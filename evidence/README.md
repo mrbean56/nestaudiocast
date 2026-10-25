@@ -27,6 +27,9 @@ qu'ils ne contiennent pas : cet index existe pour que ça ne se reproduise pas.
 | `28-rollback-test.json` | rollback niveaux 0/1 avec valeurs de volume avant/après | `tools/rollback_test.py` |
 | `35-transport-matrix.json` | 11 vérifications de transport contre le **service** déployé | `tools/transport_matrix.py` |
 | `36-auto-advance-service.json` | enchaînement automatique suivi par la cuisine, sur le service | test ad hoc, méthode décrite dans A32/A33 |
+| `37-volume-vs-sync.json` | 4 changements de volume en lecture : miroirs exacts, 1 seul rechargement, erreur −19 ms | test ad hoc (A34) |
+| `38-landing-50ms.json` | coût réel d'une tolérance de 50 ms : 1.25 rechargement/événement | test ad hoc (A34) |
+| `39-landing-30ms.json` | tolérance 30 ms : 36 % des échantillons à ≤30 ms, médiane −5.3 ms, 2 rechargements/événement | test ad hoc (A35) |
 
 ## Preuves faibles ou ambiguës — à citer avec précaution
 

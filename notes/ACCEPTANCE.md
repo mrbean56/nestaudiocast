@@ -42,6 +42,7 @@ Chaque exigence du cahier des charges, avec la preuve exécutée correspondante.
 | **≤ 150 ms** | −20 / −20 / −20 ms dans une vidéo ; max 34 ms sur la session | ✅ |
 | **Au moins trois moments** d'une **session ≥ 10 min** | 5 moments (0.75 / 4 / 7.25 / 10.5 / 13.75 min) d'une session continue de **911 s** (`notes/00-labo.md` A30) | ✅ |
 | **Sans tendance de dérive** | dérive **0.0 ± 0.0 ms/10 min** à l'intérieur d'une vidéo ; une marche de +28 ms au changement de vidéo (pipeline différent), pas une dérive | ✅ (avec la réserve documentée) |
+| Mesure **aux réglages livrés** (tolérance 30 ms) | série refaite après le changement de tolérance (`evidence/23-acoustic-v015-*`) | voir A35/A36 |
 
 ## 5. Comportements de transport
 
@@ -78,6 +79,7 @@ seulement avec accord explicite).
 | Changements réversibles | volumes restaurés, sessions arrêtées, `state/lead_adj.json` supprimable, service `disable` possible |
 | Aucun secret affiché | ⚠️ **un jeton GitHub a été lu dans la config OpenCode et affiché une fois** (2026-10-25, pendant la publication) ; propriétaire invité à le révoquer. Le dépôt public ne contient aucun secret (vérifié) |
 | Aucune suppression définitive | fichiers déplacés, jamais supprimés ; `evidence/11` régénéré après correction d'un bug de journalisation, l'original conservé en `11a` |
+| Silence réellement audible | bug trouvé en usage réel (16:5x) : les enceintes étaient à **level 0** alors que le groupe jouait à 0.4 → muet. Corrigé : le silence **mute** sans remettre le niveau à 0, et le relais **annule son propre mute** au démarrage (`group_unmuted 5/5`). Garde : avertissement si tous les membres sont muets. |
 | Achat matériel ≤ 100 $ CA, après consensus | **aucun achat** ; `notes/track3-hardware.md` conclut qu'aucun matériel ≤ 100 $ ne peut corriger la voie Nest |
 
 ## Conclusion

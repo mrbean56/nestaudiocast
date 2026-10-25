@@ -45,4 +45,30 @@ for name,v in d.items():
     print(f'   {name:14s} {tag}: {\", \".join(v[\"members\"])}')
 "
 echo
+echo "== 5. safety regressions (offline, static) ==========="
+fail=0
+if grep -n "level=0" lib/silence.py lib/emergency.py >/dev/null 2>&1; then
+  echo "   FAIL: a silence path zeroes the level (zeroing destroyed the level needed to"
+  echo "         restore, and a group master multiplies members' levels -> silent kitchen)"
+  fail=1
+else
+  echo "   ok: silencing mutes only, never zeroes levels"
+fi
+if grep -q "group_unmuted" relay/cast_relay.py; then
+  echo "   ok: the relay undoes its own stop-mute at startup (per member)"
+else
+  echo "   FAIL: no startup unmute — a service restart would leave the kitchen muted"; fail=1
+fi
+if grep -q "def device_map" lib/groupguard.py; then
+  echo "   ok: member uuid -> IP mapping present (needed to unmute members directly)"
+else
+  echo "   FAIL: no device_map"; fail=1
+fi
+if grep -q "WARNING group members are silent" relay/cast_relay.py; then
+  echo "   ok: warns when every group member is silent"
+else
+  echo "   FAIL: no silent-members warning"; fail=1
+fi
+[ "$fail" = "0" ] && echo "   -> all safety regressions clear" || echo "   -> REGRESSION(S) PRESENT"
+echo
 echo "done — evidence in evidence/"
