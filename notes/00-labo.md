@@ -505,3 +505,22 @@ avec l'ancienne tolérance et `delta = 0.265` ; une re-mesure à ces réglages r
 - **Décision laissée au propriétaire** : (a) 30 ms visés / 2 essais (état actuel : ~2 coupures par
   démarrage, parfois 45-75 ms) ; (b) 50-70 ms (1.25 coupure, parquage à 40-50 ms) ; (c) 30 ms avec
   4 essais (plus de chances d'atteindre 30 ms, mais jusqu'à 4 coupures).
+
+## A36 — Ce que coûte acoustiquement une tolérance de 30 ms (2026-10-25 17:04)
+Première série faite aux réglages livrés (30 ms) : la fenêtre de 60 s enregistrée à 60 s de
+lecture est revenue **AMBIGUOUS (σ 68.6 ms)** alors que l'offset médian était −4 ms. Cause
+identifiée en croisant le journal du relais : **un rechargement à t=62 s**, en plein milieu de
+l'enregistrement, avec une erreur numérique à ~0 ms.
+
+Deux enseignements :
+1. **Un rechargement déplace l'offset perçu** de plusieurs dizaines de ms (c'est sa raison
+   d'être) : une fenêtre qui en contient un mélange deux alignements et doit être jetée. Ce n'est
+   pas un artefact de mesure, c'est le comportement réel — et c'est précisément ce que le
+   propriétaire entend comme « ça repart ».
+2. Ce rechargement n'était **pas** nécessaire : il venait d'**une seule lecture périmée** de
+   l'état du groupe. Corrigé : il faut désormais **deux échantillons consécutifs** non-PLAYING
+   pour relancer (hystérésis), donc une lecture ratée ne coûte plus 1.6 s de silence.
+
+Fenêtre suivante, sans rechargement : **+14.0 ms, σ 6.3 ms, 57 paires → PASS** — c'est la valeur
+de référence aux réglages livrés (à comparer aux −20 ms mesurés à la tolérance de 70 ms : la
+tolérance plus serrée décale légèrement le point d'équilibre, comme prévu).
