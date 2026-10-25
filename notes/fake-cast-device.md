@@ -54,7 +54,35 @@ protocole.
 
 ### 3.1 Récepteur personnalisé sur un vrai Chromecast (le Chromecast de rechange)
 
-C'est la voie **légitime et immédiate**, et elle ne demande pas de casser quoi que ce soit :
+Procédure **vérifiée dans la documentation officielle** (developers.google.com/cast/docs/registration,
+page mise à jour le 2026-10-23 ; consultation 2026-10-25) :
+
+1. Se connecter à <https://cast.google.com/publish> avec le compte Google qui portera le projet.
+   ⚠️ **l'adresse ne pourra plus être changée** ensuite — prendre une adresse dédiée si possible.
+2. Payer les **5 $ US** d'inscription (unique, **non remboursable** — c'est écrit noir sur blanc
+   dans la FAQ « Account issues »).
+3. **Add New Application** → **Custom Receiver** (ou *Styled Media Receiver* si un lecteur
+   standard suffit et qu'aucun code n'est nécessaire).
+4. Renseigner l'**URL du récepteur**. Deux points décisifs pour nous :
+   - en développement, **HTTP suffit** (HTTPS n'est exigé qu'à la publication) ;
+   - la doc accepte explicitement une **adresse IP interne (derrière NAT)**, seulement `localhost`
+     est refusé → on peut donc héberger le récepteur **sur CT 121** (192.168.2.21), sans rien
+     exposer sur Internet.
+5. Récupérer l'**APP_ID** (8 caractères hexadécimaux).
+6. **Enregistrer le Chromecast** (obligatoire : un appareil non enregistré refuse un récepteur
+   non publié) : onglet *Devices* → *Add New Device* → numéro de série. Pour le lire : caster la
+   page du Developer Console vers l'appareil, le numéro s'affiche à l'écran et est lu à voix haute.
+7. Attendre **15 minutes** (« Ready for Testing »), puis **débrancher/rebrancher** le Chromecast.
+8. Lancer l'APP_ID sur l'appareil — ce que notre client CASTv2 sait déjà faire (`receiver` →
+   `LAUNCH` avec cet `appId`), sans écrire d'application mobile.
+
+Ce que ça donne : un flux qu'on choisit, joué sur un vrai appareil certifié, piloté par notre
+propre code. Ce que ça ne donne pas : l'app YouTube ne peut pas viser ce récepteur.
+
+Reste à faire de votre côté : les étapes 1-2 et 6-7 (compte, appareil). Les étapes 3-5 et 8 sont
+automatisables.
+
+Ancienne formulation conservée pour mémoire :
 
 - créer un compte Google Cast Developer (inscription unique, ~5 $ US), enregistrer une **URL de
   récepteur** hébergée chez soi (une page HTML qui utilise le Cast Receiver SDK) et obtenir un
