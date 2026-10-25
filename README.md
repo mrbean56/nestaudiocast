@@ -146,6 +146,9 @@ v0.1 — working proof of concept, running daily on one household. Known gaps:
 
 - the perceived offset drifts by a step of ~+30 ms at each video change (within a video it is
   flat to the millisecond) — each new video re-locks with a slightly different pipeline latency,
+- the landing tolerance is a *target*, not a bound: the actuator scatters ~±80 ms per attempt, so
+  a 30 ms tolerance means two reloads per event and occasional parks at 45-75 ms (a 50 ms
+  tolerance costs 1.25 reloads); the 150 ms perceptual budget is met either way,
 - `delta` stability across content (24p/30p, HDR) and TV picture modes is unmeasured,
 - behaviour during **ads** is untested,
 - a 10-minute session was verified digitally, not acoustically,

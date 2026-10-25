@@ -102,6 +102,27 @@ matériel ≤ 100 $ CA.
 7. **Un seul point d'écoute pour cinq enceintes** : l'instrument prend la première arrivée,
    donc l'enceinte la plus proche du micro. Ce n'est pas l'offset perçu moyen de la pièce.
 
+## 5 bis. Décisions et incidents du 2026-10-25 (soir)
+
+- **Volume** : le groupe **suit le volume de la TV** (sur front, pour ne pas se battre avec un
+  réglage fait sur le groupe). Vérifié : 4 changements en lecture = 4 miroirs exacts, **un seul
+  rechargement**, erreur numérique −19 ms (`evidence/37`).
+- **Tolérance d'atterrissage à 30 ms** (choix du propriétaire). Mesuré : c'est une **cible**, pas
+  un plafond — l'actionneur gare le groupe en pause puis envoie PLAY, et atterrit avec une
+  dispersion d'environ **±80 ms** par essai. À 30 ms : 2 rechargements par événement, médiane
+  −5 ms, pire cas 94 ms. À 50 ms : 1,25 rechargement. Le budget perceptif (150 ms) est tenu dans
+  les deux cas ; le choix est donc un compromis coupures/erreur, pas un enjeu de justesse.
+- **Deux bugs qui rendaient la cuisine muette** en usage réel, tous deux corrigés et couverts par
+  un test de régression (`tools/prove.sh` §5) :
+  1. le silence mettait les enceintes à **niveau 0** au lieu de les muter ; or le volume maître
+     d'un groupe **multiplie** le niveau de ses membres → groupe « en lecture » à 0,4 et silence
+     total ;
+  2. chaque **redémarrage du service** laissait les enceintes muettes (`ExecStopPost` mute, la
+     nouvelle instance ne démute pas). Le relais **annule désormais son propre mute** au démarrage,
+     membre par membre (uuid → IP via mDNS).
+- **`delta` reste mesuré une fois** : aucune boucle ne détecte qu'il a changé. C'est la limite
+  structurelle déjà consignée (§5.3).
+
 ## 6. Ce qui reste à faire avant de déclarer le PoC terminé
 
 1. ~~Créer le groupe cuisine-only~~ — **fait** le 2026-10-25 (groupe « Cuisine », 5 Nest Audio,
