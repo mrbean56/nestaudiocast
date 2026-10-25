@@ -1,0 +1,6 @@
+{
+ "auto_advance_followed": true,
+ "seconds": 40,
+ "when": "2026-10-25 16:2x",
+ "env": "deployed systemd service, TV driven by yt_tv"
+}

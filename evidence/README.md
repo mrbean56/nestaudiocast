@@ -25,6 +25,8 @@ qu'ils ne contiennent pas : cet index existe pour que ça ne se reproduise pas.
 | `23-acoustic-chain-selftest.json` | chaîne acoustique validée hors ligne : +6 ms de biais, σ 1 ms | mélange synthétique |
 | `27-actuator-repeatability.json` | LOAD σ 202 ms, SEEK σ 57 ms, PAUSE→SEEK→PLAY σ 30 ms | `probe/actuator_test.py` |
 | `28-rollback-test.json` | rollback niveaux 0/1 avec valeurs de volume avant/après | `tools/rollback_test.py` |
+| `35-transport-matrix.json` | 11 vérifications de transport contre le **service** déployé | `tools/transport_matrix.py` |
+| `36-auto-advance-service.json` | enchaînement automatique suivi par la cuisine, sur le service | test ad hoc, méthode décrite dans A32/A33 |
 
 ## Preuves faibles ou ambiguës — à citer avec précaution
 

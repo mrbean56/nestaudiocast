@@ -449,3 +449,10 @@ saut de 7 minutes. Le relais attend sagement ; il ne le disait pas. Corrigé : �
 **−67…+65 ms** (tolérance d'atterrissage 70 ms, 2 essais). L'offset perçu = erreur numérique +
 `delta` : il peut donc atteindre ~90 ms, toujours sous les 150 ms, avec **une seule coupure** au
 démarrage au lieu de 4.
+
+## A33 — Enchaînement automatique sur le service déployé (16:25)
+Premier essai **invalide** : le test comparait l'URL tronquée à `K0uxjdcZWyk` alors qu'elle finit
+par `.m4a` → faux positif immédiat. Corrigé (extraction de l'id par expression régulière) et
+refait : TV → `K0uxjdcZWyk` enfilée avec `QzomK1fdSUg`, seek à 556 s, YouTube enchaîne seul, la
+cuisine suit la **nouvelle** vidéo en **40 s** (dont ~10 s de recalage). `evidence/36`.
+Leçon : un test dont le prédicat est faux passe toujours ; vérifier le prédicat avant de conclure.

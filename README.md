@@ -138,6 +138,7 @@ documented in `notes/00-labo.md` (A29).
 | `evidence/` | every measurement, with `evidence/README.md` saying what each file proves |
 
 Design notes are in **French**; code and this README are in English.
+The requirement-by-requirement audit is `notes/ACCEPTANCE.md`.
 
 ## Status
 
