@@ -485,6 +485,7 @@ class Relay:
         self._fresh_launch = False
         self._g_prev = None
         self._moving = 0
+        self._not_playing = 0
         self._fixes = 0
         self.need_start = False
         self._fh = open(log_path, "a") if log_path else None
@@ -736,9 +737,15 @@ class Relay:
         if g.get("state") != "PLAYING":
             if time.time() - self._started_at < 3.0:
                 return            # LOAD -> PLAYING takes ~0.6 s; do not reload meanwhile
-            if self.sink.state in ("PAUSED", "IDLE", "NONE"):
+            # One stale read must not cost a 1.6 s gap: require two consecutive samples
+            # (evidence/23-acoustic-v015b: a single false non-PLAYING started a reload at
+            # 62 s while the error was ~0, and it split the acoustic window in two).
+            self._not_playing += 1
+            if self._not_playing >= 2 and self.sink.state in ("PAUSED", "IDLE", "NONE"):
+                self._not_playing = 0
                 self._start_sink(tv)
             return
+        self._not_playing = 0
 
         prev, self._g_prev = self._g_prev, g
         moving = prev is not None and prev.get("t") is not None and \
