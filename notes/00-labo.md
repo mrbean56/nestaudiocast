@@ -456,3 +456,23 @@ par `.m4a` → faux positif immédiat. Corrigé (extraction de l'id par expressi
 refait : TV → `K0uxjdcZWyk` enfilée avec `QzomK1fdSUg`, seek à 556 s, YouTube enchaîne seul, la
 cuisine suit la **nouvelle** vidéo en **40 s** (dont ~10 s de recalage). `evidence/36`.
 Leçon : un test dont le prédicat est faux passe toujours ; vérifier le prédicat avant de conclure.
+
+## A34 — Tolérance resserrée à 50 ms (2026-10-25, demande du propriétaire)
+`LAND_TOL_S` 70 → **50 ms** (`MAX_FIXES` reste 2). Mesure du coût réel sur le service déployé
+(`evidence/38-landing-50ms.json`) :
+
+| événement | rechargements | temps jusqu'à ≤50 ms | erreur médiane | max |
+|---|---|---|---|---|
+| lecture initiale | 1 | 24.6 s | 40.2 ms | 47.9 |
+| seek → 300 s | 1 | 24.6 s | 45.1 | 45.1 |
+| seek → 120 s | 2 | 16.4 s | 44.8 | 49.7 |
+| seek → 480 s | 1 | 8.2 s | 10.4 | 18.0 |
+
+**1.25 rechargement par événement en moyenne** (un démarrage normal + une correction une fois sur
+quatre) : le resserrement à 50 ms ne provoque donc **pas** la cascade de coupures redoutée — la
+dispersion d'atterrissage (±80 ms) tombe dans la tolérance plus souvent que prévu, et le biais de
+démarrage appris fait le reste.
+Conséquence : l'erreur numérique se stabilise à **40-50 ms** (elle s'arrête dès qu'elle est sous la
+tolérance), donc l'offset perçu attendu est de l'ordre de **+20 à +90 ms** selon le résidu de
+calibration — toujours sous 150 ms, mais la série acoustique de référence (A30) avait été faite
+avec l'ancienne tolérance et `delta = 0.265` ; une re-mesure à ces réglages reste à faire.

@@ -1,0 +1,35 @@
+{
+ "when": "2026-10-25 16:20",
+ "land_tol_ms": 50,
+ "cases": [
+  {
+   "case": "initial play",
+   "reloads": 1,
+   "settled_s": 24.6,
+   "err_median": 40.2,
+   "err_max": 47.9
+  },
+  {
+   "case": "seek 1 -> 300s",
+   "reloads": 1,
+   "settled_s": 24.6,
+   "err_median": 45.1,
+   "err_max": 45.1
+  },
+  {
+   "case": "seek 2 -> 120s",
+   "reloads": 2,
+   "settled_s": 16.4,
+   "err_median": 44.8,
+   "err_max": 49.7
+  },
+  {
+   "case": "seek 3 -> 480s",
+   "reloads": 1,
+   "settled_s": 8.2,
+   "err_median": 10.4,
+   "err_max": 18.0
+  }
+ ],
+ "mean_reloads": 1.25
+}

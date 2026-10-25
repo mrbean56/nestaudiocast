@@ -67,8 +67,9 @@ PREP_LOAD_S = 3.0    # position ahead of the TV when parking with a LOAD (buffer
 PREP_SEEK_S = 1.6    # ... and with a paused SEEK in the current file
 PLAY_LEAD_S = 0.044  # PLAY lands 44 ms late on average (evidence/27): send it that much early
 SETTLE_S = 2.0       # after a LOAD, ignore the group's playhead this long
-LAND_TOL_S = 0.070   # landing error tolerated after a start. 90 ms let a 100 ms bias sit
-                     # unchallenged (sim S4: 158 ms, over budget); 70 ms caps it near 110.
+LAND_TOL_S = 0.050   # landing error tolerated after a start — owner's call, 50 ms max.
+                     # The group lands with ~+-80 ms of scatter, so this costs extra reloads
+                     # (each one is a short gap); measured cost is recorded in notes A34.
                      # stop/starts at the beginning of a video (user report, 2026-10-25).
                      # (a LOAD lands with ~+-75 ms scatter on the group, evidence/22)
 MAX_FIXES = 2        # corrective reloads per start: each one is a gap the listener hears
