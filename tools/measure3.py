@@ -18,7 +18,7 @@ ROOT = "/home/mrbean/opencode/nestaudiocast"
 PY = ROOT + "/.venv/bin/python"
 CT = "root@192.168.2.21"
 VIDEO = "QzomK1fdSUg"
-POINTS = (60, 240, 450)      # seconds after the video starts
+POINTS = (60, 240, 450)      # seconds after the video starts (default)
 REC_S = 60
 
 
@@ -31,7 +31,13 @@ def main():
     ap.add_argument("--delta", type=float, default=0.265)
     ap.add_argument("--tag", default="v015b")
     ap.add_argument("--phone", default="192.168.2.148:39509")
+    ap.add_argument("--points", default=None,
+                    help="comma-separated seconds, e.g. 90,240,420,540 (all inside one video)")
     a = ap.parse_args()
+    global POINTS
+    if a.points:
+        POINTS = tuple(int(x) for x in a.points.split(","))
+    print("windows at", POINTS, "s", flush=True)
     log = f"evidence/23-relay-acoustic-{a.tag}.jsonl"
     print(sh(f"ssh {CT} 'systemctl stop cast-relay'").stdout.strip()[:80], flush=True)
     time.sleep(2)
