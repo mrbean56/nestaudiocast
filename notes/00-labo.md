@@ -476,3 +476,32 @@ Conséquence : l'erreur numérique se stabilise à **40-50 ms** (elle s'arrête 
 tolérance), donc l'offset perçu attendu est de l'ordre de **+20 à +90 ms** selon le résidu de
 calibration — toujours sous 150 ms, mais la série acoustique de référence (A30) avait été faite
 avec l'ancienne tolérance et `delta = 0.265` ; une re-mesure à ces réglages reste à faire.
+
+## A35 — Tolérance 30 ms : mesurée, et non atteignable comme plafond (2026-10-25, demande du propriétaire)
+`LAND_TOL_S` 50 → **30 ms** (`MAX_FIXES` reste 2). Mesure sur le service déployé
+(`evidence/39-landing-30ms.json` + journal) :
+
+| démarrage | erreur atteinte | max |
+|---|---|---|
+| 1 | **+8.6 ms** | 18 |
+| 2 | −46.2 ms (2 essais épuisés) | 54 |
+| 3 | **+11.4 ms** | 16 |
+| 4 | −45.2 ms (2 essais épuisés) | 58 |
+| 5 | +74.1 ms (2 essais épuisés) | 94 |
+| 6 | **−4.5 ms** | 17 |
+
+- **36 %** des échantillons à ≤ 30 ms, **79 %** à ≤ 70 ms, médiane **−5.3 ms**.
+- **12 démarrages pour 6 événements** : chaque tentative coûte ~1.6 s de silence. À 30 ms, le
+  nombre de coupures double par rapport à 50 ms (1.25/événement).
+- **Conclusion** : l'actionneur (gare le groupe en pause puis PLAY) atterrit avec une dispersion
+  d'environ **±80 ms**, indépendante de l'essai. Une tolérance de 30 ms **ne peut donc pas être un
+  plafond** : la boucle essaie, échoue, réessaie, puis **accepte** après 2 essais (sinon elle
+  rechargerait indéfiniment, donc coupures en boucle). Ce qui est garanti, c'est la **dispersion
+  d'atterrissage**, pas la valeur finale.
+- **Ce que ça vaut** : l'offset perçu = erreur numérique + résidu de calibration ; avec une erreur
+  numérique médiane de −5 ms et un pire cas de 94 ms, on reste **largement sous les 150 ms**
+  perceptifs. Descendre le plafond plus bas n'achète donc rien de perceptible, et coûte des
+  coupures audibles.
+- **Décision laissée au propriétaire** : (a) 30 ms visés / 2 essais (état actuel : ~2 coupures par
+  démarrage, parfois 45-75 ms) ; (b) 50-70 ms (1.25 coupure, parquage à 40-50 ms) ; (c) 30 ms avec
+  4 essais (plus de chances d'atteindre 30 ms, mais jusqu'à 4 coupures).

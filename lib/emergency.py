@@ -80,7 +80,9 @@ def mute_everything() -> dict:
             l = CastLink(host, port)
             try:
                 l.connect_platform()
-                l.set_receiver_volume(level=0.0, muted=True)
+                # Mute only: keep the level so --restore and the volume mirror still work.
+                # (A zeroed level made the kitchen silent while the group played at 0.4.)
+                l.set_receiver_volume(muted=True)
                 out[name] = "muted"
             finally:
                 l.close()

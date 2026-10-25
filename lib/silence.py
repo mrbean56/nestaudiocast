@@ -79,7 +79,10 @@ def silence(devices=None, touch_tv=False, allow_sound=False):
                            # any session found at the end is ours and must be stopped.
                            "app_at_entry": (apps[0].get("displayName") if apps else None),
                            "transport_at_entry": (apps[0].get("transportId") if apps else None)}
-            _set(l, level=0.0, muted=True)
+            # Mute, never zero: zeroing destroys the level we must restore, and a group's
+            # master volume multiplies the members' own levels — so a zeroed member stays
+            # silent even when the group plays at 0.4 (found live 2026-10-25).
+            _set(l, muted=True)
         finally:
             l.close()
         time.sleep(0.05)

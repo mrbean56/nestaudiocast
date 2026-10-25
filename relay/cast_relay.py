@@ -67,11 +67,9 @@ PREP_LOAD_S = 3.0    # position ahead of the TV when parking with a LOAD (buffer
 PREP_SEEK_S = 1.6    # ... and with a paused SEEK in the current file
 PLAY_LEAD_S = 0.044  # PLAY lands 44 ms late on average (evidence/27): send it that much early
 SETTLE_S = 2.0       # after a LOAD, ignore the group's playhead this long
-LAND_TOL_S = 0.050   # landing error tolerated after a start — owner's call, 50 ms max.
-                     # The group lands with ~+-80 ms of scatter, so this costs extra reloads
-                     # (each one is a short gap); measured cost is recorded in notes A34.
-                     # stop/starts at the beginning of a video (user report, 2026-10-25).
-                     # (a LOAD lands with ~+-75 ms scatter on the group, evidence/22)
+LAND_TOL_S = 0.030   # owner's call: 30 ms cap. The group's actuator scatters ~+-80 ms, so
+                     # most starts and re-locks need one or two corrective reloads (each one
+                     # is a short gap in the kitchen). Measured cost: notes A35 / evidence/39.
 MAX_FIXES = 2        # corrective reloads per start: each one is a gap the listener hears
 MAINT_TOL_S = 0.110  # once retries are spent, still correct an error above this...
 MAINT_EVERY_S = 60.0 # ...but rarely
@@ -236,6 +234,35 @@ class GroupSink:
     def connect(self):
         members = groupguard.require_safe_group(self.host, self.port, "kitchen group")
         self.log(f"group guard OK: {[m['name'] for m in members]}")
+        levels = [m.get("level") for m in members if m.get("level") is not None]
+        muted = all(bool(m.get("muted")) for m in members)
+        if muted:
+            # We mute on stop (ExecStopPost). Without this, every service restart would leave
+            # the kitchen playing into muted speakers. A group-wide unmute does NOT clear the
+            # members' own mute flag, so each member is unmuted directly (uuid -> IP via mDNS).
+            try:
+                ips = groupguard.device_map()
+                done = 0
+                for m in members:
+                    ip = ips.get(str(m["id"]).replace("-", "").lower())
+                    if not ip:
+                        continue
+                    l = CastLink(ip)
+                    try:
+                        l.connect_platform()
+                        l.set_receiver_volume(muted=False)
+                        done += 1
+                    finally:
+                        l.close()
+                self.log(f"group_unmuted (undoing our own stop-mute): {done}/{len(members)} members")
+            except Exception as exc:  # noqa: BLE001
+                self.log(f"group_unmute_failed: {exc}")
+        if levels and max(levels) < 0.01:
+            # A group's master volume multiplies its members' own levels: if the members are
+            # at 0 (or muted) the kitchen is silent even while the group happily plays at 0.4.
+            # That cost one debugging round on 2026-10-25 — say it loudly, once.
+            self.log(f"WARNING group members are silent: levels={levels} muted={muted} "
+                     f"— the group will play but nothing will be heard")
         self.link = CastLink(self.host, self.port)
         self.link.connect_platform()
 

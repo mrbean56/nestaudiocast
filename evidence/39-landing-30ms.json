@@ -1,0 +1,29 @@
+{
+ "when": "2026-10-25 17:00",
+ "land_tol_ms": 30,
+ "cases": [
+  {
+   "case": "initial play",
+   "reloads": null,
+   "timeout": true
+  },
+  {
+   "case": "seek 300s",
+   "reloads": null,
+   "timeout": true
+  },
+  {
+   "case": "seek 120s",
+   "reloads": null,
+   "timeout": true
+  },
+  {
+   "case": "seek 480s",
+   "reloads": null,
+   "timeout": true
+  }
+ ],
+ "mean_reloads": null,
+ "cases_within_30": 0,
+ "n": 0
+}

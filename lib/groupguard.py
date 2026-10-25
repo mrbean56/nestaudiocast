@@ -60,12 +60,45 @@ def discover_groups(timeout: float = 6.0) -> dict[str, tuple[str, int]]:
     return found
 
 
+def device_map(timeout: float = 5.0) -> dict[str, str]:
+    """uuid -> IP for every Cast device on the LAN (mDNS), to reach group members directly."""
+    from zeroconf import ServiceBrowser, ServiceListener, Zeroconf
+
+    found: dict[str, str] = {}
+
+    class L(ServiceListener):
+        def add_service(self, zc, type_, name):
+            info = zc.get_service_info(type_, name, timeout=3000)
+            if not info:
+                return
+            props = {(k.decode() if isinstance(k, bytes) else k):
+                     (v.decode() if isinstance(v, bytes) else v)
+                     for k, v in (info.properties or {}).items()}
+            addrs = [a for a in info.parsed_scoped_addresses() if ":" not in a]
+            if props.get("id") and addrs:
+                found[str(props["id"]).replace("-", "").lower()] = addrs[0]
+
+        def update_service(self, zc, type_, name):
+            self.add_service(zc, type_, name)
+
+        def remove_service(self, zc, type_, name):
+            pass
+
+    zc = Zeroconf()
+    ServiceBrowser(zc, "_googlecast._tcp.local.", L())
+    time.sleep(timeout)
+    zc.close()
+    return found
+
+
 def members(host: str, port: int) -> list[dict]:
     l = CastLink(host, port)
     try:
         l.connect_platform()
         st = l.request("receiver-0", NS_MZ, {"type": "GET_STATUS"}, timeout=6)["payload"]["status"]
         return [{"name": d["name"].strip(), "id": d["deviceId"],
+                 "level": (d.get("volume") or {}).get("level"),
+                 "muted": (d.get("volume") or {}).get("muted"),
                  "caps": d["capabilities"],
                  "audio_only": d["capabilities"] == SPEAKER_CAPS}
                 for d in st.get("devices", [])]
