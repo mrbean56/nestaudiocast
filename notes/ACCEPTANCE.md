@@ -42,7 +42,7 @@ Chaque exigence du cahier des charges, avec la preuve exécutée correspondante.
 | **≤ 150 ms** | −20 / −20 / −20 ms dans une vidéo ; max 34 ms sur la session | ✅ |
 | **Au moins trois moments** d'une **session ≥ 10 min** | 5 moments (0.75 / 4 / 7.25 / 10.5 / 13.75 min) d'une session continue de **911 s** (`notes/00-labo.md` A30) | ✅ |
 | **Sans tendance de dérive** | dérive **0.0 ± 0.0 ms/10 min** à l'intérieur d'une vidéo ; une marche de +28 ms au changement de vidéo (pipeline différent), pas une dérive | ✅ (avec la réserve documentée) |
-| Mesure **aux réglages livrés** (tolérance 30 ms) | série refaite après le changement de tolérance (`evidence/23-acoustic-v015-*`) | voir A35/A36 |
+| Mesure **aux réglages livrés** (tolérance 30 ms) | `evidence/23-acoustic-v015b-*.json` : +14.0 ms (σ 6.3) et +30.0 ms (σ 5.9) sur deux fenêtres valides, la troisième perdue (rechargement en cours d'enregistrement) ; **tendance +46 ms/10 min** | ⚠️ **critère de dérive non tenu à 30 ms** — il l'est à 50-70 ms (A30 : 0.0 ± 0.0 ms/10 min) |
 
 ## 5. Comportements de transport
 

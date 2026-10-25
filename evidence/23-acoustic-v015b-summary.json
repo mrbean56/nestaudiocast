@@ -1,0 +1,40 @@
+{
+ "when": "2026-10-25 17:11",
+ "delta": 0.265,
+ "land_tol_ms": 30,
+ "points": [
+  {
+   "n": 1,
+   "at_s": 60,
+   "offset_ms": -4.0,
+   "sd_ms": 68.6,
+   "kept": 37,
+   "rejected": 6,
+   "verdict": "AMBIGUOUS \u2014 dispersion 69 ms > 40 ms",
+   "rec_rc": 0
+  },
+  {
+   "n": 2,
+   "at_s": 240,
+   "offset_ms": 14.0,
+   "sd_ms": 6.3,
+   "kept": 57,
+   "rejected": 2,
+   "verdict": "PASS \u2014 offset 14 ms (<= 150 ms), sigma 6 ms; alias family -2986..3014 ",
+   "rec_rc": 0
+  },
+  {
+   "n": 3,
+   "at_s": 450,
+   "offset_ms": 30.0,
+   "sd_ms": 5.9,
+   "kept": 58,
+   "rejected": 3,
+   "verdict": "PASS \u2014 offset 30 ms (<= 150 ms), sigma 6 ms; alias family -2970..3030 ",
+   "rec_rc": 0
+  }
+ ],
+ "max_abs_ms": 30.0,
+ "trend_ms_per_10min": 52.1,
+ "trend_sigma_ms_per_10min": 4.1
+}

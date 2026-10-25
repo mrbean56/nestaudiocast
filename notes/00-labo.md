@@ -524,3 +524,34 @@ Deux enseignements :
 Fenêtre suivante, sans rechargement : **+14.0 ms, σ 6.3 ms, 57 paires → PASS** — c'est la valeur
 de référence aux réglages livrés (à comparer aux −20 ms mesurés à la tolérance de 70 ms : la
 tolérance plus serrée décale légèrement le point d'équilibre, comme prévu).
+
+## A37 — Série acoustique aux réglages livrés (30 ms) — et le résultat inattendu (17:11)
+Session continue de 511 s, une seule vidéo (carte de test), `delta = 0.265`, tolérance 30 ms,
+enregistrements de 60 s à 60 / 240 / 450 s (`evidence/23-acoustic-v015b-*.json`).
+
+| moment | offset perçu | σ | verdict |
+|---|---|---|---|
+| 60 s | −4.0 ms | **68.6** | **AMBIGUOUS** — un rechargement à t=62 s coupe la fenêtre en deux |
+| 240 s | **+14.0 ms** | 6.3 | PASS |
+| 450 s | **+30.0 ms** | 5.9 | PASS |
+
+**Résultat inattendu, et important** : sur les deux fenêtres valides, l'offset **monte de +14 à
++30 ms en 3,5 min**, soit **+46 ms/10 min**. À la tolérance de 70 ms, la série de 5 points sur
+911 s donnait **0.0 ± 0.0 ms/10 min** (A30). Autrement dit :
+
+> **resserrer la tolérance dégrade la stabilité.** Plus de rechargements = plus de ré-ancrages du
+> groupe, et chaque ré-ancrage repart avec une latence de pipeline légèrement différente : l'offset
+> ne tient plus en place, il **dérive par petits sauts**. C'est exactement la « tendance de
+> dérive » que le cahier des charges interdit.
+
+Hypothèse retenue (à confirmer par une série plus longue, non faite) : la dispersion d'atterrissage
+(±80 ms) et la dérive ne sont pas indépendantes — chaque correction réintroduit l'aléa qu'elle
+cherchait à annuler. À 70 ms, la boucle corrige rarement et l'offset reste stable au milliseconde
+près pendant 7 min ; à 30 ms, elle corrige souvent et l'offset se promène de quelques dizaines de
+ms par minute.
+
+**Conclusion pour la livraison** : le critère « ≤ 150 ms à trois moments d'une session ≥ 10 min
+sans tendance de dérive » est **atteint à 50-70 ms** (A30 : 5 points, 911 s, dérive nulle), et
+**pas démontré à 30 ms** (2 points valides, tendance +46 ms/10 min, un point sur trois perdu).
+Le choix de 30 ms est conservé (instruction explicite du propriétaire) mais **c'est le réglage que
+je recommande de revoir** : il n'achète pas de justesse perceptible et coûte de la stabilité.

@@ -16,7 +16,7 @@ Une page pour savoir où en est le projet sans lire le cahier de laboratoire.
 | Critère | Résultat | Preuve |
 |---|---|---|
 | offset **numérique** stable, sans dérive sur ≥10 min | **OK** : session de 690 s, +7,7 ms de moyenne, σ 10,3 ms, dérive −5,5 ± 1,2 ms/10 min | `evidence/29-session-report.json` |
-| offset **perçu** ≤ 150 ms | **MESURÉ, série de 5 points sur 911 s** : −20/−20/−20/+8/+34 ms ; dérive **0.0 ms/10 min** dans une vidéo | A30 du cahier |
+| offset **perçu** ≤ 150 ms | **MESURÉ** : −20/−20/−20/+8/+34 ms sur 911 s à 70 ms de tolérance, dérive **0.0 ± 0.0 ms/10 min** (A30) ; à 30 ms : +14/+30 ms mais **tendance +46 ms/10 min** (A37) | A30, A37 |
 | lecture / pause / reprise / seek / volumes / arrêt | **OK** sur le matériel | `evidence/21`, `22`, `24`, `26` |
 | enchaînement automatique | **OK** (suivi, recalage ~25 s) | `evidence/30-session-report.json` |
 | fin de session / nouvelle session | **OK** (cuisine arrêtée puis reprise) | `evidence/22-session-report.json` |
