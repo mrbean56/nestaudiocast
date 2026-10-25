@@ -178,6 +178,12 @@ class RemoteTv:
                 "title": (media.get("metadata") or {}).get("title"),
                 "t": s.get("currentTime"),
                 "state": s.get("playerState"),
+                # An ad is the one case we have never been able to observe: the cast sessions
+                # we create get none. Log what the receiver says about the item (customData,
+                # duration) so that if an ad ever runs, the log tells us how to detect it
+                # instead of guessing a heuristic that might break normal short videos.
+                "custom": media.get("customData"),
+                "duration": s.get("duration"),
                 "session": s.get("mediaSessionId"),
                 "volume": (st.get("volume") or {}).get("level"),
                 "muted": (st.get("volume") or {}).get("muted"),
@@ -682,7 +688,8 @@ class Relay:
 
         vid = (tv.get("content") or "").strip()
         if vid != self.cur["content"]:
-            self._log({"ev": "content_changed", "from": self.cur["content"], "to": vid})
+            self._log({"ev": "content_changed", "from": self.cur["content"], "to": vid,
+                       "duration": tv.get("duration"), "custom": tv.get("custom")})
             self._switch(tv)
             self.clock.reset()
             self.need_start = True
@@ -906,6 +913,13 @@ def main():
         relay.run(a.duration)
         return
 
+    cache = os.path.join(ROOT, "assets", "yt")
+    if os.path.isdir(cache):
+        total = sum(os.path.getsize(os.path.join(cache, f)) for f in os.listdir(cache)
+                    if os.path.isfile(os.path.join(cache, f)))
+        if total > 2 * 1024 ** 3:
+            print(f"WARNING audio cache {total / 1024 ** 3:.1f} GB in {cache}: the CT has ~6 GB. "
+                  f"Nothing is deleted automatically (project rule) - move old files away.")
     if ":" in a.group:
         host, _, port = a.group.partition(":")
     else:
