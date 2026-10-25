@@ -386,3 +386,41 @@ clics 2310 Hz via `--measure-tracks`.
   réel côté cuisine) — non implémenté, non indispensable tant que `delta` ne bouge pas.
 - `measure/realcontent_offset.py` est conservé comme **outil expérimental non validé** (son
   auto-test échoue sur la musique) : ne pas l'utiliser pour conclure.
+
+## A30 — Série acoustique de 5 points sur une session de 15 min (2026-10-25 15:32–15:47)
+Protocole `notes/measurement-protocol.md`, `delta = 0.265`, TV 0.18 / groupe 0.30 (volumes bas
+pour ne pas gêner), téléphone entre cuisine et TV, enregistrements de 60 s.
+
+| moment | offset perçu | σ | paires gardées / rejetées |
+|---|---|---|---|
+| 0.75 min | **−20 ms** | 4.4 | 60 / 0 |
+| 4.00 min | **−20 ms** | 4.5 | 59 / 0 |
+| 7.25 min | **−20 ms** | 5.3 | 53 / 7 |
+| 10.50 min | **+8 ms** | 3.5 | 16 / 4 |
+| 13.75 min | **+34 ms** | 1.8 | 29 / 4 |
+
+Session continue de **911 s (15.2 min)**, un seul app YouTube, changement de vidéo à 619 s.
+
+- **Dans une même vidéo** (3 premiers points) : dérive **0.0 ± 0.0 ms/10 min**, étendue 0 ms.
+  → critère « ≤ 150 ms à trois moments d'une session ≥ 10 min, sans tendance de dérive » **atteint**
+  pour la session d'une vidéo (max |offset| 20 ms).
+- **Au changement de vidéo** : marche de **+28 ms**, puis +26 ms sur les 3 min suivantes
+  (max |offset| de la session : 34 ms, toujours ≤ 150).
+  Interprétation : chaque nouvelle vidéo repart avec une latence de pipeline légèrement
+  différente ; ce n'est pas une dérive de la boucle. À noter comme caractéristique connue.
+- **Confirmation du « son qui s'arrête et repart 3-4 fois »** rapporté par le propriétaire : le
+  journal montre 4 `sink_started` à 16.7 / 21.9 / 27.1 / 32.2 s, puis plus rien jusqu'à 498 s.
+  C'est la boucle d'atterrissage qui réessayait (tolérance 50 ms, 6 essais) — chaque essai gare le
+  groupe en pause ~1.6 s. **Corrigé** : tolérance 70 ms, **2 essais max**, seuil de correction
+  grossière 350 ms, entretien à 110 ms toutes les 60 s, et le biais de démarrage appris est
+  désormais **persisté** (`state/lead_adj.json`) pour que le premier vidéo après un redémarrage
+  ne réapprenne pas.
+
+## A31 — Volume et piste « appareil Cast » (même jour)
+- **Miroir de volume** implémenté (`--mirror-volume`, `VOLUME_GAIN`, `VOLUME_MAX`) : le relais
+  pousse le volume de la TV sur le groupe **sur front** (uniquement quand la TV change), pour ne
+  pas se battre avec un réglage fait sur le groupe.
+- Piste A reprise à la demande du propriétaire : `notes/fake-cast-device.md` — ce qui est mesuré
+  (blocage à `deviceauth`), comment un fabricant obtient le certificat (programme Google Cast),
+  les trois voies praticables, et l'expérience proposée avec le Chromecast de rechange
+  (récepteur personnalisé, APP_ID à enregistrer — action propriétaire).

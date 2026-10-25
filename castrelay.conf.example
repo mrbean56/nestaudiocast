@@ -1,10 +1,14 @@
 # Cast relay configuration — copy to /etc/castrelay.conf
-# Name of the Cast speaker group, as announced by mDNS (resolved at every start),
-# or host:port. It must contain speakers only; the relay refuses anything else.
+# Speaker group: mDNS name (resolved at every start) or host:port.
+# It must contain speakers only; the relay refuses anything else.
 GROUP=Cuisine
 # The TV to follow (read-only).
 TV=192.168.2.80
-# Acoustic calibration: delta = measured perceived offset at delta=0 (seconds).
-# See notes/measurement-protocol.md. 0.0 until you have measured it.
+# Acoustic calibration: the offset measured at DELTA=0 (seconds), see
+# notes/measurement-protocol.md. 0.0 until you have measured it.
 DELTA=0.0
 POLL=0.25
+# Volume: 1 = the group follows the TV volume (whenever it changes on the TV).
+MIRROR_VOLUME=1
+VOLUME_GAIN=1.0
+VOLUME_MAX=1.0

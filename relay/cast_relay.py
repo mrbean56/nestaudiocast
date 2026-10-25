@@ -51,7 +51,8 @@ DMR = "CC1AD845"
 YOUTUBE_APP = "233637DE"
 YT_ID = re.compile(r"^[A-Za-z0-9_-]{11}$")
 
-COARSE_S = 0.25      # beyond this, hard resync with SEEK
+COARSE_S = 0.35      # beyond this, reload. Every correction is an audible gap, so the
+                     # threshold is generous: 150 ms is the real budget, not 35.
 FINE_S = 0.030       # beyond this, trim with playback rate (if the device honours it)
 RATE_TAU_S = 4.0     # seconds over which the rate trims an error
 MAX_RATE_DELTA = 0.02
@@ -66,11 +67,13 @@ PREP_LOAD_S = 3.0    # position ahead of the TV when parking with a LOAD (buffer
 PREP_SEEK_S = 1.6    # ... and with a paused SEEK in the current file
 PLAY_LEAD_S = 0.044  # PLAY lands 44 ms late on average (evidence/27): send it that much early
 SETTLE_S = 2.0       # after a LOAD, ignore the group's playhead this long
-LAND_TOL_S = 0.050   # landing error tolerated after a start before a corrective reload
+LAND_TOL_S = 0.070   # landing error tolerated after a start. 90 ms let a 100 ms bias sit
+                     # unchallenged (sim S4: 158 ms, over budget); 70 ms caps it near 110.
+                     # stop/starts at the beginning of a video (user report, 2026-10-25).
                      # (a LOAD lands with ~+-75 ms scatter on the group, evidence/22)
-MAX_FIXES = 6        # corrective reloads per start (each costs a short gap in the kitchen)
-MAINT_TOL_S = 0.080  # once retries are spent, still correct an error above this...
-MAINT_EVERY_S = 30.0 # ...at most every 30 s
+MAX_FIXES = 2        # corrective reloads per start: each one is a gap the listener hears
+MAINT_TOL_S = 0.110  # once retries are spent, still correct an error above this...
+MAINT_EVERY_S = 60.0 # ...but rarely
 BIAS_GAIN = 0.15     # landings scatter independently around a bias (evidence/26 run 3: the same
                      # lead landed +6/+37/-85 ms). Correcting a retry by the last error doubles
                      # the variance (observed: alternating +-100..170 ms), so retries reuse the
@@ -150,8 +153,12 @@ class RemoteTv:
                 if tr:
                     self.link.connect_transport(tr)
                     time.sleep(0.10)
+            vol = st.get("volume") or {}
             out = {"wall": time.time(), "app": app_name, "app_id": app_id,
-                   "content": None, "t": None, "state": "NO_APP"}
+                   "content": None, "t": None, "state": "NO_APP",
+                   # volume must be available even with no media app: the idle screen has no
+                   # media namespace but the receiver still reports volume (bug found live).
+                   "volume": vol.get("level"), "muted": vol.get("muted")}
             if not tr:
                 return out
             # Apps like Backdrop do not serve the media namespace at all; asking would
@@ -174,6 +181,7 @@ class RemoteTv:
                 "state": s.get("playerState"),
                 "session": s.get("mediaSessionId"),
                 "volume": (st.get("volume") or {}).get("level"),
+                "muted": (st.get("volume") or {}).get("muted"),
             })
             return out
         except (CastError, OSError) as exc:
@@ -316,6 +324,9 @@ class GroupSink:
         return {"wall": (t0 + t1) / 2, "rtt_ms": (t1 - t0) * 1000,
                 "t": s.get("currentTime"), "state": self.state, "rate": self.rate}
 
+    def set_volume(self, level, muted=False):
+        self.link.set_receiver_volume(level=level, muted=muted)
+
     def seek(self, t):
         self.link.media_command(self.transport, "SEEK", self.session,
                                 {"currentTime": max(0.0, t)}, timeout=8)
@@ -410,7 +421,7 @@ class AudioCache:
 class Relay:
     def __init__(self, tv, sink, audio, delta=0.0, poll=0.25, log_path=None,
                  dry_run=False, verbose=True, measure_url=None, use_rate=False,
-                 measure_dir=False):
+                 measure_dir=False, mirror_volume=False, volume_gain=1.0, volume_max=1.0):
         self.tv = tv
         self.sink = sink
         self.audio = audio
@@ -429,15 +440,41 @@ class Relay:
         self.stats = {"seeks": 0, "rate_changes": 0, "samples": 0}
         self.clock = TvClock()
         self._started_at = 0.0
-        self.lead_adj = 0.0       # learned start bias, seconds
+        self.lead_adj = self._load_lead_adj()   # learned start bias, seconds
         self._errors = 0
         self._last_fix = 0.0
+        self.mirror_volume = mirror_volume
+        self.volume_gain = volume_gain
+        self.volume_max = volume_max
+        self._tv_vol = None
+        self._vol_sent_at = 0.0
         self._fresh_launch = False
         self._g_prev = None
         self._moving = 0
         self._fixes = 0
         self.need_start = False
         self._fh = open(log_path, "a") if log_path else None
+
+    LEAD_STATE = os.path.join(ROOT, "state", "lead_adj.json")
+
+    def _load_lead_adj(self):
+        """Reuse the start bias learned by a previous run: without it, the first video after
+        every start of the service pays 1-2 extra reloads (= audible gaps)."""
+        try:
+            with open(self.LEAD_STATE) as fh:
+                v = float(json.load(fh)["lead_adj"])
+            return max(-0.8, min(0.8, v))
+        except Exception:  # noqa: BLE001
+            return 0.0
+
+    def _save_lead_adj(self):
+        try:
+            os.makedirs(os.path.dirname(self.LEAD_STATE), exist_ok=True)
+            with open(self.LEAD_STATE, "w") as fh:
+                json.dump({"lead_adj": round(self.lead_adj, 4),
+                           "t": time.strftime("%Y-%m-%dT%H:%M:%S")}, fh)
+        except Exception:  # noqa: BLE001
+            pass
 
     def _log(self, rec):
         rec = {"wall": round(time.time(), 4), **rec}
@@ -557,10 +594,34 @@ class Relay:
                    "lead": round(lead, 3), "lead_adj": round(self.lead_adj, 3),
                    "prep_s": round(prep_s, 2), "fire_late_ms": round((time.time() - w_fire) * 1000, 1)})
 
+    def _sync_volume(self, tv):
+        """Mirror the TV's volume onto the group, edge-triggered.
+
+        Edge-triggered on purpose: only a *change on the TV* pushes a value to the group, so a
+        volume the user sets on the group itself is not fought by the relay every 250 ms.
+        """
+        lvl = tv.get("volume")
+        if lvl is None or self.dry_run or not hasattr(self.sink, "set_volume"):
+            return
+        if self._tv_vol is not None and abs(lvl - self._tv_vol) < 0.01:
+            return
+        if time.time() - self._vol_sent_at < 0.5:
+            return
+        target = max(0.0, min(self.volume_max, lvl * self.volume_gain))
+        self._tv_vol = lvl
+        self._vol_sent_at = time.time()
+        try:
+            self.sink.set_volume(round(target, 3), muted=bool(tv.get("muted")))
+            self._log({"ev": "volume_mirrored", "tv": round(lvl, 3), "group": round(target, 3)})
+        except (CastError, OSError) as exc:
+            self._log({"ev": "volume_mirror_failed", "error": str(exc)[:80]})
+
     def step(self):
         if not self.dry_run and getattr(self.sink, "link", None) is not None:
             self.sink.link.keepalive()
         tv = self.tv.snapshot()
+        if self.mirror_volume:
+            self._sync_volume(tv)
         state = tv.get("state")
         if state == "ERROR":
             self._log({"ev": "tv_read_error", "error": tv.get("error")})
@@ -684,6 +745,7 @@ class Relay:
             self._fixes += 1
             gain = 0.0 if self._fresh_launch else BIAS_GAIN   # a fresh app launch lands ~0.7 s
             self.lead_adj -= gain * err                       # late: not representative
+            self._save_lead_adj()
             self.stats["realigns"] = self.stats.get("realigns", 0) + 1
             self.sample(tv, g, err, f"realign lead_adj={self.lead_adj:+.3f}")
             self._err_hist.clear()
@@ -783,6 +845,12 @@ def build_parser():
     p.add_argument("--measure-file", default="assets/click_train_2k.wav")
     p.add_argument("--measure-tracks", action="store_true",
                    help="for videos with assets/measure/<id>.m4a, play that click track instead")
+    p.add_argument("--mirror-volume", action="store_true",
+                   help="push the TV's volume onto the group whenever it changes on the TV")
+    p.add_argument("--volume-gain", type=float, default=1.0,
+                   help="group level = TV level * gain (default 1.0)")
+    p.add_argument("--volume-max", type=float, default=1.0,
+                   help="cap for the mirrored group level")
     p.add_argument("--use-rate", action="store_true",
                    help="use SET_PLAYBACK_RATE for fine correction. Verified to be a NO-OP on "
                         "this hardware (evidence/17); only correct for other devices")
@@ -830,7 +898,9 @@ def main():
         print(f"measurement mode: {measure_url}")
     relay = Relay(tv, sink, AudioCache(base),
                   delta=a.delta, poll=a.poll, log_path=log_path, measure_url=measure_url,
-                  use_rate=a.use_rate, measure_dir=a.measure_tracks)
+                  use_rate=a.use_rate, measure_dir=a.measure_tracks,
+                  mirror_volume=a.mirror_volume, volume_gain=a.volume_gain,
+                  volume_max=a.volume_max)
     try:
         relay.run(a.duration)
     finally:

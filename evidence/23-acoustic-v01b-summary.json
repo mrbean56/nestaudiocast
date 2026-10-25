@@ -1,0 +1,35 @@
+[
+ {
+  "n": 1,
+  "minute": 1.5,
+  "wav": "evidence/audio/23-acoustic-v01b-1.wav",
+  "record_rc": 0,
+  "analysis": [
+   "  \"drift_sigma_ms_per_min\": 1.7,",
+   "  \"verdict\": \"PASS \\u2014 offset -26 ms (<= 150 ms), sigma 4 ms; alias family -3026..2974 ms\"",
+   "}"
+  ]
+ },
+ {
+  "n": 2,
+  "minute": 5.0,
+  "wav": "evidence/audio/23-acoustic-v01b-2.wav",
+  "record_rc": 0,
+  "analysis": [
+   "  \"drift_sigma_ms_per_min\": 2.0,",
+   "  \"verdict\": \"PASS \\u2014 offset -10 ms (<= 150 ms), sigma 4 ms; alias family -3010..2990 ms\"",
+   "}"
+  ]
+ },
+ {
+  "n": 3,
+  "minute": 8.5,
+  "wav": "evidence/audio/23-acoustic-v01b-3.wav",
+  "record_rc": 0,
+  "analysis": [
+   "  \"drift_sigma_ms_per_min\": 2.2,",
+   "  \"verdict\": \"PASS \\u2014 offset -14 ms (<= 150 ms), sigma 5 ms; alias family -3014..2986 ms\"",
+   "}"
+  ]
+ }
+]

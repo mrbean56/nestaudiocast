@@ -107,9 +107,10 @@ matériel ≤ 100 $ CA.
 1. ~~Créer le groupe cuisine-only~~ — **fait** le 2026-10-25 (groupe « Cuisine », 5 Nest Audio,
    aucun appareil vidéo) ; le relais le résout par nom et la garde l'accepte.
 2. ~~Prouver la lecture continue de la TV~~ — **fait** (sessions de 344 s, 413 s, 593 s).
-3. **Mesurer l'offset perçu** à 3 moments d'une session ≥ 10 min : **bloqué** sur l'accès au
-   microphone du téléphone (débogage sans fil coupé). Tout est prêt : `tools/acoustic_session.py`
-   avec `IP:PORT`, instrument validé hors ligne (±4 ms, biais +6 ms à soustraire).
+3. ~~Mesurer l'offset perçu à 3 moments d'une session ≥ 10 min~~ — **fait** : 5 points sur une
+   session continue de 911 s, offset **−20 / −20 / −20 / +8 / +34 ms**, et **dérive nulle
+   (0.0 ± 0.0 ms/10 min)** à l'intérieur d'une vidéo ; une marche de ~+30 ms apparaît au
+   **changement de vidéo** (pipeline différent), pas une dérive. `notes/00-labo.md` A30.
 4. Transport : lecture, pause/reprise, seek, volumes, arrêt, fin de file, nouvelle session —
    **validés sur le matériel** ; session intacte de **690 s** : +7,7 ms de moyenne, σ 10,3 ms,
    dérive **−5,5 ± 1,2 ms/10 min** (`evidence/29-session-report.json`) ;

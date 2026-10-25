@@ -36,12 +36,14 @@ fix under 100 CAD (Nest Audio has no audio input and a Cast group only accepts n
 
 | What | Value | Where |
 |---|---|---|
-| Perceived offset, calibrated | **−30 ms ± 3 ms** (threshold 150 ms) | `evidence/audio`, notes A28 |
+| Perceived offset, calibrated | **−20 ms ± 4 ms**, three points inside one video, drift **0.0 ms/10 min** | notes A30 |
+| Perceived offset across a video change | +8 → +34 ms (a step, not a drift) | notes A30 |
 | Perceived offset, uncalibrated | +295 ms ± 6 ms | same |
 | Digital error, 10-minute session | +7.7 ms mean, σ 10.3 ms | `evidence/29-session-report.json` |
 | Drift over 10 min | −5.5 ± 1.2 ms | same |
 | Group clock drift, 600 s | −12.4 ± 1.0 ms/10 min | `evidence/17` |
 | Seek → re-lock | 6–20 s | `evidence/21`, `26` |
+| Session length verified | 911 s continuous, 5 acoustic points | notes A30 |
 | Real video (2 h 23, 134 MB) | audio ready in 10 s, deep seek to 2 h followed | `evidence/33`, `34` |
 
 ## How the sync works
@@ -79,7 +81,8 @@ cp tools/../castrelay.conf.example /etc/castrelay.conf   # edit GROUP / TV / DEL
 Run:
 
 ```sh
-.venv/bin/python relay/cast_relay.py --group "Cuisine" --delta 0.265 --log evidence/relay.jsonl
+.venv/bin/python relay/cast_relay.py --group "Cuisine" --delta 0.265 \
+    --mirror-volume --log evidence/relay.jsonl
 .venv/bin/python relay/cast_relay.py --dry-run          # watch the TV, touch nothing
 ```
 
@@ -140,7 +143,8 @@ Design notes are in **French**; code and this README are in English.
 
 v0.1 — working proof of concept, running daily on one household. Known gaps:
 
-- the perceived offset was measured at a single calibration point; no series over 10 minutes,
+- the perceived offset drifts by a step of ~+30 ms at each video change (within a video it is
+  flat to the millisecond) — each new video re-locks with a slightly different pipeline latency,
 - `delta` stability across content (24p/30p, HDR) and TV picture modes is unmeasured,
 - behaviour during **ads** is untested,
 - a 10-minute session was verified digitally, not acoustically,

@@ -20,3 +20,4 @@ evidence/audio/
 evidence/*.jpg
 evidence/*.png
 assets/*.m4a
+state/
