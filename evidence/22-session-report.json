@@ -1,0 +1,93 @@
+{
+ "samples": 136,
+ "in_sync": 134,
+ "actions": {
+  "settling": 31,
+  "in_sync": 134,
+  "realign": 2
+ },
+ "stretches": [],
+ "recovery": [
+  {
+   "rel": 12.8,
+   "action": [
+    "play",
+    "QzomK1fdSUg"
+   ],
+   "back_in_sync_s": 26.1
+  },
+  {
+   "rel": 21.3,
+   "action": [
+    "queue",
+    "K0uxjdcZWyk"
+   ],
+   "back_in_sync_s": 17.5
+  },
+  {
+   "rel": 42.7,
+   "action": [
+    "pause"
+   ],
+   "back_in_sync_s": 21.1
+  },
+  {
+   "rel": 57.4,
+   "action": [
+    "resume"
+   ],
+   "back_in_sync_s": 6.4
+  },
+  {
+   "rel": 87.6,
+   "action": [
+    "seek",
+    "570"
+   ],
+   "back_in_sync_s": 15.4
+  },
+  {
+   "rel": 802.4,
+   "action": [
+    "status"
+   ],
+   "back_in_sync_s": null
+  },
+  {
+   "rel": 831.5,
+   "action": [
+    "status"
+   ],
+   "back_in_sync_s": null
+  },
+  {
+   "rel": 833.8,
+   "action": [
+    "stop"
+   ],
+   "back_in_sync_s": null
+  },
+  {
+   "rel": 860.3,
+   "action": [
+    "play",
+    "QzomK1fdSUg"
+   ],
+   "back_in_sync_s": null
+  },
+  {
+   "rel": 921.5,
+   "action": [
+    "status"
+   ],
+   "back_in_sync_s": null
+  },
+  {
+   "rel": 921.8,
+   "action": [
+    "stop"
+   ],
+   "back_in_sync_s": null
+  }
+ ]
+}

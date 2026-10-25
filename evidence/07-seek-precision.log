@@ -1,0 +1,36 @@
+----------------------------------------
+Exception occurred during processing of request from ('192.168.2.61', 45790)
+Traceback (most recent call last):
+  File "/usr/lib/python3.13/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.13/socketserver.py", line 766, in __init__
+    self.handle()
+    ~~~~~~~~~~~^^
+  File "/usr/lib/python3.13/http/server.py", line 438, in handle
+    self.handle_one_request()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/usr/lib/python3.13/http/server.py", line 404, in handle_one_request
+    self.raw_requestline = self.rfile.readline(65537)
+                           ~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "/usr/lib/python3.13/socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+----------------------------------------
+asset server up: http://192.168.2.18:8099/yt/aqz-KE-bpKQ.m4a
+launched Default Media Receiver transport=4079d85b-ae2d-450f-b54b-cce5a0a6713d
+LOAD@60 -> state=IDLE t=0 cmds=274447
+first PLAYING sample: t=60.000 at 122 ms after LOAD (target 60.0)
+SEEK   120.0 -> t=120.771 err=+771.4 ms  (spread 19.0 ms)
+SEEK   300.0 -> t=300.646 err=+645.9 ms  (spread 19.9 ms)
+SEEK    45.5 -> t=46.173 err=+673.4 ms  (spread 27.1 ms)
+SEEK   600.0 -> t=600.774 err=+773.8 ms  (spread 13.9 ms)
+SEEK    90.0 -> t=90.844 err=+843.7 ms  (spread 17.1 ms)
+SEEK   200.0 -> t=200.783 err=+783.3 ms  (spread 15.6 ms)
+clock rate over 20.0s = 1.000091 (+54.5 ms per 10 min)
+
+saved evidence/07-seek-precision.json

@@ -1,0 +1,22 @@
+# runtime / tools
+.venv/
+bin/
+__pycache__/
+*.pyc
+logs/
+
+# private keys (the virtual-receiver certificate)
+certs/
+
+# downloaded media: not ours to redistribute, and large
+assets/yt/
+assets/measure/*.m4a
+assets/*.wav
+assets/*.mp4
+assets/selftest/
+
+# recordings (large) and anything showing the house
+evidence/audio/
+evidence/*.jpg
+evidence/*.png
+assets/*.m4a

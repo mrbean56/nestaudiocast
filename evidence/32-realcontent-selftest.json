@@ -1,0 +1,32 @@
+[
+ {
+  "true": 0,
+  "measured": null,
+  "verdict": "INVALID \u2014 halves of a segment disagree (tv: 6979.9 ms, kitchen: 7303.4 ms)"
+ },
+ {
+  "true": 30,
+  "measured": null,
+  "verdict": "INVALID \u2014 halves of a segment disagree (tv: 6979.9 ms, kitchen: 7165.7 ms)"
+ },
+ {
+  "true": 45,
+  "measured": null,
+  "verdict": "INVALID \u2014 halves of a segment disagree (tv: 6979.9 ms, kitchen: 7403.8 ms)"
+ },
+ {
+  "true": 120,
+  "measured": null,
+  "verdict": "INVALID \u2014 halves of a segment disagree (tv: 6979.9 ms, kitchen: 7163.4 ms)"
+ },
+ {
+  "true": -60,
+  "measured": null,
+  "verdict": "INVALID \u2014 halves of a segment disagree (tv: 6979.9 ms, kitchen: 7265.9 ms)"
+ },
+ {
+  "true": 300,
+  "measured": null,
+  "verdict": "INVALID \u2014 halves of a segment disagree (tv: 6979.9 ms, kitchen: 7988.8 ms)"
+ }
+]

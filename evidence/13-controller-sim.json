@@ -1,0 +1,86 @@
+[
+  {
+    "name": "S1-realistic-91ppm",
+    "drift_ppm": 91,
+    "duration": 72,
+    "delta": 0.0,
+    "stats": {
+      "seeks": 0,
+      "rate_changes": 0,
+      "samples": 159,
+      "realigns": 6
+    },
+    "log": "/home/mrbean/opencode/nestaudiocast/evidence/sim-S1-realistic-91ppm.jsonl",
+    "analysis": {
+      "n": 69,
+      "mean_ms": -0.8,
+      "p95_abs_ms": 14.9,
+      "max_abs_ms": 16.2,
+      "within_50ms_pct": 100.0,
+      "within_150ms_pct": 100.0
+    }
+  },
+  {
+    "name": "S2-stress-law-only-3000ppm",
+    "drift_ppm": 3000,
+    "duration": 60,
+    "delta": 0.0,
+    "stats": {
+      "seeks": 1,
+      "rate_changes": 0,
+      "samples": 201,
+      "realigns": 12
+    },
+    "log": "/home/mrbean/opencode/nestaudiocast/evidence/sim-S2-stress-law-only-3000ppm.jsonl",
+    "analysis": {
+      "n": 102,
+      "mean_ms": 27.3,
+      "p95_abs_ms": 48.7,
+      "max_abs_ms": 71.8,
+      "within_50ms_pct": 97.1,
+      "within_150ms_pct": 100.0
+    }
+  },
+  {
+    "name": "S3-delta200ms",
+    "drift_ppm": 91,
+    "duration": 45,
+    "delta": 0.2,
+    "stats": {
+      "seeks": 0,
+      "rate_changes": 0,
+      "samples": 164,
+      "realigns": 1
+    },
+    "log": "/home/mrbean/opencode/nestaudiocast/evidence/sim-S3-delta200ms.jsonl",
+    "analysis": {
+      "n": 149,
+      "mean_ms": -1.0,
+      "p95_abs_ms": 4.1,
+      "max_abs_ms": 10.9,
+      "within_50ms_pct": 100.0,
+      "within_150ms_pct": 100.0
+    }
+  },
+  {
+    "name": "S4-latency-mismatch-100ms",
+    "drift_ppm": 91,
+    "duration": 45,
+    "delta": 0.0,
+    "stats": {
+      "seeks": 0,
+      "rate_changes": 0,
+      "samples": 166,
+      "realigns": 1
+    },
+    "log": "/home/mrbean/opencode/nestaudiocast/evidence/sim-S4-latency-mismatch-100ms.jsonl",
+    "analysis": {
+      "n": 145,
+      "mean_ms": -0.7,
+      "p95_abs_ms": 4.2,
+      "max_abs_ms": 10.8,
+      "within_50ms_pct": 100.0,
+      "within_150ms_pct": 100.0
+    }
+  }
+]

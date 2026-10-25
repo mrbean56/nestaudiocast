@@ -1,0 +1,83 @@
+{"t": 1792904643.324, "ev": "mdns_advertised", "name": "Relais Cast PoC", "id": "cbf01c6934d14f49b5b0fab6b4e3ad2b", "port": 8009, "txt": {"id": "cbf01c6934d14f49b5b0fab6b4e3ad2b", "cd": "CBF01C69", "rm": "", "ve": "05", "md": "Chromecast", "ic": "/setup/icon.png", "fn": "Relais Cast PoC", "ca": "201221", "st": "0", "bs": "FA8FCA70A1B2", "nf": "1", "rs": ""}}
+{"t": 1792904643.325, "ev": "start", "name": "Relais Cast PoC", "port": 8009, "id": "cbf01c6934d14f49b5b0fab6b4e3ad2b"}
+{"t": 1792904643.326, "ev": "listening", "port": 8009, "cert": "/home/mrbean/opencode/nestaudiocast/certs/virtual-cast.crt"}
+{"t": 1792904643.504, "ev": "tls_established", "peer": "192.168.2.2", "port": 63277, "cipher": "TLS_AES_256_GCM_SHA384"}
+{"t": 1792904643.505, "ev": "deviceauth_message", "peer": "192.168.2.2", "kind": "challenge", "n_bytes": 22, "sender_nonce": "069180bc10e13ac2b20f209034c15302", "signature_algorithm": 1}
+{"t": 1792904643.548, "ev": "deviceauth_reply_sent", "peer": "192.168.2.2", "cert": "self-signed (not Google-signed)", "chain_len": 1, "sig_len": 256}
+{"t": 1792904643.6, "ev": "tls_established", "peer": "192.168.2.2", "port": 52128, "cipher": "TLS_AES_256_GCM_SHA384"}
+{"t": 1792904643.6, "ev": "deviceauth_message", "peer": "192.168.2.2", "kind": "challenge", "n_bytes": 22, "sender_nonce": "069180bc10e13ac2b20f209034c15302", "signature_algorithm": 1}
+{"t": 1792904643.631, "ev": "deviceauth_reply_sent", "peer": "192.168.2.2", "cert": "self-signed (not Google-signed)", "chain_len": 1, "sig_len": 256}
+{"t": 1792904645.679, "ev": "tls_established", "peer": "192.168.2.2", "port": 59287, "cipher": "TLS_AES_256_GCM_SHA384"}
+{"t": 1792904645.68, "ev": "deviceauth_message", "peer": "192.168.2.2", "kind": "challenge", "n_bytes": 22, "sender_nonce": "b8a13de94db6f02cc85056f73a44a375", "signature_algorithm": 1}
+{"t": 1792904645.711, "ev": "deviceauth_reply_sent", "peer": "192.168.2.2", "cert": "self-signed (not Google-signed)", "chain_len": 1, "sig_len": 256}
+{"t": 1792904645.716, "ev": "tls_established", "peer": "192.168.2.2", "port": 53524, "cipher": "TLS_AES_256_GCM_SHA384"}
+{"t": 1792904645.717, "ev": "deviceauth_message", "peer": "192.168.2.2", "kind": "challenge", "n_bytes": 22, "sender_nonce": "b8a13de94db6f02cc85056f73a44a375", "signature_algorithm": 1}
+{"t": 1792904645.756, "ev": "deviceauth_reply_sent", "peer": "192.168.2.2", "cert": "self-signed (not Google-signed)", "chain_len": 1, "sig_len": 256}
+{"t": 1792904646.5, "ev": "tls_established", "peer": "192.168.2.2", "port": 53530, "cipher": "TLS_AES_256_GCM_SHA384"}
+{"t": 1792904646.501, "ev": "deviceauth_message", "peer": "192.168.2.2", "kind": "challenge", "n_bytes": 22, "sender_nonce": "1b6ffdd41e962bba3b3c46cf8d8c4a7e", "signature_algorithm": 1}
+{"t": 1792904646.532, "ev": "deviceauth_reply_sent", "peer": "192.168.2.2", "cert": "self-signed (not Google-signed)", "chain_len": 1, "sig_len": 256}
+{"t": 1792904646.537, "ev": "tls_established", "peer": "192.168.2.2", "port": 53531, "cipher": "TLS_AES_256_GCM_SHA384"}
+{"t": 1792904646.538, "ev": "deviceauth_message", "peer": "192.168.2.2", "kind": "challenge", "n_bytes": 22, "sender_nonce": "1b6ffdd41e962bba3b3c46cf8d8c4a7e", "signature_algorithm": 1}
+{"t": 1792904646.569, "ev": "deviceauth_reply_sent", "peer": "192.168.2.2", "cert": "self-signed (not Google-signed)", "chain_len": 1, "sig_len": 256}
+{"t": 1792904651.872, "ev": "tls_established", "peer": "192.168.2.2", "port": 63637, "cipher": "TLS_AES_256_GCM_SHA384"}
+{"t": 1792904651.872, "ev": "deviceauth_message", "peer": "192.168.2.2", "kind": "challenge", "n_bytes": 22, "sender_nonce": "069180bc10e13ac2b20f209034c15302", "signature_algorithm": 1}
+{"t": 1792904651.903, "ev": "deviceauth_reply_sent", "peer": "192.168.2.2", "cert": "self-signed (not Google-signed)", "chain_len": 1, "sig_len": 256}
+{"t": 1792904660.006, "ev": "tls_established", "peer": "192.168.2.2", "port": 57251, "cipher": "TLS_AES_256_GCM_SHA384"}
+{"t": 1792904660.007, "ev": "deviceauth_message", "peer": "192.168.2.2", "kind": "challenge", "n_bytes": 22, "sender_nonce": "1b6ffdd41e962bba3b3c46cf8d8c4a7e", "signature_algorithm": 1}
+{"t": 1792904660.038, "ev": "deviceauth_reply_sent", "peer": "192.168.2.2", "cert": "self-signed (not Google-signed)", "chain_len": 1, "sig_len": 256}
+{"t": 1792904660.508, "ev": "tls_established", "peer": "192.168.2.2", "port": 51124, "cipher": "TLS_AES_256_GCM_SHA384"}
+{"t": 1792904660.508, "ev": "deviceauth_message", "peer": "192.168.2.2", "kind": "challenge", "n_bytes": 22, "sender_nonce": "b8a13de94db6f02cc85056f73a44a375", "signature_algorithm": 1}
+{"t": 1792904660.539, "ev": "deviceauth_reply_sent", "peer": "192.168.2.2", "cert": "self-signed (not Google-signed)", "chain_len": 1, "sig_len": 256}
+{"t": 1792904665.389, "ev": "tls_established", "peer": "192.168.2.2", "port": 62306, "cipher": "TLS_AES_256_GCM_SHA384"}
+{"t": 1792904665.389, "ev": "deviceauth_message", "peer": "192.168.2.2", "kind": "challenge", "n_bytes": 22, "sender_nonce": "069180bc10e13ac2b20f209034c15302", "signature_algorithm": 1}
+{"t": 1792904665.42, "ev": "deviceauth_reply_sent", "peer": "192.168.2.2", "cert": "self-signed (not Google-signed)", "chain_len": 1, "sig_len": 256}
+{"t": 1792904666.817, "ev": "tls_handshake_failed", "peer": "192.168.2.1", "error": "SSLError: [SSL: NO_SUITABLE_SIGNATURE_ALGORITHM] no suitable signature algorithm (_ssl.c:1029)"}
+{"t": 1792904671.672, "ev": "tls_established", "peer": "192.168.2.2", "port": 64643, "cipher": "TLS_AES_256_GCM_SHA384"}
+{"t": 1792904671.672, "ev": "deviceauth_message", "peer": "192.168.2.2", "kind": "challenge", "n_bytes": 22, "sender_nonce": "b8a13de94db6f02cc85056f73a44a375", "signature_algorithm": 1}
+{"t": 1792904671.703, "ev": "deviceauth_reply_sent", "peer": "192.168.2.2", "cert": "self-signed (not Google-signed)", "chain_len": 1, "sig_len": 256}
+{"t": 1792904673.607, "ev": "tls_established", "peer": "192.168.2.2", "port": 63109, "cipher": "TLS_AES_256_GCM_SHA384"}
+{"t": 1792904673.607, "ev": "deviceauth_message", "peer": "192.168.2.2", "kind": "challenge", "n_bytes": 22, "sender_nonce": "1b6ffdd41e962bba3b3c46cf8d8c4a7e", "signature_algorithm": 1}
+{"t": 1792904673.639, "ev": "deviceauth_reply_sent", "peer": "192.168.2.2", "cert": "self-signed (not Google-signed)", "chain_len": 1, "sig_len": 256}
+{"t": 1792904726.775, "ev": "tls_handshake_failed", "peer": "192.168.2.1", "error": "SSLError: [SSL: NO_SUITABLE_SIGNATURE_ALGORITHM] no suitable signature algorithm (_ssl.c:1029)"}
+{"t": 1792905264.196, "ev": "tls_established", "peer": "192.168.2.115", "port": 57862, "cipher": "TLS_AES_256_GCM_SHA384"}
+{"t": 1792905264.197, "ev": "deviceauth_message", "peer": "192.168.2.115", "kind": "challenge", "n_bytes": 22, "sender_nonce": "cf6bd8a5850919ddbab3b7f3048a473e", "signature_algorithm": 1}
+{"t": 1792905264.227, "ev": "deviceauth_reply_sent", "peer": "192.168.2.115", "cert": "self-signed (not Google-signed)", "chain_len": 1, "sig_len": 256}
+{"t": 1792905264.243, "ev": "tls_established", "peer": "192.168.2.115", "port": 57870, "cipher": "TLS_AES_256_GCM_SHA384"}
+{"t": 1792905264.244, "ev": "deviceauth_message", "peer": "192.168.2.115", "kind": "challenge", "n_bytes": 22, "sender_nonce": "cf6bd8a5850919ddbab3b7f3048a473e", "signature_algorithm": 1}
+{"t": 1792905264.275, "ev": "deviceauth_reply_sent", "peer": "192.168.2.115", "cert": "self-signed (not Google-signed)", "chain_len": 1, "sig_len": 256}
+{"t": 1792905266.009, "ev": "tls_established", "peer": "192.168.2.115", "port": 41062, "cipher": "TLS_AES_256_GCM_SHA384"}
+{"t": 1792905266.009, "ev": "deviceauth_message", "peer": "192.168.2.115", "kind": "challenge", "n_bytes": 22, "sender_nonce": "cf6bd8a5850919ddbab3b7f3048a473e", "signature_algorithm": 1}
+{"t": 1792905266.04, "ev": "deviceauth_reply_sent", "peer": "192.168.2.115", "cert": "self-signed (not Google-signed)", "chain_len": 1, "sig_len": 256}
+{"t": 1792905266.056, "ev": "tls_established", "peer": "192.168.2.115", "port": 41074, "cipher": "TLS_AES_256_GCM_SHA384"}
+{"t": 1792905266.057, "ev": "deviceauth_message", "peer": "192.168.2.115", "kind": "challenge", "n_bytes": 22, "sender_nonce": "cf6bd8a5850919ddbab3b7f3048a473e", "signature_algorithm": 1}
+{"t": 1792905266.087, "ev": "deviceauth_reply_sent", "peer": "192.168.2.115", "cert": "self-signed (not Google-signed)", "chain_len": 1, "sig_len": 256}
+{"t": 1792905266.187, "ev": "tls_established", "peer": "192.168.2.115", "port": 41082, "cipher": "TLS_AES_256_GCM_SHA384"}
+{"t": 1792905266.188, "ev": "deviceauth_message", "peer": "192.168.2.115", "kind": "challenge", "n_bytes": 22, "sender_nonce": "cf6bd8a5850919ddbab3b7f3048a473e", "signature_algorithm": 1}
+{"t": 1792905266.219, "ev": "deviceauth_reply_sent", "peer": "192.168.2.115", "cert": "self-signed (not Google-signed)", "chain_len": 1, "sig_len": 256}
+{"t": 1792905266.238, "ev": "tls_established", "peer": "192.168.2.115", "port": 41098, "cipher": "TLS_AES_256_GCM_SHA384"}
+{"t": 1792905266.238, "ev": "deviceauth_message", "peer": "192.168.2.115", "kind": "challenge", "n_bytes": 22, "sender_nonce": "cf6bd8a5850919ddbab3b7f3048a473e", "signature_algorithm": 1}
+{"t": 1792905266.269, "ev": "deviceauth_reply_sent", "peer": "192.168.2.115", "cert": "self-signed (not Google-signed)", "chain_len": 1, "sig_len": 256}
+{"t": 1792905266.981, "ev": "tls_established", "peer": "192.168.2.115", "port": 41112, "cipher": "TLS_AES_256_GCM_SHA384"}
+{"t": 1792905266.981, "ev": "deviceauth_message", "peer": "192.168.2.115", "kind": "challenge", "n_bytes": 22, "sender_nonce": "cf6bd8a5850919ddbab3b7f3048a473e", "signature_algorithm": 1}
+{"t": 1792905267.012, "ev": "deviceauth_reply_sent", "peer": "192.168.2.115", "cert": "self-signed (not Google-signed)", "chain_len": 1, "sig_len": 256}
+{"t": 1792905267.031, "ev": "tls_established", "peer": "192.168.2.115", "port": 41116, "cipher": "TLS_AES_256_GCM_SHA384"}
+{"t": 1792905267.032, "ev": "deviceauth_message", "peer": "192.168.2.115", "kind": "challenge", "n_bytes": 22, "sender_nonce": "cf6bd8a5850919ddbab3b7f3048a473e", "signature_algorithm": 1}
+{"t": 1792905267.062, "ev": "deviceauth_reply_sent", "peer": "192.168.2.115", "cert": "self-signed (not Google-signed)", "chain_len": 1, "sig_len": 256}
+{"t": 1792905274.849, "ev": "tls_established", "peer": "192.168.2.115", "port": 41118, "cipher": "TLS_AES_256_GCM_SHA384"}
+{"t": 1792905274.849, "ev": "deviceauth_message", "peer": "192.168.2.115", "kind": "challenge", "n_bytes": 22, "sender_nonce": "cf6bd8a5850919ddbab3b7f3048a473e", "signature_algorithm": 1}
+{"t": 1792905274.881, "ev": "deviceauth_reply_sent", "peer": "192.168.2.115", "cert": "self-signed (not Google-signed)", "chain_len": 1, "sig_len": 256}
+{"t": 1792905276.003, "ev": "tls_established", "peer": "192.168.2.115", "port": 47544, "cipher": "TLS_AES_256_GCM_SHA384"}
+{"t": 1792905276.003, "ev": "deviceauth_message", "peer": "192.168.2.115", "kind": "challenge", "n_bytes": 22, "sender_nonce": "cf6bd8a5850919ddbab3b7f3048a473e", "signature_algorithm": 1}
+{"t": 1792905276.034, "ev": "deviceauth_reply_sent", "peer": "192.168.2.115", "cert": "self-signed (not Google-signed)", "chain_len": 1, "sig_len": 256}
+{"t": 1792905281.096, "ev": "tls_established", "peer": "192.168.2.115", "port": 47548, "cipher": "TLS_AES_256_GCM_SHA384"}
+{"t": 1792905281.097, "ev": "deviceauth_message", "peer": "192.168.2.115", "kind": "challenge", "n_bytes": 22, "sender_nonce": "cf6bd8a5850919ddbab3b7f3048a473e", "signature_algorithm": 1}
+{"t": 1792905281.127, "ev": "deviceauth_reply_sent", "peer": "192.168.2.115", "cert": "self-signed (not Google-signed)", "chain_len": 1, "sig_len": 256}
+{"t": 1792905284.259, "ev": "tls_established", "peer": "192.168.2.115", "port": 47562, "cipher": "TLS_AES_256_GCM_SHA384"}
+{"t": 1792905284.259, "ev": "deviceauth_message", "peer": "192.168.2.115", "kind": "challenge", "n_bytes": 22, "sender_nonce": "cf6bd8a5850919ddbab3b7f3048a473e", "signature_algorithm": 1}
+{"t": 1792905284.29, "ev": "deviceauth_reply_sent", "peer": "192.168.2.115", "cert": "self-signed (not Google-signed)", "chain_len": 1, "sig_len": 256}
+{"t": 1792905286.855, "ev": "tls_established", "peer": "192.168.2.115", "port": 52498, "cipher": "TLS_AES_256_GCM_SHA384"}
+{"t": 1792905286.856, "ev": "deviceauth_message", "peer": "192.168.2.115", "kind": "challenge", "n_bytes": 22, "sender_nonce": "cf6bd8a5850919ddbab3b7f3048a473e", "signature_algorithm": 1}
+{"t": 1792905286.886, "ev": "deviceauth_reply_sent", "peer": "192.168.2.115", "cert": "self-signed (not Google-signed)", "chain_len": 1, "sig_len": 256}
+{"t": 1792905294.218, "ev": "tls_established", "peer": "192.168.2.115", "port": 52506, "cipher": "TLS_AES_256_GCM_SHA384"}
+{"t": 1792905294.218, "ev": "deviceauth_message", "peer": "192.168.2.115", "kind": "challenge", "n_bytes": 22, "sender_nonce": "cf6bd8a5850919ddbab3b7f3048a473e", "signature_algorithm": 1}
+{"t": 1792905294.249, "ev": "deviceauth_reply_sent", "peer": "192.168.2.115", "cert": "self-signed (not Google-signed)", "chain_len": 1, "sig_len": 256}

@@ -1,0 +1,230 @@
+{
+  "all_cases_expected": true,
+  "failures": [],
+  "drift_true_ms_per_min": 8.0,
+  "drift_measured_ms_per_min": 8.0,
+  "drift_sigma_ms_per_min": 0.3,
+  "drift_ok": true,
+  "cases": [
+    {
+      "case": "exact_0",
+      "true_ms": 0.0,
+      "measured_ms": 0.0,
+      "alias_candidates_ms": [
+        -3000.0,
+        -2000.0,
+        -1000.0,
+        0.0,
+        1000.0,
+        2000.0,
+        3000.0
+      ],
+      "verdict": "PASS \u2014 offset 0 ms (<= 150 ms), sigma 0 ms; alias family -3000..3000 ms",
+      "expectation": "must PASS and be accurate to 6 ms",
+      "drift_ms_per_min": 0.0,
+      "drift_sigma_ms_per_min": 0.0,
+      "stdev_ms": 0.0,
+      "suspected_bleed": 0,
+      "pairs": 60,
+      "ok": true
+    },
+    {
+      "case": "plus_37",
+      "true_ms": 37.0,
+      "measured_ms": 36.0,
+      "alias_candidates_ms": [
+        -2964.0,
+        -1964.0,
+        -964.0,
+        36.0,
+        1036.0,
+        2036.0,
+        3036.0
+      ],
+      "verdict": "PASS \u2014 offset 36 ms (<= 150 ms), sigma 0 ms; alias family -2964..3036 ms",
+      "expectation": "must PASS and be accurate to 6 ms",
+      "drift_ms_per_min": 0.0,
+      "drift_sigma_ms_per_min": 0.0,
+      "stdev_ms": 0.0,
+      "suspected_bleed": 0,
+      "pairs": 60,
+      "ok": true
+    },
+    {
+      "case": "plus_120",
+      "true_ms": 120.0,
+      "measured_ms": 120.0,
+      "alias_candidates_ms": [
+        -2880.0,
+        -1880.0,
+        -880.0,
+        120.0,
+        1120.0,
+        2120.0,
+        3120.0
+      ],
+      "verdict": "PASS \u2014 offset 120 ms (<= 150 ms), sigma 0 ms; alias family -2880..3120 ms",
+      "expectation": "must PASS and be accurate to 6 ms",
+      "drift_ms_per_min": -0.0,
+      "drift_sigma_ms_per_min": 0.0,
+      "stdev_ms": 0.0,
+      "suspected_bleed": 0,
+      "pairs": 60,
+      "ok": true
+    },
+    {
+      "case": "minus_85",
+      "true_ms": -85.0,
+      "measured_ms": -86.0,
+      "alias_candidates_ms": [
+        -3086.0,
+        -2086.0,
+        -1086.0,
+        -86.0,
+        914.0,
+        1914.0,
+        2914.0
+      ],
+      "verdict": "PASS \u2014 offset -86 ms (<= 150 ms), sigma 0 ms; alias family -3086..2914 ms",
+      "expectation": "must PASS and be accurate to 6 ms",
+      "drift_ms_per_min": 0.0,
+      "drift_sigma_ms_per_min": 0.0,
+      "stdev_ms": 0.0,
+      "suspected_bleed": 0,
+      "pairs": 60,
+      "ok": true
+    },
+    {
+      "case": "plus_400_inside_window",
+      "true_ms": 400.0,
+      "measured_ms": 400.0,
+      "alias_candidates_ms": [
+        -2600.0,
+        -1600.0,
+        -600.0,
+        400.0,
+        1400.0,
+        2400.0,
+        3400.0
+      ],
+      "verdict": "FAIL \u2014 offset 400 ms (> 150 ms)",
+      "expectation": "must measure 400 ms and fail the 150 ms threshold",
+      "drift_ms_per_min": -0.0,
+      "drift_sigma_ms_per_min": 0.0,
+      "stdev_ms": 0.0,
+      "suspected_bleed": 0,
+      "pairs": 59,
+      "ok": true
+    },
+    {
+      "case": "plus_600_alias_edge",
+      "true_ms": 600.0,
+      "measured_ms": -400.0,
+      "alias_candidates_ms": [
+        -3400.0,
+        -2400.0,
+        -1400.0,
+        -400.0,
+        600.0,
+        1600.0,
+        2600.0
+      ],
+      "verdict": "FAIL \u2014 offset -400 ms (> 150 ms)",
+      "expectation": "must not fold a >500 ms offset silently (alias family must contain truth)",
+      "drift_ms_per_min": 0.0,
+      "drift_sigma_ms_per_min": 0.0,
+      "stdev_ms": 0.0,
+      "suspected_bleed": 0,
+      "pairs": 59,
+      "ok": true
+    },
+    {
+      "case": "plus_900_alias",
+      "true_ms": 900.0,
+      "measured_ms": -100.0,
+      "alias_candidates_ms": [
+        -3100.0,
+        -2100.0,
+        -1100.0,
+        -100.0,
+        900.0,
+        1900.0,
+        2900.0
+      ],
+      "verdict": "PASS \u2014 offset -100 ms (<= 150 ms), sigma 0 ms; alias family -3100..2900 ms",
+      "expectation": "must not fold a >500 ms offset silently (alias family must contain truth)",
+      "drift_ms_per_min": -0.0,
+      "drift_sigma_ms_per_min": 0.0,
+      "stdev_ms": 0.0,
+      "suspected_bleed": 0,
+      "pairs": 59,
+      "ok": true
+    },
+    {
+      "case": "nonlinear_tv_2nd_harmonic",
+      "true_ms": 90.0,
+      "measured_ms": 90.0,
+      "alias_candidates_ms": [
+        -2910.0,
+        -1910.0,
+        -910.0,
+        90.0,
+        1090.0,
+        2090.0,
+        3090.0
+      ],
+      "verdict": "PASS \u2014 offset 90 ms (<= 150 ms), sigma 0 ms; alias family -2910..3090 ms",
+      "expectation": "must not be fooled by the 2nd harmonic",
+      "drift_ms_per_min": -0.0,
+      "drift_sigma_ms_per_min": 0.0,
+      "stdev_ms": 0.0,
+      "suspected_bleed": 0,
+      "pairs": 60,
+      "ok": true
+    },
+    {
+      "case": "music_bed_both_bands",
+      "true_ms": 60.0,
+      "measured_ms": 62.0,
+      "alias_candidates_ms": [
+        -2938.0,
+        -1938.0,
+        -938.0,
+        62.0,
+        1062.0,
+        2062.0,
+        3062.0
+      ],
+      "verdict": "PASS \u2014 offset 62 ms (<= 150 ms), sigma 1 ms; alias family -2938..3062 ms",
+      "expectation": "must still measure through a busy bed",
+      "drift_ms_per_min": -0.1,
+      "drift_sigma_ms_per_min": 0.4,
+      "stdev_ms": 1.0,
+      "suspected_bleed": 0,
+      "pairs": 60,
+      "ok": true
+    },
+    {
+      "case": "drift_8ms_per_min",
+      "true_ms": 60.0,
+      "measured_ms": 64.0,
+      "alias_candidates_ms": [
+        -2936.0,
+        -1936.0,
+        -936.0,
+        64.0,
+        1064.0,
+        2064.0,
+        3064.0
+      ],
+      "verdict": "PASS \u2014 offset 64 ms (<= 150 ms), sigma 2 ms; alias family -2936..3064 ms",
+      "expectation": "drift estimate present",
+      "drift_ms_per_min": 8.0,
+      "drift_sigma_ms_per_min": 0.3,
+      "stdev_ms": 2.4,
+      "suspected_bleed": 0,
+      "pairs": 60,
+      "ok": true
+    }
+  ]
+}

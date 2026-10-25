@@ -1,0 +1,79 @@
+{
+  "host": "127.0.0.1",
+  "port": 8009,
+  "steps": [
+    {
+      "t": 1792904488.378,
+      "step": "connected"
+    },
+    {
+      "t": 1792904488.438,
+      "step": "receiver_status",
+      "apps": 0,
+      "volume": {
+        "level": 1.0,
+        "muted": false
+      }
+    },
+    {
+      "t": 1792904488.458,
+      "step": "launched",
+      "app_id": "CC1AD845",
+      "app": "Default Media Receiver",
+      "transport": "abab0e94-de2c-4b7a-94e8-a200079fded8"
+    },
+    {
+      "t": 1792904488.679,
+      "step": "media_status_empty",
+      "status": [
+        {
+          "mediaSessionId": 1,
+          "playbackRate": 1.0,
+          "playerState": "IDLE",
+          "currentTime": 0.0,
+          "supportedMediaCommands": 274447,
+          "volume": {
+            "level": 1.0,
+            "muted": false
+          },
+          "media": {
+            "contentId": "",
+            "contentType": "audio/mp4",
+            "streamType": "BUFFERED",
+            "mediaCategory": "AUDIO"
+          }
+        }
+      ]
+    },
+    {
+      "t": 42.0,
+      "step": "loaded",
+      "state": "PLAYING"
+    },
+    {
+      "t": 1792904490.719,
+      "step": "playhead_advances",
+      "media_delta": 2.021,
+      "wall_delta": 2.021,
+      "ratio": 1.0002
+    },
+    {
+      "t": 300.32,
+      "step": "seeked",
+      "state": "PLAYING"
+    },
+    {
+      "t": 1792904492.521,
+      "step": "paused_frozen",
+      "state": "PAUSED",
+      "t_before": 300.341,
+      "t_after": 300.341,
+      "frozen": true
+    },
+    {
+      "t": 1792904492.601,
+      "step": "stopped",
+      "apps": 0
+    }
+  ]
+}

@@ -1,0 +1,255 @@
+[
+ {
+  "t": 1792939258.122,
+  "ev": "tv_before",
+  "app_id": "E8C28D3C",
+  "app": "Backdrop",
+  "volume": {
+   "controlType": "attenuation",
+   "level": 0.4000000059604645,
+   "muted": false,
+   "stepInterval": 0.05000000074505806
+  }
+ },
+ {
+  "t": 1792939258.142,
+  "ev": "group_before",
+  "app": [
+   null,
+   null,
+   null
+  ],
+  "volume": {
+   "controlType": "master",
+   "level": 0.2916647791862488,
+   "muted": false,
+   "stepInterval": 0.05000000074505806
+  }
+ },
+ {
+  "t": 1792939258.223,
+  "ev": "launched",
+  "app": "Default Media Receiver",
+  "transport": "2719e427-4573-44f3-a920-57e1f4a90a8c"
+ },
+ {
+  "t": 1792939258.363,
+  "ev": "load_reply",
+  "payload": {
+   "type": "MEDIA_STATUS",
+   "status": [
+    {
+     "mediaSessionId": 1,
+     "playbackRate": 1,
+     "playerState": "IDLE",
+     "currentTime": 0,
+     "supportedMediaCommands": 274447,
+     "volume": {
+      "level": 1,
+      "muted": false
+     },
+     "media": {
+      "contentId": "http://192.168.2.18:8099/group_video_test.mp4",
+      "contentType": "video/mp4",
+      "streamType": "BUFFERED",
+      "mediaCategory": "VIDEO"
+     },
+     "currentItemId": 1,
+     "extendedStatus": {
+      "playerState": "LOADING",
+      "media": {
+       "contentId": "http://192.168.2.18:8099/group_video_test.mp4",
+       "contentType": "video/mp4",
+       "streamType": "BUFFERED",
+       "mediaCategory": "VIDEO"
+      },
+      "mediaSessionId": 1
+     },
+     "repeatMode": "REPEAT_OFF"
+    }
+   ],
+   "requestId": 3
+  }
+ },
+ {
+  "t": 4.100154,
+  "ev": "group_media",
+  "state": "PLAYING",
+  "media": {
+   "contentId": "http://192.168.2.18:8099/group_video_test.mp4",
+   "contentType": "video/mp4",
+   "streamType": "BUFFERED",
+   "mediaCategory": "VIDEO",
+   "duration": 180,
+   "tracks": [
+    {
+     "trackId": 1,
+     "type": "VIDEO"
+    }
+   ],
+   "breakClips": [],
+   "breaks": []
+  },
+  "idle": null
+ },
+ {
+  "t": 9.111636,
+  "ev": "group_media",
+  "state": "PLAYING",
+  "media": null,
+  "idle": null
+ },
+ {
+  "t": 1792939268.561,
+  "ev": "tv_during",
+  "app_id": "705D30C6",
+  "app": "Default Media Receiver",
+  "volume": {
+   "controlType": "attenuation",
+   "level": 0.4000000059604645,
+   "muted": false,
+   "stepInterval": 0.05000000074505806
+  }
+ },
+ {
+  "t": 14.29662,
+  "ev": "group_media",
+  "state": "PLAYING",
+  "media": null,
+  "idle": null
+ },
+ {
+  "t": 19.311348,
+  "ev": "group_media",
+  "state": "PLAYING",
+  "media": null,
+  "idle": null
+ },
+ {
+  "t": 24.336138,
+  "ev": "group_media",
+  "state": "PLAYING",
+  "media": null,
+  "idle": null
+ },
+ {
+  "t": 29.352,
+  "ev": "group_media",
+  "state": "PLAYING",
+  "media": null,
+  "idle": null
+ },
+ {
+  "t": 1792939288.825,
+  "ev": "tv_during",
+  "app_id": "705D30C6",
+  "app": "Default Media Receiver",
+  "volume": {
+   "controlType": "attenuation",
+   "level": 0.4000000059604645,
+   "muted": false,
+   "stepInterval": 0.05000000074505806
+  }
+ },
+ {
+  "t": 34.56478,
+  "ev": "group_media",
+  "state": "PLAYING",
+  "media": null,
+  "idle": null
+ },
+ {
+  "t": 39.583929,
+  "ev": "group_media",
+  "state": "PLAYING",
+  "media": null,
+  "idle": null
+ },
+ {
+  "t": 44.59403,
+  "ev": "group_media",
+  "state": "PLAYING",
+  "media": null,
+  "idle": null
+ },
+ {
+  "t": 49.628255,
+  "ev": "group_media",
+  "state": "PLAYING",
+  "media": null,
+  "idle": null
+ },
+ {
+  "t": 54.643768,
+  "ev": "group_media",
+  "state": "PLAYING",
+  "media": null,
+  "idle": null
+ },
+ {
+  "t": 59.657671,
+  "ev": "group_media",
+  "state": "PLAYING",
+  "media": null,
+  "idle": null
+ },
+ {
+  "t": 64.677595,
+  "ev": "group_media",
+  "state": "PLAYING",
+  "media": null,
+  "idle": null
+ },
+ {
+  "t": 69.693767,
+  "ev": "group_media",
+  "state": "PLAYING",
+  "media": null,
+  "idle": null
+ },
+ {
+  "t": 74.732505,
+  "ev": "group_media",
+  "state": "PLAYING",
+  "media": null,
+  "idle": null
+ },
+ {
+  "t": 79.749239,
+  "ev": "group_media",
+  "state": "PLAYING",
+  "media": null,
+  "idle": null
+ },
+ {
+  "t": 84.759429,
+  "ev": "group_media",
+  "state": "PLAYING",
+  "media": null,
+  "idle": null
+ },
+ {
+  "t": 89.772445,
+  "ev": "group_media",
+  "state": "PLAYING",
+  "media": null,
+  "idle": null
+ },
+ {
+  "t": 1792939349.108,
+  "ev": "stopped",
+  "session": "2719e427-4573-44f3-a920-57e1f4a90a8c"
+ },
+ {
+  "t": 1792939351.608,
+  "ev": "tv_after",
+  "app_id": "E8C28D3C",
+  "app": "Backdrop",
+  "volume": {
+   "controlType": "attenuation",
+   "level": 0.4000000059604645,
+   "muted": false,
+   "stepInterval": 0.05000000074505806
+  }
+ }
+]

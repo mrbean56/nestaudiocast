@@ -1,0 +1,20 @@
+{
+  "processes": [
+    "virtual-receiver.pid pid=249266"
+  ],
+  "muted": {
+    "Cuisine Fenetre Vert": "muted",
+    "Cuisine Frigo Orange": "muted",
+    "Cuisine Frigo Jaune": "muted",
+    "Cuisine Meuble Bleu": "muted",
+    "Cuisine Meuble Rose": "muted",
+    "Groupe Tous": "muted",
+    "En Haut": "muted",
+    "Dehors": "muted"
+  },
+  "sessions": {
+    "Groupe Tous": "idle",
+    "En Haut": "idle",
+    "Dehors": "idle"
+  }
+}

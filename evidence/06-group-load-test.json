@@ -1,0 +1,387 @@
+{
+  "group": "192.168.2.61:32012",
+  "asset": "http://192.168.2.18:8099/sync_click.wav",
+  "steps": [
+    {
+      "t": 1792902916.4541724,
+      "step": "muted_kitchen",
+      "saved": {
+        "Cuisine Fenetre Vert": {
+          "host": "192.168.2.61",
+          "level": 0.0,
+          "muted": false
+        },
+        "Cuisine Frigo Orange": {
+          "host": "192.168.2.62",
+          "level": 0.550000011920929,
+          "muted": false
+        },
+        "Cuisine Frigo Jaune": {
+          "host": "192.168.2.63",
+          "level": 0.550000011920929,
+          "muted": false
+        },
+        "Cuisine Meuble Bleu": {
+          "host": "192.168.2.64",
+          "level": 0.08332952857017517,
+          "muted": false
+        },
+        "Cuisine Meuble Rose": {
+          "host": "192.168.2.65",
+          "level": 0.08332952857017517,
+          "muted": false
+        }
+      }
+    },
+    {
+      "t": 1792902916.5529914,
+      "step": "group_receiver_status",
+      "app": [
+        null,
+        null,
+        null
+      ],
+      "volume": {
+        "controlType": "master",
+        "level": 0.06904707849025726,
+        "muted": false,
+        "stepInterval": 0.05000000074505806
+      }
+    },
+    {
+      "t": 1792902917.9154456,
+      "step": "launch_dmr_ok",
+      "ms": 1362,
+      "payload": "RECEIVER_STATUS",
+      "app": [
+        {
+          "appId": "CC1AD845",
+          "appType": "WEB",
+          "displayName": "Default Media Receiver",
+          "iconUrl": "",
+          "isIdleScreen": false,
+          "launchedFromCloud": false,
+          "namespaces": [
+            {
+              "name": "urn:x-cast:com.google.cast.debugoverlay"
+            },
+            {
+              "name": "urn:x-cast:com.google.cast.cac"
+            },
+            {
+              "name": "urn:x-cast:com.google.cast.media"
+            }
+          ],
+          "senderConnected": false,
+          "sessionId": "dc119364-e2ff-49ce-8885-ec5dedb257e0",
+          "statusText": "Default Media Receiver",
+          "transportId": "dc119364-e2ff-49ce-8885-ec5dedb257e0",
+          "universalAppId": "CC1AD845"
+        }
+      ]
+    },
+    {
+      "t": 1792902917.9408538,
+      "step": "after_launch",
+      "app_id": "CC1AD845",
+      "app": "Default Media Receiver",
+      "transport": "dc119364-e2ff-49ce-8885-ec5dedb257e0"
+    },
+    {
+      "t": 1792902918.2663438,
+      "step": "load_ok",
+      "ms": 25,
+      "status": {
+        "mediaSessionId": 1,
+        "playbackRate": 1,
+        "playerState": "IDLE",
+        "currentTime": 0,
+        "supportedMediaCommands": 274447,
+        "volume": {
+          "level": 1,
+          "muted": false
+        },
+        "media": {
+          "contentId": "http://192.168.2.18:8099/sync_click.wav",
+          "contentType": "audio/wav",
+          "streamType": "BUFFERED",
+          "metadata": {
+            "metadataType": 0,
+            "title": "sync_click"
+          },
+          "mediaCategory": "AUDIO"
+        },
+        "currentItemId": 1,
+        "extendedStatus": {
+          "playerState": "LOADING",
+          "media": {
+            "contentId": "http://192.168.2.18:8099/sync_click.wav",
+            "contentType": "audio/wav",
+            "streamType": "BUFFERED",
+            "metadata": {
+              "metadataType": 0,
+              "title": "sync_click"
+            },
+            "mediaCategory": "AUDIO"
+          },
+          "mediaSessionId": 1
+        },
+        "repeatMode": "REPEAT_OFF"
+      }
+    },
+    {
+      "t": 1792902934.3910682,
+      "step": "group_samples",
+      "n": 30,
+      "first": {
+        "wall": 1792902918.5347,
+        "currentTime": 0,
+        "playerState": "PLAYING"
+      },
+      "last": {
+        "wall": 1792902933.891,
+        "currentTime": 14.988044,
+        "playerState": "PLAYING"
+      }
+    },
+    {
+      "t": 1792902935.155531,
+      "step": "membership",
+      "Cuisine Fenetre Vert": "Default Media Receiver",
+      "Cuisine Frigo Orange": "Default Media Receiver",
+      "Cuisine Frigo Jaune": "Default Media Receiver",
+      "Cuisine Meuble Bleu": "Default Media Receiver",
+      "Cuisine Meuble Rose": "Default Media Receiver"
+    },
+    {
+      "t": 1792902935.1758509,
+      "step": "stopped",
+      "ok": true
+    },
+    {
+      "t": 1792902936.1811416,
+      "step": "group_after_stop",
+      "app": [
+        null,
+        null,
+        null
+      ]
+    },
+    {
+      "t": 1792902937.0170007,
+      "step": "volumes_restored",
+      "n": 5
+    }
+  ],
+  "saved_volumes": {
+    "Cuisine Fenetre Vert": {
+      "host": "192.168.2.61",
+      "level": 0.0,
+      "muted": false
+    },
+    "Cuisine Frigo Orange": {
+      "host": "192.168.2.62",
+      "level": 0.550000011920929,
+      "muted": false
+    },
+    "Cuisine Frigo Jaune": {
+      "host": "192.168.2.63",
+      "level": 0.550000011920929,
+      "muted": false
+    },
+    "Cuisine Meuble Bleu": {
+      "host": "192.168.2.64",
+      "level": 0.08332952857017517,
+      "muted": false
+    },
+    "Cuisine Meuble Rose": {
+      "host": "192.168.2.65",
+      "level": 0.08332952857017517,
+      "muted": false
+    }
+  },
+  "group_samples": [
+    {
+      "wall": 1792902918.5347,
+      "currentTime": 0,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902919.485,
+      "currentTime": 0.255,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902920.0004,
+      "currentTime": 1.092874,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902920.5107,
+      "currentTime": 1.588629,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902921.0362,
+      "currentTime": 2.112618,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902921.5516,
+      "currentTime": 2.641025,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902922.0669,
+      "currentTime": 3.140877,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902922.5772,
+      "currentTime": 3.672645,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902923.0875,
+      "currentTime": 4.168059,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902923.6029,
+      "currentTime": 4.686356,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902924.1132,
+      "currentTime": 5.20459,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902924.6235,
+      "currentTime": 5.721159,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902925.1338,
+      "currentTime": 6.215383,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902925.6492,
+      "currentTime": 6.734745,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902926.1803,
+      "currentTime": 7.262532,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902926.6957,
+      "currentTime": 7.786402,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902927.211,
+      "currentTime": 8.30593,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902927.7264,
+      "currentTime": 8.802121,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902928.2472,
+      "currentTime": 9.324836,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902928.7626,
+      "currentTime": 9.846047,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902929.278,
+      "currentTime": 10.36829,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902929.7934,
+      "currentTime": 10.866274,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902930.3038,
+      "currentTime": 11.38717,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902930.8141,
+      "currentTime": 11.902444,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902931.3243,
+      "currentTime": 12.419465,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902931.8347,
+      "currentTime": 12.912655,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902932.3551,
+      "currentTime": 13.423671,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902932.8654,
+      "currentTime": 13.949516,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902933.3807,
+      "currentTime": 14.464898,
+      "playerState": "PLAYING"
+    },
+    {
+      "wall": 1792902933.891,
+      "currentTime": 14.988044,
+      "playerState": "PLAYING"
+    }
+  ],
+  "membership_after_load": {
+    "Cuisine Fenetre Vert": {
+      "app": "Default Media Receiver",
+      "app_id": "531A4F84",
+      "transport": null,
+      "same_session": false
+    },
+    "Cuisine Frigo Orange": {
+      "app": "Default Media Receiver",
+      "app_id": "705D30C6",
+      "transport": "728c524d-5dbd-43ec-b276-11b5cb84a4fd",
+      "same_session": false
+    },
+    "Cuisine Frigo Jaune": {
+      "app": "Default Media Receiver",
+      "app_id": "705D30C6",
+      "transport": "1f011d0c-6769-46a2-9261-0befa6714a03",
+      "same_session": false
+    },
+    "Cuisine Meuble Bleu": {
+      "app": "Default Media Receiver",
+      "app_id": "705D30C6",
+      "transport": "494b27a4-cb07-4b87-9281-d66d26ab859a",
+      "same_session": false
+    },
+    "Cuisine Meuble Rose": {
+      "app": "Default Media Receiver",
+      "app_id": "705D30C6",
+      "transport": "5400c5a3-f98b-4ba5-97c7-5e97e5da923b",
+      "same_session": false
+    }
+  }
+}

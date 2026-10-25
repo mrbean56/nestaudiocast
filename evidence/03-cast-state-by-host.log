@@ -1,0 +1,17 @@
+
+=== tv  (192.168.2.80:8009)
+  !! UnboundLocalError: cannot access local variable 'host' where it is not associated with a value
+
+=== nest_cuisine_fenetre_vert  (192.168.2.61:8009)
+  !! UnboundLocalError: cannot access local variable 'host' where it is not associated with a value
+
+=== group_tous  (192.168.2.61:32012)
+  !! RequestTimeout: Execution of wait timed out after 15 s.
+
+=== group_en_haut  (192.168.2.61:32132)
+  !! RequestTimeout: Execution of wait timed out after 15 s.
+
+=== group_dehors  (192.168.2.81:32049)
+  !! RequestTimeout: Execution of wait timed out after 15 s.
+
+saved evidence/03-cast-state-by-host.json

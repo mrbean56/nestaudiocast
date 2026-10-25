@@ -1,0 +1,12 @@
+[00:35:16] muted_kitchen: {"saved": {"Cuisine Fenetre Vert": {"host": "192.168.2.61", "level": 0.0, "muted": false}, "Cuisine Frigo Orange": {"host": "192.168.2.62", "level": 0.550000011920929, "muted": false}, "Cuisine Frigo Jaune": {"host": "192.168.2.63", "level": 0.550000011920929, "muted": false}, "Cuisine Meuble Bleu": {"host": "192.168.2.64", "level": 0.08332952857017517, "muted": false}, "Cuisine Meuble Rose": {"ho
+[00:35:16] group_receiver_status: {"app": [null, null, null], "volume": {"controlType": "master", "level": 0.06904707849025726, "muted": false, "stepInterval": 0.05000000074505806}}
+[00:35:17] launch_dmr_ok: {"ms": 1362, "payload": "RECEIVER_STATUS", "app": [{"appId": "CC1AD845", "appType": "WEB", "displayName": "Default Media Receiver", "iconUrl": "", "isIdleScreen": false, "launchedFromCloud": false, "namespaces": [{"name": "urn:x-cast:com.google.cast.debugoverlay"}, {"name": "urn:x-cast:com.google.cast.cac"}, {"name": "urn:x-cast:com.google.cast.media"}], "senderConnected": false, "sessionId": "dc1
+[00:35:17] after_launch: {"app_id": "CC1AD845", "app": "Default Media Receiver", "transport": "dc119364-e2ff-49ce-8885-ec5dedb257e0"}
+[00:35:18] load_ok: {"ms": 25, "status": {"mediaSessionId": 1, "playbackRate": 1, "playerState": "IDLE", "currentTime": 0, "supportedMediaCommands": 274447, "volume": {"level": 1, "muted": false}, "media": {"contentId": "http://192.168.2.18:8099/sync_click.wav", "contentType": "audio/wav", "streamType": "BUFFERED", "metadata": {"metadataType": 0, "title": "sync_click"}, "mediaCategory": "AUDIO"}, "currentItemId": 1, 
+[00:35:34] group_samples: {"n": 30, "first": {"wall": 1792902918.5347, "currentTime": 0, "playerState": "PLAYING"}, "last": {"wall": 1792902933.891, "currentTime": 14.988044, "playerState": "PLAYING"}}
+[00:35:35] membership: {"Cuisine Fenetre Vert": "Default Media Receiver", "Cuisine Frigo Orange": "Default Media Receiver", "Cuisine Frigo Jaune": "Default Media Receiver", "Cuisine Meuble Bleu": "Default Media Receiver", "Cuisine Meuble Rose": "Default Media Receiver"}
+[00:35:35] stopped: {"ok": true}
+[00:35:36] group_after_stop: {"app": [null, null, null]}
+[00:35:37] volumes_restored: {"n": 5}
+
+saved evidence/06-group-load-test.json

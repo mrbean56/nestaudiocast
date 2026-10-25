@@ -1,0 +1,170 @@
+{
+ "samples": 1123,
+ "in_sync": 1119,
+ "actions": {
+  "settling": 30,
+  "in_sync": 1119,
+  "realign": 4
+ },
+ "stretches": [
+  {
+   "content": "QzomK1fdSUg",
+   "start": 1792940938.9432,
+   "dur_s": 31.6,
+   "n": 84,
+   "mean_ms": -55.1,
+   "std_ms": 74.1,
+   "p95_abs_ms": 128.9,
+   "max_abs_ms": 214.2,
+   "drift_ms_per_10min": -3255.7,
+   "drift_sigma_ms_per_10min": 449.1,
+   "per_minute": [
+    [
+     0,
+     -55.1,
+     74.1
+    ]
+   ]
+  },
+  {
+   "content": "QzomK1fdSUg",
+   "start": 1792940979.4432,
+   "dur_s": 343.8,
+   "n": 1035,
+   "mean_ms": -1.4,
+   "std_ms": 12.3,
+   "p95_abs_ms": 17.5,
+   "max_abs_ms": 143.3,
+   "drift_ms_per_10min": 16.7,
+   "drift_sigma_ms_per_10min": 2.3,
+   "per_minute": [
+    [
+     0,
+     -1.8,
+     23.4
+    ],
+    [
+     1,
+     -4.7,
+     7.0
+    ],
+    [
+     2,
+     -4.6,
+     8.6
+    ],
+    [
+     3,
+     -1.7,
+     8.0
+    ],
+    [
+     4,
+     1.3,
+     6.7
+    ],
+    [
+     5,
+     4.6,
+     8.8
+    ]
+   ]
+  }
+ ],
+ "recovery": [
+  {
+   "rel": 12.4,
+   "action": [
+    "play",
+    "QzomK1fdSUg"
+   ],
+   "back_in_sync_s": 134.9
+  },
+  {
+   "rel": 21.1,
+   "action": [
+    "queue",
+    "K0uxjdcZWyk"
+   ],
+   "back_in_sync_s": 126.2
+  },
+  {
+   "rel": 72.8,
+   "action": [
+    "pause"
+   ],
+   "back_in_sync_s": 74.6
+  },
+  {
+   "rel": 87.5,
+   "action": [
+    "resume"
+   ],
+   "back_in_sync_s": 59.9
+  },
+  {
+   "rel": 132.8,
+   "action": [
+    "seek",
+    "250"
+   ],
+   "back_in_sync_s": 14.6
+  },
+  {
+   "rel": 170.5,
+   "action": "tv_volume",
+   "back_in_sync_s": 0.2
+  },
+  {
+   "rel": 185.5,
+   "action": "tv_volume",
+   "back_in_sync_s": 0.1
+  },
+  {
+   "rel": 202.4,
+   "action": "kitchen_volume",
+   "back_in_sync_s": 0.1
+  },
+  {
+   "rel": 217.2,
+   "action": "kitchen_volume",
+   "back_in_sync_s": 0.1
+  },
+  {
+   "rel": 1151.6,
+   "action": [
+    "status"
+   ],
+   "back_in_sync_s": null
+  },
+  {
+   "rel": 1154.3,
+   "action": [
+    "stop"
+   ],
+   "back_in_sync_s": null
+  },
+  {
+   "rel": 1184.7,
+   "action": [
+    "play",
+    "QzomK1fdSUg"
+   ],
+   "back_in_sync_s": null
+  },
+  {
+   "rel": 1241.7,
+   "action": [
+    "status"
+   ],
+   "back_in_sync_s": null
+  },
+  {
+   "rel": 1244.5,
+   "action": [
+    "stop"
+   ],
+   "back_in_sync_s": null
+  }
+ ]
+}

@@ -1,0 +1,146 @@
+{
+ "samples": 2130,
+ "in_sync": 2120,
+ "actions": {
+  "settling": 50,
+  "realign": 8,
+  "in_sync": 2120,
+  "outlier_ignored": 2
+ },
+ "stretches": [
+  {
+   "content": "dQw4w9WgXcQ",
+   "start": 1792943555.07,
+   "dur_s": 105.1,
+   "n": 321,
+   "mean_ms": -109.2,
+   "std_ms": 7.3,
+   "p95_abs_ms": 121.0,
+   "max_abs_ms": 123.9,
+   "drift_ms_per_10min": 40.7,
+   "drift_sigma_ms_per_10min": 7.7,
+   "per_minute": [
+    [
+     0,
+     -111.1,
+     6.4
+    ],
+    [
+     1,
+     -106.6,
+     7.6
+    ]
+   ]
+  },
+  {
+   "content": "QzomK1fdSUg",
+   "start": 1792943705.0212,
+   "dur_s": 593.5,
+   "n": 1799,
+   "mean_ms": 28.4,
+   "std_ms": 12.9,
+   "p95_abs_ms": 43.3,
+   "max_abs_ms": 99.1,
+   "drift_ms_per_10min": 0.8,
+   "drift_sigma_ms_per_10min": 1.1,
+   "per_minute": [
+    [
+     0,
+     32.2,
+     18.9
+    ],
+    [
+     1,
+     31.2,
+     6.1
+    ],
+    [
+     2,
+     20.1,
+     23.9
+    ],
+    [
+     3,
+     27.7,
+     7.5
+    ],
+    [
+     4,
+     28.6,
+     6.0
+    ],
+    [
+     5,
+     30.0,
+     6.3
+    ],
+    [
+     6,
+     28.8,
+     5.5
+    ],
+    [
+     7,
+     25.0,
+     16.0
+    ],
+    [
+     8,
+     29.4,
+     11.7
+    ],
+    [
+     9,
+     31.3,
+     8.5
+    ]
+   ]
+  }
+ ],
+ "recovery": [
+  {
+   "rel": 12.9,
+   "action": [
+    "play",
+    "dQw4w9WgXcQ"
+   ],
+   "back_in_sync_s": 272.4
+  },
+  {
+   "rel": 21.7,
+   "action": [
+    "queue",
+    "QzomK1fdSUg"
+   ],
+   "back_in_sync_s": 263.6
+  },
+  {
+   "rel": 301.9,
+   "action": [
+    "status"
+   ],
+   "back_in_sync_s": 0.2
+  },
+  {
+   "rel": 602.0,
+   "action": [
+    "status"
+   ],
+   "back_in_sync_s": 0.1
+  },
+  {
+   "rel": 901.5,
+   "action": [
+    "status"
+   ],
+   "back_in_sync_s": null
+  },
+  {
+   "rel": 992.8,
+   "action": [
+    "stop"
+   ],
+   "back_in_sync_s": null
+  }
+ ]
+}

@@ -1,0 +1,35 @@
+{
+  "host": "192.168.2.61",
+  "trials": [
+    {
+      "format": "wav",
+      "load_response_ms": 40.3,
+      "state_at_load": "IDLE",
+      "reported_t_at_load": 0,
+      "time_to_playing_s": 0.542,
+      "t_when_first_seen_moving": 60.272,
+      "seek_err_ms": [
+        67.9,
+        41.9,
+        70.8,
+        14.9
+      ],
+      "seek_err_std_ms": 26.1
+    },
+    {
+      "format": "m4a",
+      "load_response_ms": 261.1,
+      "state_at_load": "PLAYING",
+      "reported_t_at_load": 60,
+      "time_to_playing_s": 0.612,
+      "t_when_first_seen_moving": 60.186,
+      "seek_err_ms": [
+        -27.3,
+        -19.8,
+        -28.1,
+        68.7
+      ],
+      "seek_err_std_ms": 47.0
+    }
+  ]
+}

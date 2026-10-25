@@ -1,0 +1,12 @@
+{"wall": 1792946907.672, "rel": 0.7, "ev": "volumes_saved", "kitchen": {"Cuisine Fenetre Vert": 0.08332952857017517, "Cuisine Frigo Orange": 0.550000011920929, "Cuisine Frigo Jaune": 0.550000011920929, "Cuisine Meuble Bleu": 0.08332952857017517, "Cuisine Meuble Rose": 0.08332952857017517}, "tv": 0.4000000059604645}
+{"wall": 1792946909.948, "rel": 3.0, "ev": "kitchen_lowered", "level": 0.05}
+{"wall": 1792946919.827, "rel": 12.9, "ev": "tv_cmd", "args": ["play", "K0uxjdcZWyk"], "out": "{\"ok\": \"play\", \"videos\": [\"K0uxjdcZWyk\"]}", "rc": 0}
+{"wall": 1792946920.266, "rel": 13.3, "ev": "tv_lowered", "level": 0.15}
+{"wall": 1792946949.71, "rel": 42.8, "ev": "tv_cmd", "args": ["seek", "100"], "out": "{\"ok\": \"seek\", \"to\": 100.0}", "rc": 0}
+{"wall": 1792946999.66, "rel": 92.7, "ev": "tv_cmd", "args": ["seek", "300"], "out": "{\"ok\": \"seek\", \"to\": 300.0}", "rc": 0}
+{"wall": 1792947049.466, "rel": 142.5, "ev": "tv_cmd", "args": ["seek", "200"], "out": "{\"ok\": \"seek\", \"to\": 200.0}", "rc": 0}
+{"wall": 1792947099.533, "rel": 192.6, "ev": "tv_cmd", "args": ["seek", "450"], "out": "{\"ok\": \"seek\", \"to\": 450.0}", "rc": 0}
+{"wall": 1792947150.19, "rel": 243.3, "ev": "tv_cmd", "args": ["seek", "50"], "out": "{\"ok\": \"seek\", \"to\": 50.0}", "rc": 0}
+{"wall": 1792947199.723, "rel": 292.8, "ev": "tv_cmd", "args": ["seek", "350"], "out": "{\"ok\": \"seek\", \"to\": 350.0}", "rc": 0}
+{"wall": 1792947259.882, "rel": 353.0, "ev": "tv_cmd", "args": ["stop"], "out": "{\"ok\": \"stop\"}", "rc": 0}
+{"wall": 1792947270.535, "rel": 363.6, "ev": "volumes_restored", "kitchen": {"Cuisine Fenetre Vert": 0.0833, "Cuisine Frigo Orange": 0.55, "Cuisine Frigo Jaune": 0.55, "Cuisine Meuble Bleu": 0.0833, "Cuisine Meuble Rose": 0.0833}, "tv": 0.4000000059604645}

@@ -1,0 +1,32 @@
+[
+  {
+    "label": "tv",
+    "host": "192.168.2.80",
+    "port": 8009,
+    "error": "UnboundLocalError: cannot access local variable 'host' where it is not associated with a value"
+  },
+  {
+    "label": "nest_cuisine_fenetre_vert",
+    "host": "192.168.2.61",
+    "port": 8009,
+    "error": "UnboundLocalError: cannot access local variable 'host' where it is not associated with a value"
+  },
+  {
+    "label": "group_tous",
+    "host": "192.168.2.61",
+    "port": 32012,
+    "error": "RequestTimeout: Execution of wait timed out after 15 s."
+  },
+  {
+    "label": "group_en_haut",
+    "host": "192.168.2.61",
+    "port": 32132,
+    "error": "RequestTimeout: Execution of wait timed out after 15 s."
+  },
+  {
+    "label": "group_dehors",
+    "host": "192.168.2.81",
+    "port": 32049,
+    "error": "RequestTimeout: Execution of wait timed out after 15 s."
+  }
+]

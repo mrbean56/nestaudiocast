@@ -1,0 +1,291 @@
+{
+  "asset": "http://192.168.2.18:8099/yt/aqz-KE-bpKQ.m4a",
+  "groups": {
+    "Groupe Tous": {
+      "endpoint": "192.168.2.61:32012",
+      "transport": "ef8841d9-8ff1-451a-9e58-7a4004f723e9",
+      "members": [],
+      "detail": {
+        "Cuisine Fenetre Vert": {
+          "app": "Default Media Receiver",
+          "app_id": "531A4F84",
+          "member": false
+        },
+        "Cuisine Frigo Orange": {
+          "app": "Default Media Receiver",
+          "app_id": "705D30C6",
+          "member": false
+        },
+        "Cuisine Frigo Jaune": {
+          "app": "Default Media Receiver",
+          "app_id": "705D30C6",
+          "member": false
+        },
+        "Cuisine Meuble Bleu": {
+          "app": "Default Media Receiver",
+          "app_id": "705D30C6",
+          "member": false
+        },
+        "Cuisine Meuble Rose": {
+          "app": "Default Media Receiver",
+          "app_id": "705D30C6",
+          "member": false
+        },
+        "Salon Orange (Nest Hub)": {
+          "app": null,
+          "app_id": null,
+          "member": false
+        },
+        "Salon Jaune (Nest Hub)": {
+          "app": null,
+          "app_id": null,
+          "member": false
+        },
+        "Chromecast Salon (TV)": {
+          "app": "Default Media Receiver",
+          "app_id": "705D30C6",
+          "member": false
+        },
+        "Chromecast Sous-Sol Ultra": {
+          "app": "Default Media Receiver",
+          "app_id": "705D30C6",
+          "member": false
+        },
+        "Chromecast Chambre SS (Hub)": {
+          "error": "[Errno 32] Broken pipe"
+        },
+        "Chambre Maitre Orange (Hub)": {
+          "app": null,
+          "app_id": null,
+          "member": false
+        },
+        "Basement TV": {
+          "app": "Backdrop",
+          "app_id": "E8C28D3C",
+          "member": false
+        },
+        "TV Chambre principale (HD)": {
+          "app": null,
+          "app_id": null,
+          "member": false
+        }
+      }
+    },
+    "En Haut": {
+      "endpoint": "192.168.2.61:32132",
+      "transport": "0f9958fd-2eee-4e4f-aa5a-e0481b460fc2",
+      "members": [],
+      "detail": {
+        "Cuisine Fenetre Vert": {
+          "app": "Default Media Receiver",
+          "app_id": "531A4F84",
+          "member": false
+        },
+        "Cuisine Frigo Orange": {
+          "app": "Default Media Receiver",
+          "app_id": "705D30C6",
+          "member": false
+        },
+        "Cuisine Frigo Jaune": {
+          "app": "Default Media Receiver",
+          "app_id": "705D30C6",
+          "member": false
+        },
+        "Cuisine Meuble Bleu": {
+          "app": "Default Media Receiver",
+          "app_id": "705D30C6",
+          "member": false
+        },
+        "Cuisine Meuble Rose": {
+          "app": "Default Media Receiver",
+          "app_id": "705D30C6",
+          "member": false
+        },
+        "Salon Orange (Nest Hub)": {
+          "app": null,
+          "app_id": null,
+          "member": false
+        },
+        "Salon Jaune (Nest Hub)": {
+          "app": null,
+          "app_id": null,
+          "member": false
+        },
+        "Chromecast Salon (TV)": {
+          "app": "Default Media Receiver",
+          "app_id": "705D30C6",
+          "member": false
+        },
+        "Chromecast Sous-Sol Ultra": {
+          "app": "Backdrop",
+          "app_id": "E8C28D3C",
+          "member": false
+        },
+        "Chromecast Chambre SS (Hub)": {
+          "error": "connect to 192.168.2.119:8009 failed: OSError: [Errno 113] N"
+        },
+        "Chambre Maitre Orange (Hub)": {
+          "app": null,
+          "app_id": null,
+          "member": false
+        },
+        "Basement TV": {
+          "app": "Backdrop",
+          "app_id": "E8C28D3C",
+          "member": false
+        },
+        "TV Chambre principale (HD)": {
+          "app": null,
+          "app_id": null,
+          "member": false
+        }
+      }
+    },
+    "Dehors": {
+      "endpoint": "192.168.2.81:32049",
+      "transport": "ae0e5a29-a038-49cb-9d3a-0184c49df5b1",
+      "members": [],
+      "detail": {
+        "Cuisine Fenetre Vert": {
+          "app": null,
+          "app_id": null,
+          "member": false
+        },
+        "Cuisine Frigo Orange": {
+          "app": null,
+          "app_id": null,
+          "member": false
+        },
+        "Cuisine Frigo Jaune": {
+          "app": null,
+          "app_id": null,
+          "member": false
+        },
+        "Cuisine Meuble Bleu": {
+          "app": null,
+          "app_id": null,
+          "member": false
+        },
+        "Cuisine Meuble Rose": {
+          "app": null,
+          "app_id": null,
+          "member": false
+        },
+        "Salon Orange (Nest Hub)": {
+          "app": null,
+          "app_id": null,
+          "member": false
+        },
+        "Salon Jaune (Nest Hub)": {
+          "app": null,
+          "app_id": null,
+          "member": false
+        },
+        "Chromecast Salon (TV)": {
+          "app": "Default Media Receiver",
+          "app_id": "705D30C6",
+          "member": false
+        },
+        "Chromecast Sous-Sol Ultra": {
+          "app": "Default Media Receiver",
+          "app_id": "531A4F84",
+          "member": false
+        },
+        "Chromecast Chambre SS (Hub)": {
+          "error": "[Errno 32] Broken pipe"
+        },
+        "Chambre Maitre Orange (Hub)": {
+          "app": null,
+          "app_id": null,
+          "member": false
+        },
+        "Basement TV": {
+          "app": "Backdrop",
+          "app_id": "E8C28D3C",
+          "member": false
+        },
+        "TV Chambre principale (HD)": {
+          "app": null,
+          "app_id": null,
+          "member": false
+        }
+      }
+    }
+  },
+  "seek": [
+    {
+      "dest": 120.0,
+      "t": 120.529751,
+      "expected": 121.046,
+      "err_ms": -516.1,
+      "state": "PLAYING"
+    },
+    {
+      "dest": 300.0,
+      "t": 300.487243,
+      "expected": 301.071,
+      "err_ms": -583.8,
+      "state": "PLAYING"
+    },
+    {
+      "dest": 45.5,
+      "t": 46.112126,
+      "expected": 46.546,
+      "err_ms": -433.6,
+      "state": "PLAYING"
+    },
+    {
+      "dest": 600.0,
+      "t": 600.515742,
+      "expected": 601.076,
+      "err_ms": -560.4,
+      "state": "PLAYING"
+    },
+    {
+      "dest": 90.0,
+      "t": 90.625877,
+      "expected": 91.056,
+      "err_ms": -430.2,
+      "state": "PLAYING"
+    },
+    {
+      "dest": 200.0,
+      "t": 200.646137,
+      "expected": 201.056,
+      "err_ms": -409.8,
+      "state": "PLAYING"
+    },
+    {
+      "dest": 30.0,
+      "t": 30.483728,
+      "expected": 31.081,
+      "err_ms": -597.4,
+      "state": "PLAYING"
+    },
+    {
+      "dest": 45.0,
+      "t": 45.556999,
+      "expected": 46.081,
+      "err_ms": -524.1,
+      "state": "PLAYING"
+    }
+  ],
+  "rate": {
+    "1.005": {
+      "ok": true,
+      "rate": 1.005,
+      "state": "PLAYING"
+    },
+    "0.995": {
+      "ok": true,
+      "rate": 0.995,
+      "state": "PLAYING"
+    },
+    "1.0": {
+      "ok": true,
+      "rate": 1,
+      "state": "PLAYING"
+    },
+    "measured_ratio_at_1.005": 1.004132
+  }
+}

@@ -1,0 +1,6 @@
+Cuisine Fenetre Vert     192.168.2.61   {"app": null, "app_id": null, "volume": 0.08332952857017517, "muted": false}
+Cuisine Frigo Orange     192.168.2.62   {"app": null, "app_id": null, "volume": 0.550000011920929, "muted": false}
+Cuisine Frigo Jaune      192.168.2.63   {"app": "Spotify", "app_id": "CC32E753", "volume": 0.550000011920929, "muted": false, "state": null, "t": null, "content": ""}
+Cuisine Meuble Bleu      192.168.2.64   {"app": null, "app_id": null, "volume": 0.08332952857017517, "muted": false}
+Cuisine Meuble Rose      192.168.2.65   {"app": null, "app_id": null, "volume": 0.08332952857017517, "muted": false}
+TV Salon (Chromecast)    192.168.2.80   {"app": "YouTube", "app_id": "233637DE", "volume": 0.4000000059604645, "muted": false, "state": "PLAYING", "t": 1675.659, "content": "VyNgbQKORiA"}

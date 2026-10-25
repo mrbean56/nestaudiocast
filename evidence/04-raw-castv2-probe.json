@@ -1,0 +1,161 @@
+[
+  {
+    "host": "192.168.2.80",
+    "port": 8009,
+    "connect_ms": 105.2,
+    "receiver_status_ms": 25.3,
+    "app_id": "233637DE",
+    "app_name": "YouTube",
+    "transport_id": "867dedc1-d8fa-4021-b5ec-4df7c887696b",
+    "volume": {
+      "controlType": "attenuation",
+      "level": 0.4000000059604645,
+      "muted": false,
+      "stepInterval": 0.05000000074505806
+    },
+    "applications": [
+      {
+        "appId": "233637DE",
+        "appType": "WEB",
+        "displayName": "YouTube",
+        "iconUrl": "https://lh3.googleusercontent.com/fYXhG7TGRR7Kz9Teq7NVeDCWSjE-WzTMaN69EfXJCEHvTMxxCC8SdopLZEM27uhBHc4MlRypmDPH03ySJw",
+        "isIdleScreen": false,
+        "launchedFromCloud": false,
+        "namespaces": [
+          {
+            "name": "urn:x-cast:com.google.cast.debugoverlay"
+          },
+          {
+            "name": "urn:x-cast:com.google.cast.cac"
+          },
+          {
+            "name": "urn:x-cast:com.google.youtube.mdx"
+          },
+          {
+            "name": "urn:x-cast:com.google.cast.media"
+          }
+        ],
+        "sessionId": "867dedc1-d8fa-4021-b5ec-4df7c887696b",
+        "statusText": "YouTube",
+        "transportId": "867dedc1-d8fa-4021-b5ec-4df7c887696b",
+        "universalAppId": "233637DE"
+      }
+    ],
+    "media_error": "timeout waiting for urn:x-cast:com.google.cast.media reply to GET_STATUS on 192.168.2.80:8009",
+    "label": "tv_chromecast_salon"
+  },
+  {
+    "host": "192.168.2.61",
+    "port": 8009,
+    "connect_ms": 21.2,
+    "receiver_status_ms": 75.9,
+    "app_id": null,
+    "app_name": null,
+    "transport_id": null,
+    "volume": {
+      "controlType": "master",
+      "level": 0.08332952857017517,
+      "muted": false,
+      "stepInterval": 0.019999999552965164
+    },
+    "applications": null,
+    "label": "nest_fenetre_vert"
+  },
+  {
+    "host": "192.168.2.61",
+    "port": 32012,
+    "connect_ms": 22.2,
+    "receiver_status_ms": 91.1,
+    "app_id": null,
+    "app_name": null,
+    "transport_id": null,
+    "volume": {
+      "controlType": "master",
+      "level": 0.2619026005268097,
+      "muted": false,
+      "stepInterval": 0.05000000074505806
+    },
+    "applications": null,
+    "label": "group_tous"
+  },
+  {
+    "host": "192.168.2.61",
+    "port": 32132,
+    "connect_ms": 20.0,
+    "receiver_status_ms": 70.9,
+    "app_id": null,
+    "app_name": null,
+    "transport_id": null,
+    "volume": {
+      "controlType": "master",
+      "level": 0.2916647791862488,
+      "muted": false,
+      "stepInterval": 0.05000000074505806
+    },
+    "applications": null,
+    "label": "group_en_haut"
+  },
+  {
+    "host": "192.168.2.81",
+    "port": 32049,
+    "connect_ms": 126.0,
+    "receiver_status_ms": 45.5,
+    "app_id": null,
+    "app_name": null,
+    "transport_id": null,
+    "volume": {
+      "controlType": "master",
+      "level": 0.24166476726531982,
+      "muted": false,
+      "stepInterval": 0.05000000074505806
+    },
+    "applications": null,
+    "label": "group_dehors"
+  },
+  {
+    "host": "192.168.2.63",
+    "port": 8009,
+    "connect_ms": 21.0,
+    "receiver_status_ms": 15.2,
+    "app_id": "CC32E753",
+    "app_name": "Spotify",
+    "transport_id": "4b320cbd-a704-4510-a437-89bff2674fb9",
+    "volume": {
+      "controlType": "master",
+      "level": 0.550000011920929,
+      "muted": false,
+      "stepInterval": 0.019999999552965164
+    },
+    "applications": [
+      {
+        "appId": "CC32E753",
+        "appType": "WEB",
+        "displayName": "Spotify",
+        "iconUrl": "https://lh3.googleusercontent.com/oodettwQnQA4LTRxkeyqf93S8J6gbWu9r8DPsiVsDoiTffNV2xhiSeNnFCQ8zh5I4xGaAH_xyLzLx3E6",
+        "isIdleScreen": false,
+        "launchedFromCloud": true,
+        "namespaces": [
+          {
+            "name": "urn:x-cast:com.google.cast.debugoverlay"
+          },
+          {
+            "name": "urn:x-cast:com.google.cast.cac"
+          },
+          {
+            "name": "urn:x-cast:com.spotify.chromecast.secure.v1"
+          },
+          {
+            "name": "urn:x-cast:com.google.cast.media"
+          }
+        ],
+        "senderConnected": false,
+        "sessionId": "4b320cbd-a704-4510-a437-89bff2674fb9",
+        "statusText": "Spotify",
+        "transportId": "4b320cbd-a704-4510-a437-89bff2674fb9",
+        "universalAppId": "CC32E753"
+      }
+    ],
+    "media_error": "timeout waiting for urn:x-cast:com.google.cast.media reply to GET_STATUS on 192.168.2.63:8009",
+    "label": "nest_frigo_jaune"
+  }
+]

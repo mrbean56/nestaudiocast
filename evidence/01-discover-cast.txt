@@ -1,0 +1,98 @@
+16 Cast device(s) seen
+
+- Basement TV  [Chromecast]
+    addr   : 192.168.2.128:8009
+    id     : c7c0742197c8a8f362ca13033f3dde17
+    group  : (standalone)   caps=201221  status=
+    proto  : 05
+    service: Chromecast-c7c0742197c8a8f362ca13033f3dde17._googlecast._tcp.local.
+- Chambre Maître Orange  [Google Nest Hub]
+    addr   : 192.168.2.120, fe80::587a:4969:9f4b:2d57:8009
+    id     : 48838821110c15c28e454016f54265a2
+    group  : (standalone)   caps=231941  status=
+    proto  : 05
+    service: Google-Nest-Hub-48838821110c15c28e454016f54265a2._googlecast._tcp.local.
+- Chromecast Chambre SS  [Google Nest Hub]
+    addr   : 192.168.2.119, fe80::bc74:b569:27f0:8af7:8009
+    id     : f13fcfe65b85cb60244084af847dcbd8
+    group  : (standalone)   caps=231941  status=
+    proto  : 05
+    service: Google-Nest-Hub-f13fcfe65b85cb60244084af847dcbd8._googlecast._tcp.local.
+- Chromecast Salon  [Chromecast]
+    addr   : 192.168.2.80:8009
+    id     : dea0f72e3ce7e3f8bd2cdde1fb77d259
+    group  : (standalone)   caps=201221  status=YouTube
+    proto  : 05
+    service: Chromecast-dea0f72e3ce7e3f8bd2cdde1fb77d259._googlecast._tcp.local.
+- Chromecast Sous-Sol  [Chromecast Ultra]
+    addr   : 192.168.2.81:8009
+    id     : e7eea7d5e8a4791232288b9226297277
+    group  : (standalone)   caps=201221  status=
+    proto  : 05
+    service: Chromecast-Ultra-e7eea7d5e8a4791232288b9226297277._googlecast._tcp.local.
+- Cuisine Fenêtre Vert  [Nest Audio]
+    addr   : 192.168.2.61:8009
+    id     : 4e160ab0e865696bf66773b3071fd9fa
+    group  : (standalone)   caps=199172  status=
+    proto  : 05
+    service: Nest-Audio-4e160ab0e865696bf66773b3071fd9fa._googlecast._tcp.local.
+- Cuisine Frigo Jaune   [Nest Audio]
+    addr   : 192.168.2.63:8009
+    id     : 0e1b713aa7f5d0fcc4c5b6ad98fdbec0
+    group  : (standalone)   caps=215556  status=Spotify
+    proto  : 05
+    service: Nest-Audio-0e1b713aa7f5d0fcc4c5b6ad98fdbec0._googlecast._tcp.local.
+- Cuisine Frigo Orange  [Nest Audio]
+    addr   : 192.168.2.62:8009
+    id     : 2127966f5d4b78f4c14109589f7e7355
+    group  : (standalone)   caps=199172  status=
+    proto  : 05
+    service: Nest-Audio-2127966f5d4b78f4c14109589f7e7355._googlecast._tcp.local.
+- Cuisine Meuble Bleu  [Nest Audio]
+    addr   : 192.168.2.64:8009
+    id     : 65f59cf41a55642cba27f2f1192d8ee3
+    group  : (standalone)   caps=199172  status=
+    proto  : 05
+    service: Nest-Audio-65f59cf41a55642cba27f2f1192d8ee3._googlecast._tcp.local.
+- Cuisine Meuble Rose  [Nest Audio]
+    addr   : 192.168.2.65:8009
+    id     : b90b2ba231ce9956d0bc688a8163f0be
+    group  : (standalone)   caps=199172  status=
+    proto  : 05
+    service: Nest-Audio-b90b2ba231ce9956d0bc688a8163f0be._googlecast._tcp.local.
+- Dehors  [Google Cast Group]
+    addr   : 192.168.2.81:32049
+    id     : 89336948-6ee8-4fa1-9b33-92198ce15551
+    group  : (standalone)   caps=199204  status=
+    proto  : 05
+    service: Google-Cast-Group-893369486ee84fa19b3392198ce15551-1._googlecast._tcp.local.
+- En Haut  [Google Cast Group]
+    addr   : 192.168.2.61:32132
+    id     : 037d65e7-b675-41cd-bde6-450db6c0108c
+    group  : (standalone)   caps=199204  status=
+    proto  : 05
+    service: Google-Cast-Group-037d65e7b67541cdbde6450db6c0108c-1._googlecast._tcp.local.
+- Groupe Tous  [Google Cast Group]
+    addr   : 192.168.2.61:32012
+    id     : 7744839b-20a6-4141-9ab3-57dcbd7b660d
+    group  : (standalone)   caps=199204  status=
+    proto  : 05
+    service: Google-Cast-Group-7744839b20a641419ab357dcbd7b660d-1._googlecast._tcp.local.
+- Salon Jaune  [Google Nest Hub]
+    addr   : 192.168.2.67, fe80::513a:b975:493:c9ac:8009
+    id     : 97fe9ea25db87b481c9f84acb2c7b6ce
+    group  : (standalone)   caps=231941  status=
+    proto  : 05
+    service: Google-Nest-Hub-97fe9ea25db87b481c9f84acb2c7b6ce._googlecast._tcp.local.
+- Salon Orange  [Google Nest Hub]
+    addr   : 192.168.2.66, fe80::e1a2:de1e:13bb:3c4b:8009
+    id     : c2fabda2af1b4b64ce01705386fc6574
+    group  : (standalone)   caps=231941  status=
+    proto  : 05
+    service: Google-Nest-Hub-c2fabda2af1b4b64ce01705386fc6574._googlecast._tcp.local.
+- Téléviseur Chambre principale  [Chromecast HD]
+    addr   : 192.168.2.130:8009
+    id     : 08605dbab9392a0de6ec27bcb0a690bc
+    group  : (standalone)   caps=465413  status=
+    proto  : 05
+    service: Chromecast-HD-08605dbab9392a0de6ec27bcb0a690bc._googlecast._tcp.local.

@@ -1,0 +1,72 @@
+[
+ {
+  "cmd": [
+   "play",
+   "K0uxjdcZWyk"
+  ],
+  "loads": 5,
+  "settled_s": null,
+  "final15s_median_ms": null,
+  "final15s_max_abs": null
+ },
+ {
+  "cmd": [
+   "seek",
+   "100"
+  ],
+  "loads": 3,
+  "settled_s": 43.5,
+  "final15s_median_ms": 19.2,
+  "final15s_max_abs": 29.7
+ },
+ {
+  "cmd": [
+   "seek",
+   "300"
+  ],
+  "loads": 2,
+  "settled_s": 10.2,
+  "final15s_median_ms": 4.8,
+  "final15s_max_abs": 7.6
+ },
+ {
+  "cmd": [
+   "seek",
+   "200"
+  ],
+  "loads": 7,
+  "settled_s": null,
+  "final15s_median_ms": -140.5,
+  "final15s_max_abs": 173.7
+ },
+ {
+  "cmd": [
+   "seek",
+   "450"
+  ],
+  "loads": 4,
+  "settled_s": 6.4,
+  "final15s_median_ms": 22.4,
+  "final15s_max_abs": 28.8
+ },
+ {
+  "cmd": [
+   "seek",
+   "50"
+  ],
+  "loads": 4,
+  "settled_s": 16.6,
+  "final15s_median_ms": -14.2,
+  "final15s_max_abs": 23.1
+ },
+ {
+  "cmd": [
+   "seek",
+   "350"
+  ],
+  "loads": 7,
+  "settled_s": 24.3,
+  "final15s_median_ms": 110.7,
+  "final15s_max_abs": 120.0
+ }
+]

@@ -1,0 +1,37 @@
+[
+ {
+  "true": 0,
+  "measured": null,
+  "sd": null,
+  "pairs": 70,
+  "verdict": "PASS \u2014 offset 6 ms (<= 150 ms), sigma 1 "
+ },
+ {
+  "true": 40,
+  "measured": null,
+  "sd": null,
+  "pairs": 70,
+  "verdict": "PASS \u2014 offset 46 ms (<= 150 ms), sigma 1"
+ },
+ {
+  "true": -60,
+  "measured": null,
+  "sd": null,
+  "pairs": 69,
+  "verdict": "PASS \u2014 offset -54 ms (<= 150 ms), sigma "
+ },
+ {
+  "true": 120,
+  "measured": null,
+  "sd": null,
+  "pairs": 70,
+  "verdict": "PASS \u2014 offset 126 ms (<= 150 ms), sigma "
+ },
+ {
+  "true": -140,
+  "measured": null,
+  "sd": null,
+  "pairs": 69,
+  "verdict": "PASS \u2014 offset -134 ms (<= 150 ms), sigma"
+ }
+]

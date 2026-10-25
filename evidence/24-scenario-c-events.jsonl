@@ -1,0 +1,10 @@
+{"wall": 1792943427.651, "rel": 0.7, "ev": "volumes_saved", "kitchen": {"Cuisine Fenetre Vert": 0.08332952857017517, "Cuisine Frigo Orange": 0.550000011920929, "Cuisine Frigo Jaune": 0.550000011920929, "Cuisine Meuble Bleu": 0.08332952857017517, "Cuisine Meuble Rose": 0.08332952857017517}, "tv": 0.4000000059604645}
+{"wall": 1792943429.845, "rel": 2.9, "ev": "kitchen_lowered", "level": 0.05}
+{"wall": 1792943439.856, "rel": 12.9, "ev": "tv_cmd", "args": ["play", "dQw4w9WgXcQ"], "out": "{\"ok\": \"play\", \"videos\": [\"dQw4w9WgXcQ\"]}", "rc": 0}
+{"wall": 1792943448.646, "rel": 21.7, "ev": "tv_cmd", "args": ["queue", "QzomK1fdSUg"], "out": "{\"ok\": \"queue\", \"videos\": [\"QzomK1fdSUg\"]}", "rc": 0}
+{"wall": 1792943449.177, "rel": 22.2, "ev": "tv_lowered", "level": 0.15}
+{"wall": 1792943728.824, "rel": 301.9, "ev": "tv_cmd", "args": ["status"], "out": "{\"app\": \"YouTube\", \"app_id\": \"233637DE\", \"state\": \"PLAYING\", \"t\": 29.047, \"content\": \"QzomK1fdSUg\", \"volume\": 0.15000000596046448}", "rc": 0}
+{"wall": 1792944028.944, "rel": 602.0, "ev": "tv_cmd", "args": ["status"], "out": "{\"app\": \"YouTube\", \"app_id\": \"233637DE\", \"state\": \"PLAYING\", \"t\": 329.168, \"content\": \"QzomK1fdSUg\", \"volume\": 0.15000000596046448}", "rc": 0}
+{"wall": 1792944328.425, "rel": 901.5, "ev": "tv_cmd", "args": ["status"], "out": "{\"app\": \"YouTube\", \"app_id\": \"233637DE\", \"state\": \"BUFFERING\", \"t\": 0, \"content\": \"QzomK1fdSUg\", \"volume\": 0.15000000596046448}", "rc": 0}
+{"wall": 1792944419.696, "rel": 992.8, "ev": "tv_cmd", "args": ["stop"], "out": "{\"ok\": \"stop\"}", "rc": 0}
+{"wall": 1792944440.422, "rel": 1013.5, "ev": "volumes_restored", "kitchen": {"Cuisine Fenetre Vert": 0.0833, "Cuisine Frigo Orange": 0.55, "Cuisine Frigo Jaune": 0.55, "Cuisine Meuble Bleu": 0.0833, "Cuisine Meuble Rose": 0.0833}, "tv": 0.4000000059604645}

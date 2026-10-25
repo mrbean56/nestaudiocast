@@ -1,0 +1,35 @@
+{
+  "En Haut": {
+    "endpoint": "192.168.2.61:32132",
+    "safe_audio_only": false,
+    "members": [
+      "Cuisine Fenêtre Vert",
+      "Cuisine Frigo Orange",
+      "Cuisine Frigo Jaune",
+      "Chromecast Salon [VIDEO]",
+      "Cuisine Meuble Rose",
+      "Cuisine Meuble Bleu"
+    ]
+  },
+  "Groupe Tous": {
+    "endpoint": "192.168.2.61:32012",
+    "safe_audio_only": false,
+    "members": [
+      "Cuisine Fenêtre Vert",
+      "Cuisine Frigo Orange",
+      "Chromecast Sous-Sol [VIDEO]",
+      "Cuisine Frigo Jaune",
+      "Chromecast Salon [VIDEO]",
+      "Cuisine Meuble Rose",
+      "Cuisine Meuble Bleu"
+    ]
+  },
+  "Dehors": {
+    "endpoint": "192.168.2.81:32049",
+    "safe_audio_only": false,
+    "members": [
+      "Chromecast Sous-Sol [VIDEO]",
+      "Chromecast Salon [VIDEO]"
+    ]
+  }
+}

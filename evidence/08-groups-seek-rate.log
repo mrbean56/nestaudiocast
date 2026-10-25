@@ -1,0 +1,19 @@
+Exception occurred during processing of request from ('192.168.2.61', 45522)
+[Groupe Tous] members = []
+[En Haut] members = []
+[Dehors] members = []
+seek tests on mediaSessionId=1
+  SEEK   120.0 -> t=  120.530 expected=  121.046 err=  -516.1 ms
+  SEEK   300.0 -> t=  300.487 expected=  301.071 err=  -583.8 ms
+  SEEK    45.5 -> t=   46.112 expected=   46.546 err=  -433.6 ms
+  SEEK   600.0 -> t=  600.516 expected=  601.076 err=  -560.4 ms
+  SEEK    90.0 -> t=   90.626 expected=   91.056 err=  -430.2 ms
+  SEEK   200.0 -> t=  200.646 expected=  201.056 err=  -409.8 ms
+  SEEK    30.0 -> t=   30.484 expected=   31.081 err=  -597.4 ms
+  SEEK    45.0 -> t=   45.557 expected=   46.081 err=  -524.1 ms
+playbackRate tests
+  SET_PLAYBACK_RATE 1.005 -> accepted, reported playbackRate=1.005
+  SET_PLAYBACK_RATE 0.995 -> accepted, reported playbackRate=0.995
+  SET_PLAYBACK_RATE 1.0 -> accepted, reported playbackRate=1
+  measured media/wall ratio at 1.005 = 1.004132
+saved evidence/08-groups-seek-rate.json

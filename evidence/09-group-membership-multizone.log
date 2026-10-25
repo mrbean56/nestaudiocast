@@ -1,0 +1,22 @@
+3 group(s) found
+
+=== En Haut  (192.168.2.61:32132)  n=6  safe=False
+   speaker      Cuisine Fenêtre Vert         4e160ab0-e865-696b-f667-73b3071fd9fa  caps=196612
+   speaker      Cuisine Frigo Orange         2127966f-5d4b-78f4-c141-09589f7e7355  caps=196612
+   speaker      Cuisine Frigo Jaune          0e1b713a-a7f5-d0fc-c4c5-b6ad98fdbec0  caps=196612
+   VIDEO/other  Chromecast Salon             dea0f72e-3ce7-e3f8-bd2c-dde1fb77d259  caps=196613
+   speaker      Cuisine Meuble Rose          b90b2ba2-31ce-9956-d0bc-688a8163f0be  caps=196612
+   speaker      Cuisine Meuble Bleu          65f59cf4-1a55-642c-ba27-f2f1192d8ee3  caps=196612
+=== Groupe Tous  (192.168.2.61:32012)  n=7  safe=False
+   speaker      Cuisine Fenêtre Vert         4e160ab0-e865-696b-f667-73b3071fd9fa  caps=196612
+   speaker      Cuisine Frigo Orange         2127966f-5d4b-78f4-c141-09589f7e7355  caps=196612
+   VIDEO/other  Chromecast Sous-Sol          e7eea7d5-e8a4-7912-3228-8b9226297277  caps=196613
+   speaker      Cuisine Frigo Jaune          0e1b713a-a7f5-d0fc-c4c5-b6ad98fdbec0  caps=196612
+   VIDEO/other  Chromecast Salon             dea0f72e-3ce7-e3f8-bd2c-dde1fb77d259  caps=196613
+   speaker      Cuisine Meuble Rose          b90b2ba2-31ce-9956-d0bc-688a8163f0be  caps=196612
+   speaker      Cuisine Meuble Bleu          65f59cf4-1a55-642c-ba27-f2f1192d8ee3  caps=196612
+=== Dehors  (192.168.2.81:32049)  n=2  safe=False
+   VIDEO/other  Chromecast Sous-Sol          e7eea7d5-e8a4-7912-3228-8b9226297277  caps=196613
+   VIDEO/other  Chromecast Salon             dea0f72e-3ce7-e3f8-bd2c-dde1fb77d259  caps=196613
+
+saved evidence/09-group-membership-multizone.json

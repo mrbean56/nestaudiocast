@@ -1,0 +1,15 @@
+{"wall": 1792947304.431, "rel": 0.8, "ev": "volumes_saved", "kitchen": {"Cuisine Fenetre Vert": 0.08332952857017517, "Cuisine Frigo Orange": 0.550000011920929, "Cuisine Frigo Jaune": 0.550000011920929, "Cuisine Meuble Bleu": 0.08332952857017517, "Cuisine Meuble Rose": 0.08332952857017517}, "tv": 0.4000000059604645}
+{"wall": 1792947306.701, "rel": 3.0, "ev": "kitchen_lowered", "level": 0.05}
+{"wall": 1792947316.474, "rel": 12.8, "ev": "tv_cmd", "args": ["play", "QzomK1fdSUg"], "out": "{\"ok\": \"play\", \"videos\": [\"QzomK1fdSUg\"]}", "rc": 0}
+{"wall": 1792947325.006, "rel": 21.3, "ev": "tv_cmd", "args": ["queue", "K0uxjdcZWyk"], "out": "{\"ok\": \"queue\", \"videos\": [\"K0uxjdcZWyk\"]}", "rc": 0}
+{"wall": 1792947325.55, "rel": 21.9, "ev": "tv_lowered", "level": 0.15}
+{"wall": 1792947346.402, "rel": 42.7, "ev": "tv_cmd", "args": ["pause"], "out": "{\"ok\": \"pause\"}", "rc": 0}
+{"wall": 1792947361.096, "rel": 57.4, "ev": "tv_cmd", "args": ["resume"], "out": "{\"ok\": \"resume\"}", "rc": 0}
+{"wall": 1792947391.248, "rel": 87.6, "ev": "tv_cmd", "args": ["seek", "570"], "out": "{\"ok\": \"seek\", \"to\": 570.0}", "rc": 0}
+{"wall": 1792948106.046, "rel": 802.4, "ev": "tv_cmd", "args": ["status"], "out": "{\"app\": \"Backdrop\", \"app_id\": \"E8C28D3C\", \"state\": \"NO_MEDIA\", \"t\": null, \"content\": null, \"volume\": null}", "rc": 0}
+{"wall": 1792948135.13, "rel": 831.5, "ev": "tv_cmd", "args": ["status"], "out": "{\"app\": \"Backdrop\", \"app_id\": \"E8C28D3C\", \"state\": \"NO_MEDIA\", \"t\": null, \"content\": null, \"volume\": null}", "rc": 0}
+{"wall": 1792948137.431, "rel": 833.8, "ev": "tv_cmd", "args": ["stop"], "out": "{\"ok\": \"stop\"}", "rc": 0}
+{"wall": 1792948163.954, "rel": 860.3, "ev": "tv_cmd", "args": ["play", "QzomK1fdSUg"], "out": "{\"refused\": true, \"app\": \"Default Media Receiver\", \"app_id\": \"CC1AD845\"}", "rc": 3}
+{"wall": 1792948225.152, "rel": 921.5, "ev": "tv_cmd", "args": ["status"], "out": "{\"app\": \"Default Media Receiver\", \"app_id\": \"CC1AD845\", \"state\": null, \"t\": null, \"content\": null, \"volume\": 0.15000000596046448}", "rc": 0}
+{"wall": 1792948225.42, "rel": 921.8, "ev": "tv_cmd", "args": ["stop"], "out": "{\"refused\": true, \"app\": \"Default Media Receiver\", \"app_id\": \"CC1AD845\"}", "rc": 3}
+{"wall": 1792948253.256, "rel": 949.6, "ev": "volumes_restored", "kitchen": {"Cuisine Fenetre Vert": 0.0833, "Cuisine Frigo Orange": 0.55, "Cuisine Frigo Jaune": 0.55, "Cuisine Meuble Bleu": 0.0833, "Cuisine Meuble Rose": 0.0833}, "tv": 0.4000000059604645}

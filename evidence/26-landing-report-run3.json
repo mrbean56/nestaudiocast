@@ -1,0 +1,79 @@
+[
+ {
+  "cmd": [
+   "play",
+   "K0uxjdcZWyk"
+  ],
+  "starts": 2,
+  "first_landing_ms": null,
+  "settled_s": null,
+  "final15s_median_ms": 50.1,
+  "final15s_max_abs": 91.9
+ },
+ {
+  "cmd": [
+   "seek",
+   "100"
+  ],
+  "starts": 1,
+  "first_landing_ms": null,
+  "settled_s": null,
+  "final15s_median_ms": null,
+  "final15s_max_abs": null
+ },
+ {
+  "cmd": [
+   "seek",
+   "300"
+  ],
+  "starts": 6,
+  "first_landing_ms": null,
+  "settled_s": 33.2,
+  "final15s_median_ms": -12.1,
+  "final15s_max_abs": 22.8
+ },
+ {
+  "cmd": [
+   "seek",
+   "200"
+  ],
+  "starts": 1,
+  "first_landing_ms": null,
+  "settled_s": 8.3,
+  "final15s_median_ms": 5.8,
+  "final15s_max_abs": 15.7
+ },
+ {
+  "cmd": [
+   "seek",
+   "450"
+  ],
+  "starts": 4,
+  "first_landing_ms": null,
+  "settled_s": 7.8,
+  "final15s_median_ms": -16.5,
+  "final15s_max_abs": 26.5
+ },
+ {
+  "cmd": [
+   "seek",
+   "50"
+  ],
+  "starts": 3,
+  "first_landing_ms": null,
+  "settled_s": 18.9,
+  "final15s_median_ms": 20.6,
+  "final15s_max_abs": 29.7
+ },
+ {
+  "cmd": [
+   "seek",
+   "350"
+  ],
+  "starts": 3,
+  "first_landing_ms": null,
+  "settled_s": 7.0,
+  "final15s_median_ms": 14.9,
+  "final15s_max_abs": 23.9
+ }
+]

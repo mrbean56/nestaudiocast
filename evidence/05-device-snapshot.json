@@ -1,0 +1,39 @@
+{
+  "Cuisine Fenetre Vert": {
+    "app": null,
+    "app_id": null,
+    "volume": 0.08332952857017517,
+    "muted": false
+  },
+  "Cuisine Frigo Orange": {
+    "app": null,
+    "app_id": null,
+    "volume": 0.550000011920929,
+    "muted": false
+  },
+  "Cuisine Frigo Jaune": {
+    "app": null,
+    "app_id": null,
+    "volume": 0.550000011920929,
+    "muted": false
+  },
+  "Cuisine Meuble Bleu": {
+    "app": null,
+    "app_id": null,
+    "volume": 0.08332952857017517,
+    "muted": false
+  },
+  "Cuisine Meuble Rose": {
+    "app": null,
+    "app_id": null,
+    "volume": 0.08332952857017517,
+    "muted": false
+  },
+  "TV Salon (Chromecast)": {
+    "app": "Backdrop",
+    "app_id": "E8C28D3C",
+    "volume": 0.4000000059604645,
+    "muted": false,
+    "media_err": "timeout waiting for urn:x-cast:com.google.cast.media reply t"
+  }
+}

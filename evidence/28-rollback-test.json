@@ -1,0 +1,153 @@
+{
+ "t": "2026-10-25 13:38:55",
+ "before": {
+  "Cuisine Fenetre Vert": {
+   "level": 0.05,
+   "muted": false,
+   "app": null
+  },
+  "Cuisine Frigo Orange": {
+   "level": 0.05,
+   "muted": false,
+   "app": null
+  },
+  "Cuisine Frigo Jaune": {
+   "level": 0.05,
+   "muted": false,
+   "app": null
+  },
+  "Cuisine Meuble Bleu": {
+   "level": 0.05,
+   "muted": false,
+   "app": null
+  },
+  "Cuisine Meuble Rose": {
+   "level": 0.05,
+   "muted": false,
+   "app": null
+  },
+  "TV Salon": {
+   "level": 0.1,
+   "muted": false,
+   "app": "Backdrop"
+  },
+  "group Cuisine": {
+   "app": null
+  }
+ },
+ "during": {
+  "Cuisine Fenetre Vert": {
+   "level": 0.05,
+   "muted": false,
+   "app": "Default Media Receiver"
+  },
+  "Cuisine Frigo Orange": {
+   "level": 0.05,
+   "muted": false,
+   "app": "Default Media Receiver"
+  },
+  "Cuisine Frigo Jaune": {
+   "level": 0.05,
+   "muted": false,
+   "app": "Default Media Receiver"
+  },
+  "Cuisine Meuble Bleu": {
+   "level": 0.05,
+   "muted": false,
+   "app": "Default Media Receiver"
+  },
+  "Cuisine Meuble Rose": {
+   "level": 0.05,
+   "muted": false,
+   "app": "Default Media Receiver"
+  },
+  "TV Salon": {
+   "level": 0.1,
+   "muted": false,
+   "app": "YouTube"
+  },
+  "group Cuisine": {
+   "app": "Default Media Receiver"
+  }
+ },
+ "level0": {
+  "ct_relay": "stopped",
+  "emergency": "{\n  \"processes\": [],\n  \"muted\": {\n    \"Cuisine Fenetre Vert\": \"muted\",\n    \"Cuisine Frigo Orange\": \"muted\",\n    \"Cuisine Frigo Jaune\": \"muted\",\n    \"Cuisine Meuble Bleu\": \"muted\",\n    \"Cuisine Meuble Rose\": \"muted\",\n    \"_groups\": \"not touched: they contain the TV (see notes/00-labo.md A6)\"\n  },\n  \"sessions\": {\n    \"En Haut\": \"idle\",\n    \"Groupe Tous\": \"idle\",\n    \"Cuisine\": \"stopped Default Media Receiver\",\n    \"Dehors\": \"idle\"\n  }\n}",
+  "tv": "{\"ok\": \"stop\"}"
+ },
+ "level0_s": 11.2,
+ "after_level0": {
+  "Cuisine Fenetre Vert": {
+   "level": 0,
+   "muted": false,
+   "app": null
+  },
+  "Cuisine Frigo Orange": {
+   "level": 0,
+   "muted": false,
+   "app": null
+  },
+  "Cuisine Frigo Jaune": {
+   "level": 0,
+   "muted": false,
+   "app": null
+  },
+  "Cuisine Meuble Bleu": {
+   "level": 0,
+   "muted": false,
+   "app": null
+  },
+  "Cuisine Meuble Rose": {
+   "level": 0,
+   "muted": false,
+   "app": null
+  },
+  "TV Salon": {
+   "level": 0.1,
+   "muted": false,
+   "app": "Backdrop"
+  },
+  "group Cuisine": {
+   "app": null
+  }
+ },
+ "silent_after_level0": true,
+ "level1": "{\n  \"restored\": {\n    \"Cuisine Fenetre Vert\": {\n      \"level\": 0.05000000074505806,\n      \"muted\": false\n    },\n    \"Cuisine Frigo Orange\": {\n      \"level\": 0.05000000074505806,\n      \"muted\": false\n    },\n    \"Cuisine Frigo Jaune\": {\n      \"level\": 0.05000000074505806,\n      \"muted\": false\n    },\n    \"Cuisine Meuble Bleu\": {\n      \"level\": 0.05000000074505806,\n      \"muted\": false\n    },\n    \"Cuisine Meuble Rose\": {\n      \"level\": 0.05000000074505806,\n      \"muted\": false\n    }\n  }\n}",
+ "after": {
+  "Cuisine Fenetre Vert": {
+   "level": 0.05,
+   "muted": false,
+   "app": null
+  },
+  "Cuisine Frigo Orange": {
+   "level": 0.05,
+   "muted": false,
+   "app": null
+  },
+  "Cuisine Frigo Jaune": {
+   "level": 0.05,
+   "muted": false,
+   "app": null
+  },
+  "Cuisine Meuble Bleu": {
+   "level": 0.05,
+   "muted": false,
+   "app": null
+  },
+  "Cuisine Meuble Rose": {
+   "level": 0.05,
+   "muted": false,
+   "app": null
+  },
+  "TV Salon": {
+   "level": 0.1,
+   "muted": false,
+   "app": "Backdrop"
+  },
+  "group Cuisine": {
+   "app": null
+  }
+ },
+ "volume_diffs": {},
+ "PASS": true
+}

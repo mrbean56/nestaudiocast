@@ -1,0 +1,3 @@
+{"wall": 1792943449.1305, "ev": "content_changed", "from": null, "to": "dQw4w9WgXcQ"}
+{"wall": 1792943449.131, "ev": "audio_pending", "video": "dQw4w9WgXcQ"}
+{"wall": 1792943451.4316, "ev": "tv_read_error", "error": "timeout waiting for urn:x-cast:com.google.cast.media reply to GET_STATUS on 192.168.2.80:8009"}

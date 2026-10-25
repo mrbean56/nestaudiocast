@@ -1,0 +1,32 @@
+
+=== tv  (192.168.2.80)
+  name       : Cuisine Meuble Bleu
+  model      : Nest Audio  (Google Inc. / fw Cuisine Meuble Bleu)
+  uuid       : 65f59cf4-1a55-642c-ba27-f2f1192d8ee3
+  app        : None  app_id=None  status_text=''
+  volume     : level=0.08332952857017517 muted=False
+  media      : state=UNKNOWN idle=None time=0.0 dur=None
+  content_id : 
+  !! AttributeError: 'MediaStatus' object has no attribute 'media_info'
+
+=== nest_audio_1  (192.168.2.61)
+  name       : Cuisine Meuble Bleu
+  model      : Nest Audio  (Google Inc. / fw Cuisine Meuble Bleu)
+  uuid       : 65f59cf4-1a55-642c-ba27-f2f1192d8ee3
+  app        : None  app_id=None  status_text=''
+  volume     : level=0.08332952857017517 muted=False
+  media      : state=UNKNOWN idle=None time=0.0 dur=None
+  content_id : 
+  !! AttributeError: 'MediaStatus' object has no attribute 'media_info'
+
+=== group_tous  (192.168.2.61:32012)
+  name       : Cuisine Meuble Bleu
+  model      : Nest Audio  (Google Inc. / fw Cuisine Meuble Bleu)
+  uuid       : 65f59cf4-1a55-642c-ba27-f2f1192d8ee3
+  app        : None  app_id=None  status_text=''
+  volume     : level=0.08332952857017517 muted=False
+  media      : state=UNKNOWN idle=None time=0.0 dur=None
+  content_id : 
+  !! AttributeError: 'MediaStatus' object has no attribute 'media_info'
+
+saved evidence/02-cast-state.json
