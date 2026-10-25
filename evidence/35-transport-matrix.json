@@ -1,0 +1,120 @@
+{
+ "when": "2026-10-25 15:58:37",
+ "log": "/opt/castrelay/evidence/relay-20261025-155345.jsonl",
+ "checks": [
+  {
+   "check": "play: kitchen joins",
+   "pass": true,
+   "seconds": 20.6,
+   "group": {
+    "app": "Default Media Receiver",
+    "volume": 0.15,
+    "state": "PLAYING",
+    "t": 13.419606
+   }
+  },
+  {
+   "check": "play: TV plays the same video",
+   "pass": true,
+   "tv": {
+    "state": "PLAYING",
+    "content": "K0uxjdcZWyk",
+    "t": 19.882
+   }
+  },
+  {
+   "check": "pause: kitchen pauses",
+   "pass": true,
+   "seconds": 6.3,
+   "group": {
+    "app": "Default Media Receiver",
+    "volume": 0.15,
+    "state": "PAUSED",
+    "t": 23.179173
+   }
+  },
+  {
+   "check": "resume: kitchen resumes",
+   "pass": true,
+   "seconds": 6.3,
+   "group": {
+    "app": "Default Media Receiver",
+    "volume": 0.15,
+    "state": "PLAYING",
+    "t": 30.025967
+   },
+   "digital_err_ms": -66.8
+  },
+  {
+   "check": "seek +: kitchen follows",
+   "pass": true,
+   "seconds": 35.5,
+   "group": {
+    "app": "Default Media Receiver",
+    "volume": 0.15,
+    "state": "PLAYING",
+    "t": 426.48191
+   },
+   "digital_err_ms": 25.0
+  },
+  {
+   "check": "seek -: kitchen follows",
+   "pass": true,
+   "seconds": 6.3,
+   "group": {
+    "app": "Default Media Receiver",
+    "volume": 0.15,
+    "state": "PLAYING",
+    "t": 66.106542
+   },
+   "digital_err_ms": 65.0
+  },
+  {
+   "check": "volume: group mirrors TV down",
+   "pass": true,
+   "group": {
+    "app": "Default Media Receiver",
+    "volume": 0.22,
+    "state": "PLAYING",
+    "t": 86.568631
+   }
+  },
+  {
+   "check": "volume: group mirrors TV up",
+   "pass": true,
+   "group": {
+    "app": "Default Media Receiver",
+    "volume": 0.35,
+    "state": "PLAYING",
+    "t": 96.73375
+   }
+  },
+  {
+   "check": "stop: kitchen stops with the TV",
+   "pass": true,
+   "seconds": 6.1,
+   "group": {
+    "app": null,
+    "volume": 0.35
+   }
+  },
+  {
+   "check": "new session: kitchen joins the new video",
+   "pass": true,
+   "seconds": 20.6,
+   "group": {
+    "app": "Default Media Receiver",
+    "volume": 0.35,
+    "state": "PLAYING",
+    "t": 13.753006
+   }
+  },
+  {
+   "check": "new session: TV on the new video",
+   "pass": true,
+   "tv": "QzomK1fdSUg"
+  }
+ ],
+ "passed": 11,
+ "total": 11
+}

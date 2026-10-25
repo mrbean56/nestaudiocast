@@ -424,3 +424,28 @@ Session continue de **911 s (15.2 min)**, un seul app YouTube, changement de vid
   (blocage à `deviceauth`), comment un fabricant obtient le certificat (programme Google Cast),
   les trois voies praticables, et l'expérience proposée avec le Chromecast de rechange
   (récepteur personnalisé, APP_ID à enregistrer — action propriétaire).
+
+## A32 — Matrice de transport sur le service déployé (2026-10-25 16:10, `evidence/35-transport-matrix.json`)
+Testé **contre le service systemd** (pas un relais lancé à la main), TV pilotée par `yt_tv` :
+
+| # | Vérification | Résultat |
+|---|---|---|
+| 1 | lecture : la cuisine rejoint | **PASS**, 20.6 s (dont le téléchargement) |
+| 2 | la TV joue bien la même vidéo | PASS |
+| 3 | pause : la cuisine se met en pause | **PASS**, 6.3 s |
+| 4 | reprise | **PASS**, 6.3 s, erreur numérique −66.8 ms |
+| 5 | seek +7 min | **PASS**, mais **35 s de silence** — voir ci-dessous |
+| 6 | seek −6 min | **PASS**, 6.3 s, erreur +65 ms |
+| 7-8 | volume TV 0.22 puis 0.35 → groupe | **PASS** (0.22, 0.35) |
+| 9 | arrêt : la cuisine s'arrête | **PASS**, 6.1 s |
+| 10-11 | nouvelle session, autre vidéo | **PASS**, 20.6 s |
+
+**Les 35 s du seek ne viennent pas du relais** : le journal ne montre rien entre `tv_jump` (158.5 s)
+et le `sink_started` (194.8 s) parce que la **TV était en `BUFFERING`** — YouTube rebuffe après un
+saut de 7 minutes. Le relais attend sagement ; il ne le disait pas. Corrigé : événement
+`tv_waiting` toutes les 5 s.
+
+**Effet du compromis « moins de coupures »** : l'erreur numérique en régime est passée de ±30 ms à
+**−67…+65 ms** (tolérance d'atterrissage 70 ms, 2 essais). L'offset perçu = erreur numérique +
+`delta` : il peut donc atteindre ~90 ms, toujours sous les 150 ms, avec **une seule coupure** au
+démarrage au lieu de 4.

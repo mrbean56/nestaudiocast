@@ -636,6 +636,13 @@ class Relay:
             self._err_hist.clear()
             return
         if state != "PLAYING" or tv.get("t") is None:
+            # Say so, at most every 5 s: otherwise a long TV rebuffer (a big seek makes
+            # YouTube buffer for tens of seconds) looks like the relay being stuck — that is
+            # exactly how the 35 s after a +7 min seek looked in the transport test.
+            now = time.time()
+            if now - getattr(self, "_wait_logged", 0) > 5:
+                self._wait_logged = now
+                self._log({"ev": "tv_waiting", "tv_state": state})
             self.clock.reset()
             self.need_start = True
             if self.cur.get("content") and not self.degraded:
