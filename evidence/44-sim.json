@@ -1,0 +1,936 @@
+{
+  "task": "F \u2014 the control law, proved in simulation",
+  "command": "tests/v020/sim_v020.py --json evidence/44-sim.json",
+  "generated_at": "2026-10-25T21:58:28-0400",
+  "host": "opencode",
+  "python": "3.13.5",
+  "sources": {
+    "group drift -12.4\u00b11.0 ms/10min": "evidence/17-rate-gain-and-drift.json",
+    "group read \u03c3 10.2 ms, stale outliers \u00b195\u2026162 ms": "evidence/17, notes/00-labo A15",
+    "PAUSE\u2192SEEK\u2192PLAY landing \u03c3 30 ms, LOAD \u03c3 202 ms": "evidence/27-actuator-repeatability.json",
+    "perceptual budget 150 ms": "notes/ACCEPTANCE.md \u00a74",
+    "rate gain / stall / start dispersion": "unmeasured here: task C, defaults 1.0 / 0 / 0"
+  },
+  "cases": {
+    "cold_start": {
+      "duration_s": 600.0,
+      "steady_samples": 2099,
+      "steady_from_s": 33.5,
+      "window_medians_ms": {
+        "n": 113,
+        "p50": 0.7705,
+        "p95": 2.492,
+        "max_abs": 3.79,
+        "mean_signed": 0.38
+      },
+      "window_medians_estimate_ms": {
+        "n": 113,
+        "p50": 1.6700000000000002,
+        "p95": 5.64,
+        "max_abs": 7.87
+      },
+      "raw_p95_abs_ms": 2.472,
+      "raw_max_abs_ms": 4.7,
+      "read_p95_abs_ms": 20.648,
+      "read_max_abs_ms": 160.06,
+      "estimate_p95_abs_ms": 5.72,
+      "convergence_s": {
+        "0.0": 3.0
+      },
+      "convergence_max_s": 3.0,
+      "rate": {
+        "n": 21,
+        "max_abs_u": 0.000287,
+        "max_abs_u_steady": 0.000386,
+        "max_abs_u_settled": 0.000361,
+        "distinct": 14,
+        "rate_max": 0.002
+      },
+      "commands": {
+        "group_play": 1,
+        "play_at": 2,
+        "rate": 21
+      },
+      "after_steady": {
+        "rate": 21
+      },
+      "relandings": 1,
+      "relanding_refused": 0,
+      "rejected_reads": 13,
+      "first_landing_error_ms": 19.75,
+      "after_relanding_error_ms": -4.12,
+      "clock_residual_ms": 1.43,
+      "params": {
+        "duration_s": 600.0,
+        "tick_s": 0.25,
+        "seed": 20261025,
+        "repeats": 1,
+        "delta_v2": 0.265,
+        "drift_ms_10min": -12.4,
+        "group_noise_ms": 10.2,
+        "outlier_rate": 0.005,
+        "outlier_ms": 150.0,
+        "landing_mode": "park",
+        "landing_sigma_ms": 30.0,
+        "landing_mean_ms": -43.6,
+        "load_sigma_ms": 202.0,
+        "load_mean_ms": -314.7,
+        "lead_error_ms": 0.0,
+        "true_offset_ms": 1234.5,
+        "rtt_max_ms": 40.0,
+        "clock_pings": 8,
+        "clock_residual_ms": null,
+        "rate_gain": 1.0,
+        "rate_stall_ms": 0.0,
+        "start_dispersion_ms": 0.0,
+        "video_noise_ms": 0.0,
+        "stale_rate": 0.0
+      },
+      "note": "nominal: one start event, ten minutes, drift and read noise as measured",
+      "verdict": {
+        "expected": "pass",
+        "ok": true,
+        "checks": {
+          "steady_p95_le_10ms": true,
+          "no_load_seek_after_steady": true,
+          "no_play_at_after_steady": true,
+          "convergence_le_10s": true
+        },
+        "verdict": "PASS"
+      }
+    },
+    "drift_only": {
+      "duration_s": 900.0,
+      "steady_samples": 3259,
+      "steady_from_s": 33.5,
+      "window_medians_ms": {
+        "n": 174,
+        "p50": 0.639,
+        "p95": 1.6955,
+        "max_abs": 2.38,
+        "mean_signed": -0.09
+      },
+      "window_medians_estimate_ms": {
+        "n": 174,
+        "p50": 1.4449999999999998,
+        "p95": 4.52,
+        "max_abs": 8.97
+      },
+      "raw_p95_abs_ms": 1.791,
+      "raw_max_abs_ms": 2.41,
+      "read_p95_abs_ms": 20.679,
+      "read_max_abs_ms": 155.99,
+      "estimate_p95_abs_ms": 4.51,
+      "convergence_s": {
+        "0.0": 3.0
+      },
+      "convergence_max_s": 3.0,
+      "rate": {
+        "n": 26,
+        "max_abs_u": 0.00025,
+        "max_abs_u_steady": 0.000394,
+        "max_abs_u_settled": 0.000394,
+        "distinct": 13,
+        "rate_max": 0.002
+      },
+      "commands": {
+        "group_play": 1,
+        "play_at": 2,
+        "rate": 26
+      },
+      "after_steady": {
+        "rate": 26
+      },
+      "relandings": 1,
+      "relanding_refused": 0,
+      "rejected_reads": 23,
+      "first_landing_error_ms": 18.09,
+      "after_relanding_error_ms": 1.41,
+      "clock_residual_ms": 0.76,
+      "params": {
+        "duration_s": 900.0,
+        "tick_s": 0.25,
+        "seed": 20261025,
+        "repeats": 1,
+        "delta_v2": 0.265,
+        "drift_ms_10min": -12.4,
+        "group_noise_ms": 10.2,
+        "outlier_rate": 0.005,
+        "outlier_ms": 150.0,
+        "landing_mode": "park",
+        "landing_sigma_ms": 30.0,
+        "landing_mean_ms": -43.6,
+        "load_sigma_ms": 202.0,
+        "load_mean_ms": -314.7,
+        "lead_error_ms": 0.0,
+        "true_offset_ms": 1234.5,
+        "rtt_max_ms": 40.0,
+        "clock_pings": 8,
+        "clock_residual_ms": null,
+        "rate_gain": 1.0,
+        "rate_stall_ms": 0.0,
+        "start_dispersion_ms": 0.0,
+        "video_noise_ms": 0.0,
+        "stale_rate": 0.0
+      },
+      "note": "the drift criterion's own case: |rate-1| must never exceed RATE_MAX/4",
+      "verdict": {
+        "expected": "pass",
+        "ok": true,
+        "checks": {
+          "steady_p95_le_10ms": true,
+          "no_load_seek_after_steady": true,
+          "no_play_at_after_steady": true,
+          "convergence_le_10s": true,
+          "drift_trim_le_rate_max_quarter": true
+        },
+        "verdict": "PASS"
+      }
+    },
+    "seek": {
+      "duration_s": 480.0,
+      "steady_samples": 1555,
+      "steady_from_s": 30.0,
+      "window_medians_ms": {
+        "n": 83,
+        "p50": 1.6015000000000001,
+        "p95": 5.202,
+        "max_abs": 7.99,
+        "mean_signed": -1.0
+      },
+      "window_medians_estimate_ms": {
+        "n": 83,
+        "p50": 1.98,
+        "p95": 6.25,
+        "max_abs": 7.04
+      },
+      "raw_p95_abs_ms": 5.212,
+      "raw_max_abs_ms": 8.7,
+      "read_p95_abs_ms": 22.863,
+      "read_max_abs_ms": 161.9,
+      "estimate_p95_abs_ms": 6.47,
+      "convergence_s": {
+        "0.0": 1.0,
+        "120.0": 3.0
+      },
+      "convergence_max_s": 3.0,
+      "rate": {
+        "n": 15,
+        "max_abs_u": 0.000253,
+        "max_abs_u_steady": 0.000404,
+        "max_abs_u_settled": 0.000404,
+        "distinct": 8,
+        "rate_max": 0.002
+      },
+      "commands": {
+        "group_play": 2,
+        "play_at": 3,
+        "rate": 15,
+        "group_seek": 1
+      },
+      "after_steady": {
+        "rate": 14
+      },
+      "relandings": 1,
+      "relanding_refused": 1,
+      "rejected_reads": 11,
+      "first_landing_error_ms": -8.1,
+      "after_relanding_error_ms": 14.47,
+      "clock_residual_ms": 0.59,
+      "params": {
+        "duration_s": 480.0,
+        "tick_s": 0.25,
+        "seed": 20261025,
+        "repeats": 1,
+        "delta_v2": 0.265,
+        "drift_ms_10min": -12.4,
+        "group_noise_ms": 10.2,
+        "outlier_rate": 0.005,
+        "outlier_ms": 150.0,
+        "landing_mode": "park",
+        "landing_sigma_ms": 30.0,
+        "landing_mean_ms": -43.6,
+        "load_sigma_ms": 202.0,
+        "load_mean_ms": -314.7,
+        "lead_error_ms": 0.0,
+        "true_offset_ms": 1234.5,
+        "rtt_max_ms": 40.0,
+        "clock_pings": 8,
+        "clock_residual_ms": null,
+        "rate_gain": 1.0,
+        "rate_stall_ms": 0.0,
+        "start_dispersion_ms": 0.0,
+        "video_noise_ms": 0.0,
+        "stale_rate": 0.0
+      },
+      "note": "a mirrored user seek at 120 s, then six quiet minutes",
+      "verdict": {
+        "expected": "pass",
+        "ok": true,
+        "checks": {
+          "steady_p95_le_10ms": true,
+          "no_load_seek_after_steady": true,
+          "no_play_at_after_steady": true,
+          "convergence_le_10s": true
+        },
+        "verdict": "PASS"
+      }
+    },
+    "pause_resume": {
+      "duration_s": 420.0,
+      "steady_samples": 1267,
+      "steady_from_s": 30.0,
+      "window_medians_ms": {
+        "n": 68,
+        "p50": 2.408,
+        "p95": 5.4045000000000005,
+        "max_abs": 7.54,
+        "mean_signed": 2.61
+      },
+      "window_medians_estimate_ms": {
+        "n": 68,
+        "p50": 1.1,
+        "p95": 4.615,
+        "max_abs": 6.48
+      },
+      "raw_p95_abs_ms": 5.356,
+      "raw_max_abs_ms": 8.39,
+      "read_p95_abs_ms": 20.974,
+      "read_max_abs_ms": 167.74,
+      "estimate_p95_abs_ms": 4.64,
+      "convergence_s": {
+        "0.0": 1.0,
+        "120.0": 0.0,
+        "140.0": 4.0
+      },
+      "convergence_max_s": 4.0,
+      "rate": {
+        "n": 10,
+        "max_abs_u": 0.00025,
+        "max_abs_u_steady": 0.000294,
+        "max_abs_u_settled": 0.000271,
+        "distinct": 4,
+        "rate_max": 0.002
+      },
+      "commands": {
+        "group_play": 2,
+        "play_at": 3,
+        "rate": 10,
+        "group_pause": 1,
+        "pause": 1
+      },
+      "after_steady": {
+        "rate": 10
+      },
+      "relandings": 1,
+      "relanding_refused": 1,
+      "rejected_reads": 5,
+      "first_landing_error_ms": 8.99,
+      "after_relanding_error_ms": 19.55,
+      "clock_residual_ms": 3.0,
+      "params": {
+        "duration_s": 420.0,
+        "tick_s": 0.25,
+        "seed": 20261025,
+        "repeats": 1,
+        "delta_v2": 0.265,
+        "drift_ms_10min": -12.4,
+        "group_noise_ms": 10.2,
+        "outlier_rate": 0.005,
+        "outlier_ms": 150.0,
+        "landing_mode": "park",
+        "landing_sigma_ms": 30.0,
+        "landing_mean_ms": -43.6,
+        "load_sigma_ms": 202.0,
+        "load_mean_ms": -314.7,
+        "lead_error_ms": 0.0,
+        "true_offset_ms": 1234.5,
+        "rtt_max_ms": 40.0,
+        "clock_pings": 8,
+        "clock_residual_ms": null,
+        "rate_gain": 1.0,
+        "rate_stall_ms": 0.0,
+        "start_dispersion_ms": 0.0,
+        "video_noise_ms": 0.0,
+        "stale_rate": 0.0
+      },
+      "note": "pause 20 s, resume: the group is the reference, the video is placed there",
+      "verdict": {
+        "expected": "pass",
+        "ok": true,
+        "checks": {
+          "steady_p95_le_10ms": true,
+          "no_load_seek_after_steady": true,
+          "no_play_at_after_steady": true,
+          "convergence_le_10s": true
+        },
+        "verdict": "PASS"
+      }
+    },
+    "clock_residual": {
+      "duration_s": 600.0,
+      "steady_samples": 2131,
+      "steady_from_s": 33.5,
+      "window_medians_ms": {
+        "n": 114,
+        "p50": 11.404,
+        "p95": 12.672,
+        "max_abs": 12.91,
+        "mean_signed": 11.24
+      },
+      "window_medians_estimate_ms": {
+        "n": 114,
+        "p50": 1.29,
+        "p95": 3.63,
+        "max_abs": 7.17
+      },
+      "raw_p95_abs_ms": 12.698,
+      "raw_max_abs_ms": 13.25,
+      "read_p95_abs_ms": 21.247,
+      "read_max_abs_ms": 159.06,
+      "estimate_p95_abs_ms": 3.97,
+      "convergence_s": {
+        "0.0": 271.0
+      },
+      "convergence_max_s": 271.0,
+      "rate": {
+        "n": 17,
+        "max_abs_u": 0.000242,
+        "max_abs_u_steady": 0.000316,
+        "max_abs_u_settled": 0.000316,
+        "distinct": 10,
+        "rate_max": 0.002
+      },
+      "commands": {
+        "group_play": 1,
+        "play_at": 2,
+        "rate": 17
+      },
+      "after_steady": {
+        "rate": 17
+      },
+      "relandings": 1,
+      "relanding_refused": 0,
+      "rejected_reads": 17,
+      "first_landing_error_ms": -37.55,
+      "after_relanding_error_ms": 13.12,
+      "clock_residual_ms": 12.0,
+      "params": {
+        "duration_s": 600.0,
+        "tick_s": 0.25,
+        "seed": 20261025,
+        "repeats": 1,
+        "delta_v2": 0.265,
+        "drift_ms_10min": -12.4,
+        "group_noise_ms": 10.2,
+        "outlier_rate": 0.005,
+        "outlier_ms": 150.0,
+        "landing_mode": "park",
+        "landing_sigma_ms": 30.0,
+        "landing_mean_ms": -43.6,
+        "load_sigma_ms": 202.0,
+        "load_mean_ms": -314.7,
+        "lead_error_ms": 0.0,
+        "true_offset_ms": 1234.5,
+        "rtt_max_ms": 40.0,
+        "clock_pings": 8,
+        "clock_residual_ms": 12.0,
+        "rate_gain": 1.0,
+        "rate_stall_ms": 0.0,
+        "start_dispersion_ms": 0.0,
+        "video_noise_ms": 0.0,
+        "stale_rate": 0.0
+      },
+      "note": "a 12 ms clock estimate error: the loop is no better than its clock",
+      "verdict": {
+        "expected": "fail",
+        "ok": false,
+        "checks": {
+          "steady_p95_le_10ms": false,
+          "no_load_seek_after_steady": true,
+          "no_play_at_after_steady": true,
+          "convergence_le_10s": false
+        },
+        "verdict": "FAIL (expected)"
+      }
+    },
+    "stale_reads": {
+      "duration_s": 420.0,
+      "steady_samples": 1435,
+      "steady_from_s": 33.5,
+      "window_medians_ms": {
+        "n": 78,
+        "p50": 1.0265,
+        "p95": 2.2785,
+        "max_abs": 3.33,
+        "mean_signed": -0.42
+      },
+      "window_medians_estimate_ms": {
+        "n": 78,
+        "p50": 1.63,
+        "p95": 4.404999999999999,
+        "max_abs": 5.95
+      },
+      "raw_p95_abs_ms": 2.327,
+      "raw_max_abs_ms": 3.38,
+      "read_p95_abs_ms": 21.646,
+      "read_max_abs_ms": 152.35,
+      "estimate_p95_abs_ms": 4.43,
+      "convergence_s": {
+        "0.0": 4.0
+      },
+      "convergence_max_s": 4.0,
+      "rate": {
+        "n": 14,
+        "max_abs_u": 0.000248,
+        "max_abs_u_steady": 0.000338,
+        "max_abs_u_settled": 0.000338,
+        "distinct": 7,
+        "rate_max": 0.002
+      },
+      "commands": {
+        "group_play": 1,
+        "play_at": 2,
+        "rate": 14
+      },
+      "after_steady": {
+        "rate": 14
+      },
+      "relandings": 1,
+      "relanding_refused": 0,
+      "rejected_reads": 8,
+      "first_landing_error_ms": 44.53,
+      "after_relanding_error_ms": 0.16,
+      "clock_residual_ms": 1.0,
+      "params": {
+        "duration_s": 420.0,
+        "tick_s": 0.25,
+        "seed": 20261025,
+        "repeats": 1,
+        "delta_v2": 0.265,
+        "drift_ms_10min": -12.4,
+        "group_noise_ms": 10.2,
+        "outlier_rate": 0.005,
+        "outlier_ms": 150.0,
+        "landing_mode": "park",
+        "landing_sigma_ms": 30.0,
+        "landing_mean_ms": -43.6,
+        "load_sigma_ms": 202.0,
+        "load_mean_ms": -314.7,
+        "lead_error_ms": 0.0,
+        "true_offset_ms": 1234.5,
+        "rtt_max_ms": 40.0,
+        "clock_pings": 8,
+        "clock_residual_ms": null,
+        "rate_gain": 1.0,
+        "rate_stall_ms": 0.0,
+        "start_dispersion_ms": 0.0,
+        "video_noise_ms": 0.0,
+        "stale_rate": 0.02
+      },
+      "note": "2 % of reads report a stale PAUSED state (A36): no reload may follow",
+      "verdict": {
+        "expected": "pass",
+        "ok": true,
+        "checks": {
+          "steady_p95_le_10ms": true,
+          "no_load_seek_after_steady": true,
+          "no_play_at_after_steady": true,
+          "convergence_le_10s": true
+        },
+        "verdict": "PASS"
+      }
+    },
+    "landing_park": {
+      "repeats": 40,
+      "duration_s": 20.0,
+      "landing_ms": {
+        "n": 40,
+        "p50": 20.18,
+        "p95": 47.26,
+        "max_abs": 63.6,
+        "over_150ms_pct": 0.0
+      },
+      "after_relanding_ms": {
+        "n": 30,
+        "p50": 2.31,
+        "p95": 5.69
+      },
+      "rate": {
+        "n": 0,
+        "max_abs_u": 0.0,
+        "max_abs_u_steady": 0.0,
+        "max_abs_u_settled": 0.0,
+        "distinct": 0,
+        "rate_max": 0.002
+      },
+      "commands": {
+        "group_play": 1,
+        "play_at": 2
+      },
+      "after_steady": {},
+      "params": {
+        "duration_s": 20.0,
+        "tick_s": 0.25,
+        "seed": 20261025,
+        "repeats": 40,
+        "delta_v2": 0.265,
+        "drift_ms_10min": -12.4,
+        "group_noise_ms": 10.2,
+        "outlier_rate": 0.005,
+        "outlier_ms": 150.0,
+        "landing_mode": "park",
+        "landing_sigma_ms": 30.0,
+        "landing_mean_ms": -43.6,
+        "load_sigma_ms": 202.0,
+        "load_mean_ms": -314.7,
+        "lead_error_ms": 0.0,
+        "true_offset_ms": 1234.5,
+        "rtt_max_ms": 40.0,
+        "clock_pings": 8,
+        "clock_residual_ms": null,
+        "rate_gain": 1.0,
+        "rate_stall_ms": 0.0,
+        "start_dispersion_ms": 0.0,
+        "video_noise_ms": 0.0,
+        "stale_rate": 0.0
+      },
+      "note": "PAUSE->SEEK->PLAY, 40 draws: what the first landing costs",
+      "verdict": {
+        "expected": "informational",
+        "ok": true,
+        "checks": {
+          "after_relanding_p95_le_10ms": true
+        },
+        "verdict": "INFO (landing distribution)"
+      }
+    },
+    "landing_load": {
+      "repeats": 40,
+      "duration_s": 20.0,
+      "landing_ms": {
+        "n": 40,
+        "p50": 281.36,
+        "p95": 456.43,
+        "max_abs": 493.91,
+        "over_150ms_pct": 67.5
+      },
+      "after_relanding_ms": {
+        "n": 40,
+        "p50": 2.48,
+        "p95": 6.54
+      },
+      "rate": {
+        "n": 0,
+        "max_abs_u": 0.0,
+        "max_abs_u_steady": 0.0,
+        "max_abs_u_settled": 0.0,
+        "distinct": 0,
+        "rate_max": 0.002
+      },
+      "commands": {
+        "group_play": 1,
+        "play_at": 2
+      },
+      "after_steady": {},
+      "params": {
+        "duration_s": 20.0,
+        "tick_s": 0.25,
+        "seed": 20261025,
+        "repeats": 40,
+        "delta_v2": 0.265,
+        "drift_ms_10min": -12.4,
+        "group_noise_ms": 10.2,
+        "outlier_rate": 0.005,
+        "outlier_ms": 150.0,
+        "landing_mode": "load",
+        "landing_sigma_ms": 30.0,
+        "landing_mean_ms": -43.6,
+        "load_sigma_ms": 202.0,
+        "load_mean_ms": -314.7,
+        "lead_error_ms": 0.0,
+        "true_offset_ms": 1234.5,
+        "rtt_max_ms": 40.0,
+        "clock_pings": 8,
+        "clock_residual_ms": null,
+        "rate_gain": 1.0,
+        "rate_stall_ms": 0.0,
+        "start_dispersion_ms": 0.0,
+        "video_noise_ms": 0.0,
+        "stale_rate": 0.0
+      },
+      "note": "LOAD, 40 draws: why a LOAD start may never be used",
+      "verdict": {
+        "expected": "informational",
+        "ok": true,
+        "checks": {
+          "after_relanding_p95_le_10ms": true
+        },
+        "verdict": "INFO (landing distribution)"
+      }
+    },
+    "pessimistic": {
+      "duration_s": 300.0,
+      "steady_samples": 792,
+      "steady_from_s": 33.5,
+      "window_medians_ms": {
+        "n": 46,
+        "p50": 15.682,
+        "p95": 87.1405,
+        "max_abs": 93.46,
+        "mean_signed": 26.61
+      },
+      "window_medians_estimate_ms": {
+        "n": 46,
+        "p50": 14.86,
+        "p95": 87.33500000000001,
+        "max_abs": 92.08
+      },
+      "raw_p95_abs_ms": 87.013,
+      "raw_max_abs_ms": 94.05,
+      "read_p95_abs_ms": 86.048,
+      "read_max_abs_ms": 157.24,
+      "estimate_p95_abs_ms": 87.76,
+      "convergence_s": {
+        "0.0": 206.0,
+        "60.0": 146.0
+      },
+      "convergence_max_s": 206.0,
+      "rate": {
+        "n": 19,
+        "max_abs_u": 0.002,
+        "max_abs_u_steady": 0.002,
+        "max_abs_u_settled": 0.002,
+        "distinct": 14,
+        "rate_max": 0.002
+      },
+      "commands": {
+        "group_play": 2,
+        "play_at": 4,
+        "rate": 19,
+        "group_seek": 1
+      },
+      "after_steady": {
+        "rate": 18
+      },
+      "relandings": 2,
+      "relanding_refused": 0,
+      "rejected_reads": 7,
+      "first_landing_error_ms": -68.96,
+      "after_relanding_error_ms": 24.53,
+      "clock_residual_ms": 1.06,
+      "params": {
+        "duration_s": 300.0,
+        "tick_s": 0.25,
+        "seed": 20261025,
+        "repeats": 1,
+        "delta_v2": 0.265,
+        "drift_ms_10min": -12.4,
+        "group_noise_ms": 10.2,
+        "outlier_rate": 0.005,
+        "outlier_ms": 150.0,
+        "landing_mode": "park",
+        "landing_sigma_ms": 30.0,
+        "landing_mean_ms": -43.6,
+        "load_sigma_ms": 202.0,
+        "load_mean_ms": -314.7,
+        "lead_error_ms": 0.0,
+        "true_offset_ms": 1234.5,
+        "rtt_max_ms": 40.0,
+        "clock_pings": 8,
+        "clock_residual_ms": null,
+        "rate_gain": 0.5,
+        "rate_stall_ms": 0.0,
+        "start_dispersion_ms": 40.0,
+        "video_noise_ms": 0.0,
+        "stale_rate": 0.0
+      },
+      "note": "rate gain 0.5 + 40 ms start dispersion: must fail, with its number",
+      "verdict": {
+        "expected": "fail",
+        "ok": false,
+        "checks": {
+          "steady_p95_le_10ms": false,
+          "no_load_seek_after_steady": true,
+          "no_play_at_after_steady": true,
+          "convergence_le_10s": false
+        },
+        "verdict": "FAIL (expected)"
+      }
+    },
+    "rate_dead": {
+      "duration_s": 600.0,
+      "steady_samples": 2025,
+      "steady_from_s": 30.0,
+      "window_medians_ms": {
+        "n": 114,
+        "p50": 3.0555,
+        "p95": 8.345500000000001,
+        "max_abs": 8.92,
+        "mean_signed": -3.11
+      },
+      "window_medians_estimate_ms": {
+        "n": 114,
+        "p50": 4.31,
+        "p95": 9.99,
+        "max_abs": 11.3
+      },
+      "raw_p95_abs_ms": 8.395,
+      "raw_max_abs_ms": 9.0,
+      "read_p95_abs_ms": 22.619,
+      "read_max_abs_ms": 151.43,
+      "estimate_p95_abs_ms": 10.4,
+      "convergence_s": {
+        "0.0": 1.0
+      },
+      "convergence_max_s": 1.0,
+      "rate": {
+        "n": 32,
+        "max_abs_u": 0.000493,
+        "max_abs_u_steady": 0.00056,
+        "max_abs_u_settled": 0.00056,
+        "distinct": 16,
+        "rate_max": 0.002
+      },
+      "commands": {
+        "group_play": 1,
+        "play_at": 1,
+        "rate": 32
+      },
+      "after_steady": {
+        "rate": 32
+      },
+      "relandings": 0,
+      "relanding_refused": 1,
+      "rejected_reads": 10,
+      "first_landing_error_ms": 3.38,
+      "after_relanding_error_ms": null,
+      "clock_residual_ms": 0.39,
+      "params": {
+        "duration_s": 600.0,
+        "tick_s": 0.25,
+        "seed": 20261025,
+        "repeats": 1,
+        "delta_v2": 0.265,
+        "drift_ms_10min": -12.4,
+        "group_noise_ms": 10.2,
+        "outlier_rate": 0.005,
+        "outlier_ms": 150.0,
+        "landing_mode": "park",
+        "landing_sigma_ms": 30.0,
+        "landing_mean_ms": -43.6,
+        "load_sigma_ms": 202.0,
+        "load_mean_ms": -314.7,
+        "lead_error_ms": 0.0,
+        "true_offset_ms": 1234.5,
+        "rtt_max_ms": 40.0,
+        "clock_pings": 8,
+        "clock_residual_ms": null,
+        "rate_gain": 0.0,
+        "rate_stall_ms": 0.0,
+        "start_dispersion_ms": 0.0,
+        "video_noise_ms": 0.0,
+        "stale_rate": 0.0
+      },
+      "note": "rate gain 0 (v0.1's finding on our own receiver): the margin without a trim",
+      "verdict": {
+        "expected": "pass",
+        "ok": true,
+        "checks": {
+          "steady_p95_le_10ms": true,
+          "no_load_seek_after_steady": true,
+          "no_play_at_after_steady": true,
+          "convergence_le_10s": true
+        },
+        "verdict": "PASS"
+      }
+    },
+    "wrong_lead": {
+      "duration_s": 300.0,
+      "steady_samples": 955,
+      "steady_from_s": 33.5,
+      "window_medians_ms": {
+        "n": 53,
+        "p50": 1.922,
+        "p95": 3.5175,
+        "max_abs": 3.81,
+        "mean_signed": 1.57
+      },
+      "window_medians_estimate_ms": {
+        "n": 53,
+        "p50": 2.39,
+        "p95": 5.470000000000001,
+        "max_abs": 6.1
+      },
+      "raw_p95_abs_ms": 3.613,
+      "raw_max_abs_ms": 3.84,
+      "read_p95_abs_ms": 20.991,
+      "read_max_abs_ms": 159.76,
+      "estimate_p95_abs_ms": 5.74,
+      "convergence_s": {
+        "0.0": 4.0
+      },
+      "convergence_max_s": 4.0,
+      "rate": {
+        "n": 14,
+        "max_abs_u": 0.00025,
+        "max_abs_u_steady": 0.000339,
+        "max_abs_u_settled": 0.000318,
+        "distinct": 8,
+        "rate_max": 0.002
+      },
+      "commands": {
+        "group_play": 1,
+        "play_at": 2,
+        "rate": 14
+      },
+      "after_steady": {
+        "rate": 14
+      },
+      "relandings": 1,
+      "relanding_refused": 0,
+      "rejected_reads": 9,
+      "first_landing_error_ms": 224.13,
+      "after_relanding_error_ms": -2.83,
+      "clock_residual_ms": 3.25,
+      "params": {
+        "duration_s": 300.0,
+        "tick_s": 0.25,
+        "seed": 20261025,
+        "repeats": 1,
+        "delta_v2": 0.265,
+        "drift_ms_10min": -12.4,
+        "group_noise_ms": 10.2,
+        "outlier_rate": 0.005,
+        "outlier_ms": 150.0,
+        "landing_mode": "park",
+        "landing_sigma_ms": 30.0,
+        "landing_mean_ms": -43.6,
+        "load_sigma_ms": 202.0,
+        "load_mean_ms": -314.7,
+        "lead_error_ms": 200.0,
+        "true_offset_ms": 1234.5,
+        "rtt_max_ms": 40.0,
+        "clock_pings": 8,
+        "clock_residual_ms": null,
+        "rate_gain": 1.0,
+        "rate_stall_ms": 0.0,
+        "start_dispersion_ms": 0.0,
+        "video_noise_ms": 0.0,
+        "stale_rate": 0.0
+      },
+      "note": "a lead learned 200 ms wrong: the single re-landing absorbs it",
+      "verdict": {
+        "expected": "pass",
+        "ok": true,
+        "checks": {
+          "steady_p95_le_10ms": true,
+          "no_load_seek_after_steady": true,
+          "no_play_at_after_steady": true,
+          "convergence_le_10s": true
+        },
+        "verdict": "PASS"
+      }
+    }
+  }
+}
