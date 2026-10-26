@@ -41,6 +41,7 @@ repos:
         name: gitleaks (whole history)
         entry: gitleaks git --redact --no-banner
         pass_filenames: false
+        always_run: true
         stages: [manual]
 
   - repo: local
