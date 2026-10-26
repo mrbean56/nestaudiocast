@@ -54,7 +54,8 @@ works, but it has no tiers and no network guard: use pytest.
 | commit | `tools/safety_guards.sh` | mute-never-zero, startup unmute, relay yield (A23, A36, A37, §7) |
 | push | the offline suite | nothing leaves this host red |
 
-`uv run pre-commit run --all-files` runs them all; CI does exactly that, then pytest.
+`uv run pre-commit run --all-files` runs them all. CI does exactly that, then scans the whole
+history for secrets (`uv run pre-commit run gitleaks-history --hook-stage manual`), then pytest.
 
 v0.1 code (`lib/castv2.py`, `lib/silence.py`, `lib/emergency.py`, `lib/groupguard.py`,
 `relay/`, the v0.1 `probe/`, `measure/` and `tools/` scripts) is linted for real errors but

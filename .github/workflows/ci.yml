@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0          # gitleaks scans history, not just the tip
+          fetch-depth: 0          # the history scan below needs every commit
       - uses: astral-sh/setup-uv@v7
         with:
           version: "0.13.5"
@@ -21,5 +21,7 @@ jobs:
         run: uv sync --locked
       - name: hooks (lint, format, lock, requirements export, secrets, safety guards)
         run: uv run pre-commit run --all-files --show-diff-on-failure
+      - name: secrets in the whole history
+        run: uv run pre-commit run gitleaks-history --hook-stage manual
       - name: contracts + units (offline tier; LAN tiers are refused on CI)
         run: uv run pytest
