@@ -1,0 +1,169 @@
+{
+ "tool": "acoustic_v020",
+ "self_test": true,
+ "when": "2026-10-25 22:12:05",
+ "offline": true,
+ "targets_touched": [],
+ "note": "synthetic recordings + a loopback fake service + a stub recorder; measure/analyze_offset.py is called unchanged through a subprocess",
+ "cases": [
+  {
+   "case": "known offset +0 ms",
+   "ok": true,
+   "measured_ms": -4.0,
+   "true_ms": 0.0,
+   "pairs": 20,
+   "stdev_ms": 0.0,
+   "reasons": []
+  },
+  {
+   "case": "known offset +40 ms",
+   "ok": true,
+   "measured_ms": 36.0,
+   "true_ms": 40.0,
+   "pairs": 20,
+   "stdev_ms": 0.0,
+   "reasons": []
+  },
+  {
+   "case": "known offset -60 ms",
+   "ok": true,
+   "measured_ms": -64.0,
+   "true_ms": -60.0,
+   "pairs": 20,
+   "stdev_ms": 0.0,
+   "reasons": []
+  },
+  {
+   "case": "instrument bias +6 ms is subtracted",
+   "ok": true,
+   "got": 34.0,
+   "expected": 34.0,
+   "detail": null
+  },
+  {
+   "case": "alias-ambiguous window refused",
+   "ok": true,
+   "reasons": [
+    "analyzer refused the window: AMBIGUOUS — measured 476 ms sits at the ±500 ms aliasing limit of a 1 s click period",
+    "corrected offset 476 ms exceeds ±150 ms"
+   ],
+   "measured_ms": 476.0
+  },
+  {
+   "case": "dispersion > 40 ms refused",
+   "ok": true,
+   "stdev_ms": 113.0,
+   "reasons": [
+    "sigma 113.0 ms > 40 ms",
+    "analyzer refused the window: AMBIGUOUS — dispersion 113 ms > 40 ms"
+   ]
+  },
+  {
+   "case": "fewer than 8 pairs refused",
+   "ok": true,
+   "pairs": 4,
+   "reasons": [
+    "only 4 kept pairs (< 8)",
+    "analyzer refused the window: AMBIGUOUS — only 4 pairs"
+   ]
+  },
+  {
+   "case": "injected drift recovered (2 -> 30 ms over 7 min)",
+   "ok": true,
+   "drift": {
+    "drift_ms_per_10min": 40.0,
+    "sigma_ms_per_10min": 0.0,
+    "trend_counts": true,
+    "limit_ms_per_10min": 60.0,
+    "points": 3,
+    "ok": true,
+    "rule": "protocol §5: |projected 10 min| <= 60 ms, or a trend not beyond 2 sigma"
+   }
+  },
+  {
+   "case": "drift over the 60 ms/10 min limit rejected",
+   "ok": true,
+   "drift": {
+    "drift_ms_per_10min": 114.3,
+    "sigma_ms_per_10min": 0.0,
+    "trend_counts": true,
+    "limit_ms_per_10min": 60.0,
+    "points": 3,
+    "ok": false,
+    "rule": "protocol §5: |projected 10 min| <= 60 ms, or a trend not beyond 2 sigma"
+   }
+  },
+  {
+   "case": "flat series accepted",
+   "ok": true,
+   "got": true,
+   "expected": true,
+   "detail": null
+  },
+  {
+   "case": "linearity 1:1 holds (+100 ms -> +98 ms)",
+   "ok": true,
+   "got": true,
+   "expected": true,
+   "detail": null
+  },
+  {
+   "case": "linearity 1:1 broken (+100 ms -> +10 ms)",
+   "ok": true,
+   "got": false,
+   "expected": false,
+   "detail": null
+  },
+  {
+   "case": "linearity sign inverted",
+   "ok": true,
+   "got": false,
+   "expected": false,
+   "detail": null
+  },
+  {
+   "case": "window cut by a reload is discarded",
+   "ok": true,
+   "steady_since_before": 1792980662.6024077,
+   "steady_since_after": 1792980722.6113842
+  },
+  {
+   "case": "share -> 3 recordings -> analyze -> series verdict (stub recorder)",
+   "ok": true,
+   "points": [
+    {
+     "minute": 0.01,
+     "corrected_ms": 36.0,
+     "pairs_kept": 20,
+     "ok": true
+    },
+    {
+     "minute": 0.02,
+     "corrected_ms": 36.0,
+     "pairs_kept": 20,
+     "ok": true
+    },
+    {
+     "minute": 0.03,
+     "corrected_ms": 36.0,
+     "pairs_kept": 20,
+     "ok": true
+    }
+   ],
+   "series": {
+    "drift_ms_per_10min": -0.0,
+    "sigma_ms_per_10min": 0.0,
+    "trend_counts": true,
+    "limit_ms_per_10min": 60.0,
+    "points": 3,
+    "ok": true,
+    "rule": "protocol §5: |projected 10 min| <= 60 ms, or a trend not beyond 2 sigma"
+   },
+   "verdict": "PASS — 3/3 windows valid; series drift -0.0 ± 0.0 ms/10 min",
+   "stopped": true
+  }
+ ],
+ "passed": 15,
+ "total": 15,
+ "result": "SELF-TEST PASS"
+}

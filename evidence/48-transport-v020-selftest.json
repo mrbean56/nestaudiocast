@@ -1,0 +1,107 @@
+{
+ "tool": "transport_v020",
+ "self_test": true,
+ "when": "2026-10-25 22:12:50",
+ "offline": true,
+ "targets_touched": [],
+ "note": "a loopback fake service only; no speaker, no group, no Chromecast",
+ "cases": [
+  {
+   "case": "healthy fake service: 12/12 rows pass",
+   "ok": true,
+   "detail": {
+    "passed": 12,
+    "failed": 0,
+    "unverified": 0,
+    "total": 12,
+    "failed_checks": []
+   }
+  },
+  {
+   "case": "every check carries a duration or an unverified reason",
+   "ok": true,
+   "detail": {
+    "rows": 12
+   }
+  },
+  {
+   "case": "broken 'volume' is caught (volume down: group follows)",
+   "ok": true,
+   "detail": {
+    "failed_checks": [
+     "volume down: group follows",
+     "volume up: group follows"
+    ]
+   }
+  },
+  {
+   "case": "broken 'resume' is caught (resume: playing and advancing)",
+   "ok": true,
+   "detail": {
+    "failed_checks": [
+     "resume: playing and advancing",
+     "volume down: group follows",
+     "volume up: group follows"
+    ]
+   }
+  },
+  {
+   "case": "broken 'newshare' is caught (new share mid-session: new session)",
+   "ok": true,
+   "detail": {
+    "failed_checks": [
+     "new share mid-session: new session"
+    ]
+   }
+  },
+  {
+   "case": "broken 'stop' is caught (stop: idle, no session)",
+   "ok": true,
+   "detail": {
+    "failed_checks": [
+     "stop: idle, no session"
+    ]
+   }
+  },
+  {
+   "case": "broken 'seek' is caught (seek +: lands forward)",
+   "ok": true,
+   "detail": {
+    "failed_checks": [
+     "seek +: lands forward",
+     "seek -: lands backward",
+     "end of media: ended then idle"
+    ]
+   }
+  },
+  {
+   "case": "no duration -> end of media is unverified, not a pass",
+   "ok": true,
+   "detail": {
+    "row": {
+     "check": "end of media: ended then idle",
+     "pass": null,
+     "seconds": null,
+     "unverified": "no --duration-s given: the duration is not in /api/status (proposed amendment)"
+    }
+   }
+  },
+  {
+   "case": "non-idle service refused before the matrix",
+   "ok": true,
+   "detail": {
+    "checks": [
+     {
+      "check": "precondition: idle service",
+      "pass": false,
+      "seconds": 0.0,
+      "state": "playing"
+     }
+    ]
+   }
+  }
+ ],
+ "passed": 9,
+ "total": 9,
+ "result": "SELF-TEST PASS"
+}

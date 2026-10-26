@@ -1,0 +1,139 @@
+{
+ "tool": "analyze_v020",
+ "self_test": true,
+ "when": "2026-10-25 22:12:00",
+ "offline": true,
+ "targets_touched": [],
+ "note": "every input is synthetic except the two archived v0.1 files, which are read as files; nothing here opens a socket",
+ "cases": [
+  {
+   "case": "v0.2 contract log, 3 ms bias",
+   "input": "contract-good.jsonl",
+   "exit": 0,
+   "expected_exit": 0,
+   "ok": true,
+   "verdict": "PASS — 41/41 steady window(s) within ±20 ms; worst |median| 5.5 ms; no reload in steady state",
+   "overall": {
+    "median_ms": 2.7,
+    "p95_abs_ms": 9.1,
+    "max_abs_ms": 13.3,
+    "n": 836
+   },
+   "windows": 41
+  },
+  {
+   "case": "v0.2 log with a hidden reload at 120 s",
+   "input": "contract-injected-reload.jsonl",
+   "exit": 3,
+   "expected_exit": 3,
+   "ok": true,
+   "verdict": "FAIL — 1 load/seek event(s) inside steady state (contracts §1); 35 steady window(s), worst |median| 5.5 ms",
+   "overall": {
+    "median_ms": 2.8,
+    "p95_abs_ms": 9.1,
+    "max_abs_ms": 13.3,
+    "n": 716
+   },
+   "windows": 35
+  },
+  {
+   "case": "v0.2 log with +60 ms/10 min injected drift",
+   "input": "contract-drift.jsonl",
+   "exit": 1,
+   "expected_exit": 1,
+   "ok": true,
+   "verdict": "FAIL — 29/65 steady window(s) with |median| > 20 ms (worst 36.1 ms)",
+   "overall": {
+    "median_ms": 19.4,
+    "p95_abs_ms": 35.2,
+    "max_abs_ms": 43.5,
+    "n": 1316
+   },
+   "windows": 65
+  },
+  {
+   "case": "v0.2 log with a +35 ms median (over ±20 ms)",
+   "input": "contract-breach.jsonl",
+   "exit": 1,
+   "expected_exit": 1,
+   "ok": true,
+   "verdict": "FAIL — 41/41 steady window(s) with |median| > 20 ms (worst 36.2 ms)",
+   "overall": {
+    "median_ms": 34.9,
+    "p95_abs_ms": 38.0,
+    "max_abs_ms": 40.1,
+    "n": 836
+   },
+   "windows": 41
+  },
+  {
+   "case": "v0.2 log too short for a steady window",
+   "input": "contract-short.jsonl",
+   "exit": 4,
+   "expected_exit": 4,
+   "ok": true,
+   "verdict": "INCOMPLETE — no steady 5 s window (needs >= 30s of playing samples after the last transport event; 112 sample(s), 0 steady)",
+   "overall": {
+    "median_ms": null,
+    "p95_abs_ms": null,
+    "max_abs_ms": null,
+    "n": 0
+   },
+   "windows": 0
+  },
+  {
+   "case": "v0.2 log without video positions + --video-log",
+   "input": "contract-group-only.jsonl",
+   "exit": 0,
+   "expected_exit": 0,
+   "ok": true,
+   "verdict": "PASS — 41/41 steady window(s) within ±20 ms; worst |median| 5.5 ms; no reload in steady state",
+   "overall": {
+    "median_ms": 2.7,
+    "p95_abs_ms": 9.1,
+    "max_abs_ms": 13.3,
+    "n": 836
+   },
+   "windows": 41
+  },
+  {
+   "case": "archived v0.1 relay log evidence/29 (v0.1 realigns after the start: the v0.2 rule forbids it)",
+   "input": "29-relay-untouched.jsonl",
+   "exit": 3,
+   "expected_exit": 3,
+   "ok": true,
+   "verdict": "FAIL — 1 load/seek event(s) inside steady state (contracts §1); 96 steady window(s), worst |median| 31.2 ms",
+   "overall": {
+    "median_ms": 8.5,
+    "p95_abs_ms": 23.8,
+    "max_abs_ms": 83.9,
+    "n": 1477
+   },
+   "windows": 96
+  },
+  {
+   "case": "archived v0.1 landing report evidence/39",
+   "input": "39-landing-30ms.json",
+   "exit": 4,
+   "expected_exit": 4,
+   "ok": true,
+   "verdict": "INCOMPLETE — a v0.1 landing report carries no samples; run the v0.2 session log through this instrument instead",
+   "overall": {
+    "median_ms": null,
+    "p95_abs_ms": null,
+    "max_abs_ms": null,
+    "n": 0
+   },
+   "windows": 0
+  },
+  {
+   "case": "unreadable input",
+   "ok": true,
+   "exit": 2,
+   "expected_exit": 2
+  }
+ ],
+ "passed": 9,
+ "total": 9,
+ "result": "SELF-TEST PASS"
+}

@@ -1,0 +1,155 @@
+{
+ "tool": "quiet_v020",
+ "self_test": true,
+ "when": "2026-10-25 22:14:22",
+ "offline": true,
+ "targets_touched": [],
+ "note": "loopback fake service and a temporary config file; the real /etc/castsender.conf is never read or written by the self-test",
+ "cases": [
+  {
+   "case": "a share that plays during quiet hours is caught",
+   "ok": true,
+   "detail": {
+    "PASS": false,
+    "verdict": "FAIL — the share was not refused during the quiet window; 1 group transport packet(s) during quiet hours",
+    "reasons": [
+     "the share was not refused during the quiet window",
+     "1 group transport packet(s) during quiet hours"
+    ],
+    "group_packets_refuse": [
+     {
+      "kind": "load",
+      "side": "group",
+      "wall": 1792980852.7213695,
+      "t": null
+     }
+    ],
+    "group_packets_video_only": [],
+    "restore": {
+     "health": true,
+     "config_identical": true,
+     "quiet": false,
+     "state": "idle"
+    }
+   }
+  },
+  {
+   "case": "a group packet during quiet hours is caught",
+   "ok": true,
+   "detail": {
+    "PASS": false,
+    "verdict": "FAIL — 1 group transport packet(s) during quiet hours",
+    "reasons": [
+     "1 group transport packet(s) during quiet hours"
+    ],
+    "group_packets_refuse": [
+     {
+      "kind": "load",
+      "side": "group",
+      "wall": 1792980853.930496,
+      "t": null
+     }
+    ],
+    "group_packets_video_only": [],
+    "restore": {
+     "health": true,
+     "config_identical": true,
+     "quiet": false,
+     "state": "idle"
+    }
+   }
+  },
+  {
+   "case": "a group load under video_only is caught",
+   "ok": true,
+   "detail": {
+    "PASS": false,
+    "verdict": "FAIL — 1 group transport packet(s) under video_only",
+    "reasons": [
+     "1 group transport packet(s) under video_only"
+    ],
+    "group_packets_refuse": [],
+    "group_packets_video_only": [
+     {
+      "kind": "load",
+      "side": "group",
+      "wall": 1792980854.6908612,
+      "t": null
+     }
+    ],
+    "restore": {
+     "health": true,
+     "config_identical": true,
+     "quiet": false,
+     "state": "idle"
+    }
+   }
+  },
+  {
+   "case": "a video_only share that never plays is caught",
+   "ok": true,
+   "detail": {
+    "PASS": false,
+    "verdict": "FAIL — the video did not play under video_only",
+    "reasons": [
+     "the video did not play under video_only"
+    ],
+    "group_packets_refuse": [],
+    "group_packets_video_only": [],
+    "restore": {
+     "health": true,
+     "config_identical": true,
+     "quiet": false,
+     "state": "idle"
+    }
+   }
+  },
+  {
+   "case": "a restore that does not take effect is caught",
+   "ok": true,
+   "detail": {
+    "PASS": false,
+    "verdict": "FAIL — the service still reports quiet after the restore",
+    "reasons": [
+     "the service still reports quiet after the restore"
+    ],
+    "group_packets_refuse": [],
+    "group_packets_video_only": [],
+    "restore": {
+     "health": true,
+     "config_identical": true,
+     "quiet": true,
+     "state": "idle"
+    }
+   }
+  },
+  {
+   "case": "healthy path: quiet_refused, video_only plays, group untouched, config restored",
+   "ok": true,
+   "detail": {
+    "PASS": true,
+    "verdict": "PASS — quiet_refused with zero group packets, then video_only playing with the group untouched; config restored byte for byte",
+    "refuse_ok": true,
+    "video_only_ok": true,
+    "group_packets_refuse": [],
+    "group_packets_video_only": [],
+    "restore": {
+     "health": true,
+     "config_identical": true,
+     "quiet": false,
+     "state": "idle"
+    }
+   }
+  },
+  {
+   "case": "--dry-run writes nothing and says so",
+   "ok": true,
+   "detail": {
+    "verdict": "DRY RUN — nothing written, nothing restarted"
+   }
+  }
+ ],
+ "passed": 7,
+ "total": 7,
+ "result": "SELF-TEST PASS"
+}
