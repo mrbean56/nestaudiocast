@@ -148,7 +148,7 @@ cd ~/opencode/nestaudiocast-wt/sender
 ./tests/v020/run.sh                                   # 124 tests, 0 échec
 ./tools/prove.sh --fast                               # suite de sécurité v0.1 : verte
 .venv/bin/python -m sender.selftest \
-    --evidence evidence/40-sender-selftest.json       # matrice + 10 min + boot cleanup
+    --evidence evidence/47-sender-selftest.json       # matrice + 10 min + boot cleanup
 .venv/bin/python -m sender.service --offline --once    # le service démarre et répond
 .venv/bin/python -m sender.service --offline --cleanup # ExecStopPost, sans enregistrement
 ```
