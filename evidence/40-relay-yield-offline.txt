@@ -1,0 +1,221 @@
+# 40 — relay-yield : v0.1 ne touche plus le groupe quand v0.2 le possède (tâche H)
+# Archivé 2026-10-25T21:49:09-04:00 sur opencode (192.168.2.18), branche feat/relay-yield.
+# PORTÉE : hors ligne + vérifications LAN EN LECTURE SEULE. Aucun paquet vers le groupe
+# Cuisine, la TV ou le Chromecast. Le test matériel (notes/labo-relay-yield.md §7) n'a PAS
+# été exécuté : le son de la cuisine est interdit cette nuit.
+
+## 1. Fichiers et empreintes
+3dd7d5c27a3be4e9e1511903025b55ef72de5a78f6bd15f6ee5372e4c02fbc58  relay/cast_relay.py
+9eb60c12c6f0c084f2f940216660e9cefa099f13515fa92a968a98798bc64179  tools/relay-stop-post.sh
+61e5e055c55e7a80b80448db0ca53190d7508133e5189208e70159ef315019fc  tools/run-relay.sh
+b1386b30e142e8ed7b106b26e8dea22c86a280e9cdfe3e7b3c4fa2bafdcfd473  tools/prove.sh
+6f185b795552d00c1ea3565ae60ae7824f43e6f6b208570aa60c9570c501445c  tests/v020/test_relay_yield.py
+2b02779cc81cc11c8037af78279f78eeb308ec45e75211d7bde7b4c80f0da75a  notes/labo-relay-yield.md
+
+## 2. État déployé sur CT 121 (lecture seule)
+$ ssh root@192.168.2.21 "systemctl cat cast-relay | grep -n ^Exec; sha256sum ..."
+12:ExecStart=/opt/castrelay/tools/run-relay.sh
+14:ExecStopPost=-/opt/castrelay/.venv/bin/python /opt/castrelay/lib/emergency.py
+--- sha emergency deploye vs depot
+fcc8a4287fa5ab127bde2cc6f95c6550a2c09d4c56d0e3f98731472cb8758175  /opt/castrelay/lib/emergency.py
+--- state/ (aucun group.owner aujourd hui)
+total 12
+drwxr-xr-x  2 root root 4096 Oct 25 15:55 .
+drwxrwxr-x 15 root root 4096 Oct 25 16:02 ..
+-rw-r--r--  1 root root   49 Oct 25 18:01 lead_adj.json
+--- relay deploye (sha attendu = celui de v0.2.0 de base, AVANT cette tache)
+ddba5e00bbb99f24ae5812b5628127f3b24702f2cba6e0e4cad01fbab313b504  /opt/castrelay/relay/cast_relay.py
+--- depot, apres cette tache
+fcc8a4287fa5ab127bde2cc6f95c6550a2c09d4c56d0e3f98731472cb8758175  lib/emergency.py
+3dd7d5c27a3be4e9e1511903025b55ef72de5a78f6bd15f6ee5372e4c02fbc58  relay/cast_relay.py
+$ git show v0.2.0:relay/cast_relay.py | sha256sum   # == le deploye : le code H n est PAS deployee
+ddba5e00bbb99f24ae5812b5628127f3b24702f2cba6e0e4cad01fbab313b504  -
+$ git show v0.2.0:tools/run-relay.sh | sha256sum
+98e7da876b4006fc40e723f23d3876925bbf8a3d1e7839604eafded3ce909649  -
+
+## 3. Suite v0.2 (hors ligne)
+$ ./tests/v020/run.sh
+test_unreadable_path_is_not_ownership (test_relay_yield.OwnerFile.test_unreadable_path_is_not_ownership) ... ok
+
+----------------------------------------------------------------------
+Ran 24 tests in 0.003s
+
+OK
+
+## 4. Gardes statiques (prove.sh --fast ; §3/§4 sont des lectures de statut, aucun paquet)
+$ ./tools/prove.sh --fast
+== 5. safety regressions (offline, static) ===========
+   ok: silencing mutes only, never zeroes levels
+   ok: the relay undoes its own stop-mute at startup (per member)
+   ok: member uuid -> IP mapping present (needed to unmute members directly)
+   ok: warns when every group member is silent
+   ok: the relay reads state/group.owner and yields the group to a live v0.2 owner
+   ok: the lock is read-only for the relay (never created, refreshed or deleted)
+   ok: ExecStopPost wrapper skips emergency.py while v0.2 owns the group
+   -> all safety regressions clear
+
+done — evidence in evidence/
+
+## 5. Le relais ne parle pas au groupe (sink factice en mémoire)
+# Le VRAI Relay (relay/cast_relay.py) avec un sink qui compte chaque paquet, un verrou frais,
+# mirror_volume=True. Aucun socket : ni TV, ni groupe, ni Chromecast.
+----- yield_fake.py -----
+"""Offline check of the yield branch: a fake sink records every group packet it would send.
+
+No speaker, no group, no TV, no socket: the sink is an in-memory recorder, the TV a dict.
+"""
+import json, os, sys, time
+sys.path.insert(0, "relay")
+import cast_relay as R
+
+OWNER = sys.argv[1]
+CALLS = []
+
+class Link:
+    def keepalive(self):
+        CALLS.append("link.keepalive")
+    def close(self):
+        CALLS.append("link.close")
+
+class Sink:
+    """Every method a group packet would leave through, recorded and neutralised."""
+    def __init__(self):
+        self.link = Link()
+        self.session = None
+        self.transport = None
+        self.content = None
+        self.state = "IDLE"
+    def _rec(self, name, *a, **k):
+        CALLS.append(name)
+    connect = lambda self, *a, **k: self._rec("connect")
+    reconnect = lambda self, *a, **k: self._rec("reconnect")
+    snapshot = lambda self, *a, **k: (self._rec("snapshot"), {"wall": time.time(), "t": 0.0,
+                                                             "state": "PLAYING"})[1]
+    prepare = lambda self, *a, **k: (self._rec("prepare"), True)[1]
+    start = lambda self, *a, **k: (self._rec("start"), {"playerState": "PLAYING"})[1]
+    play_now = lambda self, *a, **k: self._rec("play")
+    play = lambda self, *a, **k: self._rec("play")
+    pause = lambda self, *a, **k: self._rec("pause")
+    seek = lambda self, *a, **k: self._rec("seek")
+    set_rate = lambda self, *a, **k: self._rec("set_rate")
+    set_volume = lambda self, *a, **k: self._rec("set_volume")
+    stop = lambda self, *a, **k: self._rec("stop_app")
+    close = lambda self, *a, **k: CALLS.append("sink.close")
+
+class Tv:
+    def snapshot(self):
+        return {"wall": time.time(), "state": "PLAYING", "t": 100.0,
+                "content": "AAAAAAAAAAA", "volume": 0.4, "muted": False}
+
+class Audio:
+    inflight = set()
+    def url_for(self, vid):
+        return None
+    def fetch_async(self, vid):
+        CALLS.append("yt-dlp")
+
+sink, tv = Sink(), Tv()
+log = os.path.join(os.path.dirname(OWNER), "relay-yield-fake.jsonl")
+r = R.Relay(tv, sink, Audio(), poll=0.25, log_path=log, verbose=False, owner_path=OWNER,
+            mirror_volume=True)
+
+def lock(doc, age=1.0):
+    with open(OWNER, "w") as fh:
+        json.dump(doc, fh)
+    t = time.time() - age
+    os.utime(OWNER, (t, t))
+
+lock({"owner": "cast-sender", "pid": 999999, "since": time.time() - 2})
+for _ in range(4):
+    r.step()
+print(json.dumps({"phase": "yielded", "steps": 4, "group_calls": CALLS,
+                  "owner_v020": r.owner.v020}))
+with open(log) as fh:
+    ev = [json.loads(l)["ev"] for l in fh]
+print(json.dumps({"phase": "yielded", "log_events": ev}))
+
+# heartbeat: two polls 5.2 s apart must leave two relay_yielded lines, still zero packets
+CALLS.clear()
+time.sleep(5.2)
+r.step()
+with open(log) as fh:
+    beats = [json.loads(l) for l in fh if json.loads(l)["ev"] == "relay_yielded"]
+print(json.dumps({"phase": "heartbeat", "group_calls": CALLS, "relay_yielded_lines": len(beats),
+                  "last": beats[-1] if beats else None}))
+
+CALLS.clear()
+lock({"owner": "cast-sender", "pid": 999999, "since": time.time() - 40}, age=40)
+r.step()
+print(json.dumps({"phase": "lock_stale", "group_calls": CALLS, "yielded": r._yielded}))
+
+CALLS.clear()
+r.step()
+print(json.dumps({"phase": "after_resume", "group_calls": CALLS, "yielded": r._yielded,
+                  "need_start": r.need_start}))
+----- sortie (log neuf) -----
+{"phase": "yielded", "steps": 4, "group_calls": [], "owner_v020": true}
+{"phase": "yielded", "log_events": ["relay_yielded"]}
+{"phase": "heartbeat", "group_calls": [], "relay_yielded_lines": 2, "last": {"wall": 1792979404.5418, "ev": "relay_yielded", "owner": "cast-sender", "pid": 999999, "age_s": 6.2, "reason": "fresh", "note": "v0.2 owns the group: no group traffic"}}
+{"phase": "lock_stale", "group_calls": [], "yielded": false}
+{"phase": "after_resume", "group_calls": ["link.keepalive", "set_volume", "yt-dlp", "stop_app"], "yielded": false, "need_start": true}
+
+## 6. Le crochet d'arrêt décide correctement (lib/emergency.py remplacé par un stub)
+----- wrapper_decision.sh -----
+#!/bin/sh
+# Offline check of tools/relay-stop-post.sh: five locks, one STUB lib/emergency.py, so no
+# speaker is reachable from the temporary ROOT and nothing can be muted by this test.
+set -eu
+REPO=${REPO:-$(pwd)}
+W=$(mktemp -d)
+mkdir -p "$W/lib" "$W/state" "$W/relay" "$W/.venv/bin"
+ln -s "$REPO/relay/cast_relay.py" "$W/relay/cast_relay.py"
+for f in castv2.py groupguard.py silence.py asset_server.py; do ln -s "$REPO/lib/$f" "$W/lib/$f"; done
+printf '#!/bin/sh\nexec %s/.venv/bin/python "$@"\n' "$REPO" > "$W/.venv/bin/python"
+chmod +x "$W/.venv/bin/python"
+printf 'print("STUB: emergency.py would have run (no speaker touched)")\n' > "$W/lib/emergency.py"
+export CASTRELAY_ROOT="$W" GROUP_OWNER_FILE="$W/state/group.owner"
+
+lock() {  # lock <owner> <age_seconds>
+  "$REPO/.venv/bin/python" - "$GROUP_OWNER_FILE" "$1" "$2" <<'PY'
+import json, os, sys, time
+p, owner, age = sys.argv[1], sys.argv[2], float(sys.argv[3])
+t = time.time() - age
+json.dump({"owner": owner, "pid": 999999, "since": t}, open(p, "w"))
+os.utime(p, (t, t))
+PY
+}
+
+echo "case 1: fresh cast-sender lock";  lock cast-sender 1;  sh "$REPO/tools/relay-stop-post.sh"; echo "rc=$?"
+echo "case 2: stale cast-sender lock";  lock cast-sender 40; sh "$REPO/tools/relay-stop-post.sh"; echo "rc=$?"
+echo "case 3: malformed lock";          printf '{"owner": "cast-sender"' > "$GROUP_OWNER_FILE"; sh "$REPO/tools/relay-stop-post.sh"; echo "rc=$?"
+echo "case 4: absent lock";            rm -f "$GROUP_OWNER_FILE"; sh "$REPO/tools/relay-stop-post.sh"; echo "rc=$?"
+echo "case 5: our own (cast-relay) lock"; lock cast-relay 1; sh "$REPO/tools/relay-stop-post.sh"; echo "rc=$?"
+----- sortie -----
+case 1: fresh cast-sender lock
+skip_mute_v020 owner=cast-sender pid=999999 age_s=1.133
+   lib/emergency.py NOT run: a mute or a session stop would act on v0.2's audio
+rc=0
+case 2: stale cast-sender lock
+v0.1 stop path: owner=cast-sender reason=stale age_s=40.122
+STUB: emergency.py would have run (no speaker touched)
+rc=0
+case 3: malformed lock
+v0.1 stop path: owner=None reason=malformed:not-json age_s=None
+STUB: emergency.py would have run (no speaker touched)
+rc=0
+case 4: absent lock
+v0.1 stop path: owner=None reason=absent age_s=None
+STUB: emergency.py would have run (no speaker touched)
+rc=0
+case 5: our own (cast-relay) lock
+v0.1 stop path: owner=cast-relay reason=fresh age_s=1.122
+STUB: emergency.py would have run (no speaker touched)
+rc=0
+
+## 7. Ce que ce fichier ne prouve pas
+- Rien sur une session v0.2 réelle : le test LAN est écrit dans
+  notes/labo-relay-yield.md §7, NON EXÉCUTÉ (aucun son en cuisine cette nuit).
+- Rien sur le remplacement de notre session par le LOAD de v0.2 si le relais jouait déjà
+  (risque résiduel, labo §4).
+- Rien sur un --owner-file relatif en service réel (défaut state/group.owner sous
+  WorkingDirectory=/opt/castrelay ; le wrapper le résout en absolu).
