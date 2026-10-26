@@ -45,7 +45,7 @@ laisser la dérive mesurable sur 10 min sans être inventée sur une série plat
 
 **Mesure** — `.venv/bin/python` sur `v020.group.PlayheadEstimator` et `v020.group.drift()`, série
 synthétique déterministe (graine 7, 4 Hz, 8 ms de bruit) ; sortie archivée dans
-`evidence/v020-group-estimator-selftest.json` :
+`evidence/43-group-estimator-selftest.json` :
 
 | Cas | Résultat | Ce que ça prouve |
 |---|---|---|
@@ -72,7 +72,7 @@ il n'est pas supposé ici.
 
 ## G3 — Sécurité de session et d'hystérésis, hors ligne
 
-**Mesure** — `tests/v020/test_group.py` (61 tests, `evidence/v020-group-offline-tests.log`), avec
+**Mesure** — `tests/v020/test_group.py` (61 tests, `evidence/43-group-offline-tests.log`), avec
 `tests/v020/fakes.FakeGroup` et un **faux appareil CASTv2** (`FakeDevice`, scripté en
 `MEDIA_STATUS`), horloge simulée, aucun socket :
 
@@ -104,7 +104,7 @@ pas par convention.
 PAUSE→SEEK→PLAY, puis résidu de l'estimateur et dérive réelle sur 10 min) peut être écrite et
 **prouvée inerte** aujourd'hui, sans envoyer un seul paquet.
 
-**Mesure** — `evidence/v020-group-probe-dryrun.log` : mode par défaut = plan, `exit 0`,
+**Mesure** — `evidence/43-group-probe-dryrun.log` : mode par défaut = plan, `exit 0`,
 `transport_constructed: 0`, `castv2_imported: false` (aucun mDNS, aucun socket, aucun objet de
 transport). Le compteur est instrumenté dans le script : une exécution à blanc qui construirait un
 transport le dirait et sortirait en code 3. Refus vérifiés et testés (code 2) : sans `--mute`, sans
@@ -132,10 +132,10 @@ refuser. **Non prouvé : ses chiffres.** Aucune dispersion d'atterrissage ni auc
 
 | Commande | Résultat | Fichier |
 |---|---|---|
-| `./tests/v020/run.sh` | **61 tests, OK** (0,2 s) | `evidence/v020-group-offline-tests.log` |
-| `./tools/prove.sh --fast` | sortie **0** : analyseur PASS, cuisine **silencieuse** (`audible right now: none`), groupe **Cuisine SAFE** (5 Nest Audio, aucun appareil vidéo), 4 gardes de régression OK | `evidence/v020-group-prove-fast.log` |
-| `tools/group_probe_v020.py --dry-run` | sortie **0**, `transport_constructed: 0` | `evidence/v020-group-probe-dryrun.log` |
-| estimateur synthétique | résidu **3,44 ms**, 0 rejet / 240 ; périmée +156 ms rejetée ; dérive 10 min **180,4 ± 1,8 ms/10 min** sur 300 ppm, **−1,4 ± 1,8** sur une série plate | `evidence/v020-group-estimator-selftest.json` |
+| `./tests/v020/run.sh` | **61 tests, OK** (0,2 s) | `evidence/43-group-offline-tests.log` |
+| `./tools/prove.sh --fast` | sortie **0** : analyseur PASS, cuisine **silencieuse** (`audible right now: none`), groupe **Cuisine SAFE** (5 Nest Audio, aucun appareil vidéo), 4 gardes de régression OK | `evidence/43-group-prove-fast.log` |
+| `tools/group_probe_v020.py --dry-run` | sortie **0**, `transport_constructed: 0` | `evidence/43-group-probe-dryrun.log` |
+| estimateur synthétique | résidu **3,44 ms**, 0 rejet / 240 ; périmée +156 ms rejetée ; dérive 10 min **180,4 ± 1,8 ms/10 min** sur 300 ppm, **−1,4 ± 1,8** sur une série plate | `evidence/43-group-estimator-selftest.json` |
 
 `prove.sh --fast` est la seule commande de la liste qui parle au LAN, et elle ne fait que lire :
 mDNS puis `MULTIZONE_STATUS`. Elle confirme au passage que le groupe `Cuisine` que la sonde
