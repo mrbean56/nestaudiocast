@@ -190,7 +190,8 @@ QUIET_POLICY=refuse    # refuse | video_only
   "the TV is not playing YouTube" while it is not the owner (no LOAD, no SEEK, no mute, no volume
   mirroring — heartbeat only). **The v0.2 owner always wins**: it is created by an explicit user
   action (a share), the relay's never is.
-- Quiet hours: outside `QUIET_START…QUIET_END` no audible playback starts. `refuse` = the share
+- Quiet hours (**not used**: the owner does not want them, 2026-10-26; both keys stay empty and the
+  gate does not test them): outside `QUIET_START…QUIET_END` no audible playback starts. `refuse` = the share
   answers `quiet_refused` and nothing plays; `video_only` = the video plays on the Chromecast and
   the group is never loaded. Inside the window nothing changes (a session running when the window
   opens is **not** stopped — the rule is about starting).

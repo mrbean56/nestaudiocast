@@ -183,7 +183,7 @@ points qui demandaient son accord, et il a fait l'action non automatisable.
 | Achat matériel | **aucun** : on enregistre le Chromecast déjà sur la TV (« no purchase, no spare ») | cahier des charges v0.2.0 |
 | GPU | une RTX 3070 Ti **peut** être passée au CT 121 (partagée avec Jellyfin et Ollama : l'ajouter est permis, les déranger ne l'est pas) | idem |
 | Live | hors portée | idem |
-| Heures calmes | **fenêtre et politique encore à choisir** (`refuse` par défaut ; `QUIET_START`/`QUIET_END` vides = désactivé) | à trancher |
+| Heures calmes | **non voulues** (propriétaire, 2026-10-26) : `QUIET_START`/`QUIET_END` restent vides = désactivé ; retirées du gate matériel. Le code reste, inactif | cette ligne |
 
 ### 8.2 Le renversement d'architecture, et pourquoi il est forcé
 
@@ -256,7 +256,8 @@ ce qui le trancherait.
 4. **La garde réseau des tests ne couvre pas les sous-processus** (`docs/dev.md`). Un test qui lance
    un script (`test_group.py` → `tools/group_probe_v020.py --run`) compte sur les refus du script
    lui-même. Ces refus sont testés ; ils ne sont pas imposés par le lanceur.
-5. **Nommage des heures calmes.** `QUIET_START..QUIET_END` est, selon §7, la fenêtre où le son
-   **peut** démarrer — l'inverse de ce que le nom suggère. Renommer ou inverser : décision du
-   propriétaire, à prendre avant d'y mettre une valeur.
+5. ~~**Nommage des heures calmes.**~~ Sans objet : le propriétaire ne veut pas d'heures calmes
+   (2026-10-26). Si un jour on les active : `QUIET_START..QUIET_END` est, selon §7, la fenêtre où
+   le son **peut** démarrer — l'inverse de ce que le nom suggère ; renommer avant d'y mettre une
+   valeur.
 
