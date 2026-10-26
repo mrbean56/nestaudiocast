@@ -109,10 +109,22 @@
     catch (e) { /* a sender that left is not an error worth reporting */ }
   }
 
+  // CAF's getSenders() lists *CAF* senders; a plain CASTv2 controller is not one of them, so a
+  // broadcast alone reaches nobody (measured 2026-10-26: clock, a direct reply, arrived; state,
+  // error and ended, all broadcasts, did not). Every message now also goes to the sender we last
+  // heard from, which is the id the transport hands us and which sendTo() demonstrably reaches.
+  var lastSender = null;
+
+  function targets() {
+    var ids = [];
+    try { ids = (context.getSenders() || []).slice(); } catch (e) { ids = []; }
+    if (lastSender && ids.indexOf(lastSender) < 0) { ids.push(lastSender); }
+    return ids;
+  }
+
   function broadcast(type, extra) {
     var msg = envelope(type, extra);
-    var ids = [];
-    try { ids = context.getSenders() || []; } catch (e) { ids = []; }
+    var ids = targets();
     for (var i = 0; i < ids.length; i++) { sendTo(ids[i], msg); }
     return msg;
   }
@@ -422,6 +434,7 @@
     if (typeof m === 'string') { try { m = JSON.parse(m); } catch (e) { sendError('bad_json', 'payload is not JSON'); return; } }
     if (!m || typeof m !== 'object') { sendError('bad_message', 'payload is not an object'); return; }
     if (typeof m.seq === 'number') { seq = m.seq; }
+    if (senderId) { lastSender = senderId; }
     if (!helo[senderId]) { helo[senderId] = true; hello(senderId); }
     var type = m.type;
     log('<- ' + type);
