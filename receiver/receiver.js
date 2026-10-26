@@ -171,13 +171,20 @@
 
   function statePayload() {
     var s = sample();
+    var v = mediaEl();
     return {
       rx_ms: s.rx_ms,
       media: s.media,
       rate: currentRate(),
       player_state: playerState(),
       buffered_end: bufferedEnd(),
-      dropped: droppedFrames()
+      dropped: droppedFrames(),
+      // diagnosis, not protocol: what the element thinks, and what we still owe it (2026-10-26:
+      // a LOAD at 20 s kept playing from 0 and the state alone did not say why)
+      el: v ? ((v.id || 'noid') + '/' + typeof v.readyState) : 'none',
+      ready: v ? v.readyState : null,
+      pending: pendingPos,
+      logTail: logs.slice(-4).map(function (l) { return l.line; })
     };
   }
 

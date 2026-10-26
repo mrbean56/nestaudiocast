@@ -129,6 +129,14 @@ class Handler(BaseHTTPRequestHandler):
             return
         # the loader fetches these: the script is versioned by its query string, the build stamp
         # must never be cached (that is the whole point of it)
+        # The device caches by path and ignores query strings, so the loader asks for a path
+        # that changes when the content may have: /r/<build>/receiver.js and /b/<now>/build.txt.
+        if path.startswith("/r/") and path.endswith("/receiver.js"):
+            self._file(os.path.join(ROOT, "receiver.js"), "text/javascript; charset=utf-8")
+            return
+        if path.startswith("/b/") and path.endswith("/build.txt"):
+            self._file(os.path.join(ROOT, "build.txt"), "text/plain; charset=utf-8")
+            return
         if path == "/receiver.js":
             self._file(os.path.join(ROOT, "receiver.js"), "text/javascript; charset=utf-8")
             return

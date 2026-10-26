@@ -65,19 +65,23 @@
 -->
 <script>
 (function () {
+  // The device caches by PATH and ignores query strings (measured 2026-10-26: /receiver.js?v=A
+  // was fetched once and never again, for two later builds; the whole app, sub-resources
+  // included, lives until a reboot). So every fetch here uses a path that changes when the
+  // content could have changed: /b/<now>/build.txt and /r/<build>/receiver.js.
   function inject(build) {
     var s = document.createElement('script');
-    s.src = '/receiver.js?v=' + encodeURIComponent(build);
-    s.onerror = function () { showLoadFailure('receiver.js failed to load'); };
+    s.src = '/r/' + encodeURIComponent(build) + '/receiver.js';
+    s.onerror = function () { show('the page script failed to load'); };
     document.head.appendChild(s);
   }
-  function showLoadFailure(why) {
+  function show(why) {
     var el = document.getElementById('idle');
     if (el) { el.className = ''; el.textContent = 'VideoNetCaster: ' + why; }
   }
   var xhr = new XMLHttpRequest();
   try {
-    xhr.open('GET', '/build.txt?t=' + Date.now(), true);
+    xhr.open('GET', '/b/' + Date.now() + '/build.txt', true);
     xhr.onload = function () {
       var v = (xhr.responseText || '').trim();
       inject(v || String(Date.now()));

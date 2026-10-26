@@ -57,8 +57,9 @@ class TestPageExists(unittest.TestCase):
         """The device caches receiver.html; only a *stable* loader keeps updates reboot-free."""
         with open(LOADER_PATH, encoding="utf-8") as fh:
             src = fh.read()
-        self.assertIn("/build.txt", src)
-        self.assertIn("/receiver.js?v=", src)
+        # paths that change with the build: the device caches by path and ignores ?queries
+        self.assertIn("/b/' + Date.now() + '/build.txt", src)
+        self.assertIn("/r/' + encodeURIComponent(build) + '/receiver.js", src)
         self.assertIn(CAF_LOADER, src)  # the SDK must still be loaded by the page
         self.assertLess(len(src), 8000, "the loader must stay small and stable")
 
