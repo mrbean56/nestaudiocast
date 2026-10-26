@@ -52,6 +52,16 @@ TRANSITION_BUDGET = 2           # one group re-landing + one play_at, per window
 ENDED_LINGER_S = 2.0            # how long `ended` is visible before `idle`
 REFUSE_LOG_EVERY_S = 10.0       # throttle for the guard's own log lines (a hostile controller)
 START_LEAD_S = 0.2              # only used by the stopgap plan, never by the real controller
+#: How long the *parked* group takes from PLAY to actually playing. Evidence/27 (C): the
+#: PAUSE->SEEK->PLAY landing lands -44 ms from the instant it was told, so the group is told
+#: 44 ms early. Not the 0.55 s of evidence/16/A4 — that is a LOAD from idle, never this path.
+GROUP_LEAD_S = 0.044
+#: The receiver's clock estimate is refreshed this often (contracts §3.1); the landing needs it.
+CLOCK_REFRESH_S = 30.0
+#: How long to wait for the receiver to report a buffered parked position before starting anyway.
+RECEIVER_READY_TIMEOUT_S = 10.0
+#: A scheduled instant further than this in the future is not honoured (the loop keeps breathing).
+MAX_SCHEDULE_S = 3.0
 
 #: Commands that move a playhead: allowed before the start event, or inside a re-landing window.
 GUARDED = (C.MSG_LOAD, C.MSG_SEEK, C.MSG_PLAY_AT)
@@ -159,6 +169,9 @@ class SessionManager:
         self._last_error: str | None = None
         self._level: float | None = None      # last level we commanded (no getter in the seam)
         self._controller_missing = False
+        self._clock_offset_ms = 0.0           # receiver-clock minus controller-clock (§3)
+        self._clock_residual_ms: float | None = None
+        self._clock_at = -1e9
 
     # =====================================================================================
     # share
@@ -265,6 +278,19 @@ class SessionManager:
             if self._aborted(session):
                 return
 
+            # The clock estimate first: a landing instant expressed on the receiver's clock is
+            # meaningless without it (§3.1), and it is what _receiver_ms() uses.
+            self._refresh_clock(force=True)
+
+            # Then the video, parked: the plan (§1) assumes both sides sit loaded and paused at
+            # session.start_at when it is computed, and never loads anything itself.
+            if not self._load_video(session):
+                return
+            self._log("video_parked", session_id=session.id, at=round(session.start_at, 3),
+                      ready=self._wait_receiver_ready(session))
+            if self._aborted(session):
+                return
+
             group_ready = False
             if session.audible:
                 try:
@@ -324,12 +350,16 @@ class SessionManager:
         return None
 
     def _start_plan(self, session: Session, now: float, group_ready: bool) -> list:
-        """The controller's single start event, or a documented stopgap when it is a stub."""
+        """The controller's single start event, or a documented stopgap when it is a stub.
+
+        Both arguments the controller takes are **media positions**, not instants (contracts §1):
+        the group sits parked at ``session.start_at`` and so does the video, which is what the two
+        sides reported after their LOAD/SEEK. ``lead_s`` is the parked group's own landing delay,
+        so it is told to play that much earlier (evidence/27 C: -44 ms).
+        """
         try:
-            video_ready = now
-            group_ready_at = now + START_LEAD_S if group_ready else now
-            plan = self._controller.start(now, video_ready, group_ready_at,
-                                          lead_s=START_LEAD_S)
+            plan = self._controller.start(now, session.start_at, session.start_at,
+                                          lead_s=GROUP_LEAD_S)
             return list(plan or [])
         except NotImplementedError:
             self._controller_missing = True
@@ -337,15 +367,77 @@ class SessionManager:
                       fallback="stopgap_start", task="F")
             return self._stopgap_start(session, group_ready)
 
+    # -- the receiver's parked load, and its readiness ------------------------------------
+    def _load_video(self, session: Session) -> bool:
+        """LOAD the manifest paused at ``session.start_at``; False ends the session cleanly."""
+        try:
+            self._link.send(C.MSG_LOAD, url=self._mpd_url(session),
+                            content_type="application/dash+xml",
+                            media=session.start_at, autoplay=False)
+        except NotImplementedError:
+            self._fail(session, "sender_link_unavailable", "the receiver link is a stub (task D)")
+            return False
+        except Exception as exc:  # noqa: BLE001 - LostDevice included
+            self._fail(session, "receiver_failed", f"load: {type(exc).__name__}: {exc}")
+            return False
+        return True
+
+    def _wait_receiver_ready(self, session: Session,
+                             timeout: float = RECEIVER_READY_TIMEOUT_S) -> bool:
+        """Wait (bounded) for the parked position to be buffered; the plan starts either way.
+
+        A landing computed on an unbuffered receiver simply lands late — measurable, not fatal —
+        so this returns False rather than failing the session, and says so in the log.
+        """
+        deadline = self._clock() + float(timeout)
+        need = session.start_at
+        while self._clock() < deadline:
+            sample = self._safe_latest()
+            if sample is not None:
+                state = getattr(sample, "player_state", None)
+                buffered = getattr(sample, "buffered_end", None)
+                if state in (C.PLAYER_PAUSED, C.PLAYER_PLAYING) and buffered is not None \
+                        and float(buffered) >= need:
+                    return True
+                if state == C.PLAYER_ERROR:
+                    return False
+            if self._aborted(session):
+                return False
+            time.sleep(min(0.1, self._tick_s))
+        return False
+
+    # -- the receiver's clock --------------------------------------------------------------
+    def _refresh_clock(self, force: bool = False) -> None:
+        """Re-estimate the receiver clock offset (§3.1); feeds the controller and _receiver_ms."""
+        now = self._clock()
+        if not force and now - self._clock_at < CLOCK_REFRESH_S:
+            return
+        try:
+            estimate = self._link.ping(n=5)
+        except NotImplementedError:
+            return
+        except Exception as exc:  # noqa: BLE001 - a clock hiccup is not a session failure
+            self._log("clock_failed", error=f"{type(exc).__name__}: {exc}")
+            return
+        self._clock_at = now
+        self._clock_offset_ms = float(getattr(estimate, "offset_ms", 0.0) or 0.0)
+        self._clock_residual_ms = getattr(estimate, "residual_ms", None)
+        try:
+            self._controller.on_clock(estimate)
+        except Exception:  # noqa: BLE001 - a stub controller has no clock
+            pass
+        self._log("clock_estimate", offset_ms=round(self._clock_offset_ms, 3),
+                  residual_ms=None if self._clock_residual_ms is None
+                  else round(float(self._clock_residual_ms), 3))
+
     def _stopgap_start(self, session: Session, group_ready: bool) -> list:
-        """Load parked, release the group, then tell the receiver where to be.
+        """Release the group, then tell the receiver where to be.
 
         Not a sync plan: it exists so the skeleton starts end to end while task F is a stub,
-        and it says so in the log. The real controller replaces it by returning a plan.
+        and it says so in the log. The video is already parked by ``_load_video`` (§1: the plan
+        never loads), so this only releases both sides. The real controller replaces it.
         """
-        plan = [C.Command(kind=C.MSG_LOAD, payload={
-            "url": self._mpd_url(session), "content_type": "application/dash+xml",
-            "media": session.start_at, "autoplay": False})]
+        plan = []
         if group_ready and session.audible:
             plan.append(C.Command(kind="play", payload={"target": "group"}))
         plan.append(C.Command(kind=C.MSG_PLAY_AT, payload={
@@ -362,6 +454,7 @@ class SessionManager:
             if session is None:
                 return
             now = self._clock()
+            self._refresh_clock()          # throttled by CLOCK_REFRESH_S (§3.1)
             if session.state == C.STATE_ENDED:
                 if self._ended_at is not None and now - self._ended_at >= ENDED_LINGER_S:
                     self._session = None
@@ -538,7 +631,7 @@ class SessionManager:
                                     payload.get("content_type") or "audio/mp4",
                                     session.start_at if at is None else at)
             elif name == "play":
-                self._group.play()
+                self._play_group_at(payload.get("at"), phase)
             elif name == "pause":
                 self._group.pause()
             elif name == "stop":
@@ -562,6 +655,39 @@ class SessionManager:
         except Exception as exc:  # noqa: BLE001 - a group error must not kill the server
             self._log("group_error", session_id=session.id, kind=name,
                       error=f"{type(exc).__name__}: {exc}")
+
+    def _play_group_at(self, at, phase: str) -> None:
+        """Release the parked group at a controller-clock instant, if one was asked for.
+
+        The control law tells the group *when* to go (contracts §1: the start is a scheduled
+        release, evidence/27 C), so the executor has to honour the instant instead of playing
+        now. It runs on the session worker thread during the start event; the wait is bounded by
+        ``MAX_SCHEDULE_S`` so a mad plan cannot park the thread.
+        """
+        instant = None
+        try:
+            instant = None if at is None else float(at)
+        except (TypeError, ValueError):
+            instant = None
+        if instant is None:
+            self._group.play()
+            return
+        delay = instant - self._clock()
+        if delay <= 0.0:
+            self._log("group_play_late", phase=phase, by_s=round(-delay, 4))
+        elif delay > MAX_SCHEDULE_S:
+            self._log("group_play_unscheduled", phase=phase, by_s=round(delay, 3))
+        else:
+            # One bounded sleep, never a spin: the executor is on the session worker thread and
+            # a plan that asks for a distant instant must not park it (MAX_SCHEDULE_S above).
+            time.sleep(delay)
+            if self._clock() < instant - 0.002:
+                # The injected clock did not move while we slept (a frozen test clock, or a
+                # clock that jumped backwards). Release now and say so: the landing error is
+                # measurable, a deadlock is not.
+                self._log("group_play_clock_stalled", phase=phase,
+                          short_by_s=round(instant - self._clock(), 4))
+        self._group.play()
 
     def _reload_allowed(self, session: Session, kind: str, now: float) -> bool:
         """The guard of §1: playhead moves only before the start, or in a one-shot window."""
@@ -946,8 +1072,9 @@ class SessionManager:
         """
         offset = 0.0
         try:
-            estimate = self._link.ping(n=3)
-            offset = float(getattr(estimate, "offset_ms", 0.0) or 0.0)
+            if self._clock_offset_ms == 0.0 and self._clock_at < 0.0:
+                self._refresh_clock(force=True)     # first use: nothing cached yet
+            offset = float(self._clock_offset_ms)
         except Exception:  # noqa: BLE001 - no clock estimate is a valid state
             offset = 0.0
         return self._clock() * 1000.0 + offset

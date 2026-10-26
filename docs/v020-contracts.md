@@ -209,3 +209,44 @@ QUIET_POLICY=refuse    # refuse | video_only
 A task is done when a command in `evidence/README.md`'s style reproduces a number, on this LAN,
 archived in `evidence/`, with the command that produced it in the lab note. "Unproven, because X"
 is an acceptable answer. A fabricated or model-generated number is a failure of the task.
+
+---
+
+## 10. Amendments after the first eight tasks (integrator, 2026-10-25)
+
+Each one was forced by a merge or by a measurement. Nothing above is retracted; these only pin
+what was ambiguous.
+
+1. **§1 — the units of `Controller.start()`.** `start(now, video_pos, group_pos, lead_s)`:
+   `video_pos` and `group_pos` are **media positions**, in seconds, where each side sits parked and
+   loaded when the call is made. They are *not* instants. (The first integration wired wall-clock
+   seconds in and the plan landed years away; `tests/v020/test_integration_seams.py` now fails if it
+   ever happens again.)
+2. **§1 — who loads.** The executor (the session) performs `load`/`prepare`; the control law never
+   loads and never seeks. `_stopgap_*` paths exist only while a seam is a stub and say so in the log.
+3. **§1 — the parked landing delay.** `lead_s` is the delay between telling the **parked** group to
+   play and it actually playing: **44 ms** (`evidence/27`, case C: −44 ms mean). It is *not* the
+   0.55 s of a LOAD from idle (`evidence/16`, A4) — that path does not exist in v0.2.
+4. **§4/§5 — `MediaProxy` needs an HTTP face.** Add
+   `MediaProxy.serve_http(method, path, headers) -> (status, headers, body)`; `/media/<sid>/<n>` is
+   delegated to it by the API. Until task B implements it, the API answers `501
+   media_stream_unavailable` rather than pretending.
+5. **§5 — the measurement track lives at `/assets/measure/<file>`** (read-only, `.m4a`/`.wav`, no
+   path traversal), because `measure: true` must hand `click_train_2310.m4a` to the group while the
+   video keeps its own track.
+6. **§6 — `CastGroup.volume_state() -> {"level", "muted"}`** is added: `set_volume(level, muted)`
+   alone cannot express "mute" without re-commanding a level. Until it exists, `POST
+   /api/control {"action":"volume","muted":true}` answers `409 no_known_level`.
+7. **§5 — `quiet` is an object**: `{enabled, start, end, policy, allowed_now, decision}`;
+   `steady_since` is an epoch in seconds or `null`.
+8. **§5 — quiet refusal is a 202**, with `state: "quiet_refused"` in the same envelope as a nominal
+   share: the request was accepted, the *playback* is refused.
+9. **§3/§1 — command routing convention** (`Command.kind`): any `kind` in `CONTROLLER_MESSAGES` goes
+   to the receiver; any other `kind` goes to the group, through the aliases `play|pause|stop|seek|
+   prepare|load|volume` (and their `group_`-prefixed forms); `payload["target"] == "group"` forces
+   the group (needed because `pause` exists on both sides).
+10. **§2 — a constant clock bias is not a sync error.** `DELTA_V2` is calibrated acoustically, so a
+    constant receiver↔group clock bias is absorbed by the calibration; only its *variation* over a
+    session can move the offset. The clock estimator (task D, ~0.5 ms on the fake) is far below the
+    budget; the sim's "12 ms constant residual" case must therefore be read as a *re-calibration*
+    scenario, not as a structural limit. (Review note recorded in `notes/labo-sync.md`.)

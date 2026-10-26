@@ -100,9 +100,8 @@ class TrimController:
     def start(self, now: float, video_ready: float, group_ready: float,
               lead_s: float = 0.0) -> list[Command]:
         self.planned += 1
+        # §1: the executor loads and parks both sides; the plan only schedules their release.
         return [
-            Command(kind=MSG_LOAD, payload={"url": "", "content_type": "application/dash+xml",
-                                            "media": self.start_position, "autoplay": False}),
             Command(kind="play", payload={"target": "group"}),
             Command(kind=MSG_PLAY_AT, payload={"rx_ms": 0.0, "media": self.start_position}),
         ]
