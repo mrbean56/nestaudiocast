@@ -1,0 +1,43 @@
+{
+  "input": {
+    "hz": 4.0,
+    "noise_ms": 8.0,
+    "note": "300 ppm is 25x the group's own measured drift (A15: -12.4 ms/10 min)"
+  },
+  "A_estimator_60s_300ppm": {
+    "samples": 240,
+    "residual_ms": 3.437,
+    "window_slope": 1.012985,
+    "accepted": 240,
+    "rejections": 0,
+    "first_verdict": "resumed"
+  },
+  "B_stale_read": {
+    "injected_ms": 156.0,
+    "verdict": "outlier",
+    "estimate_moved_ms": 0.0,
+    "rejections": 1
+  },
+  "C_two_reads_in_a_row": {
+    "first": "outlier",
+    "second": "jump",
+    "rejections": 1,
+    "jumps": 1
+  },
+  "D_drift_10min_300ppm": {
+    "n": 120,
+    "drift_ms_per_10min": 180.447,
+    "se_ms_per_10min": 1.84,
+    "significant": true,
+    "sigma_ms": 5.819,
+    "span_s": 595.0
+  },
+  "E_drift_10min_flat": {
+    "n": 120,
+    "drift_ms_per_10min": -1.443,
+    "se_ms_per_10min": 1.76,
+    "significant": false,
+    "sigma_ms": 5.564,
+    "span_s": 595.0
+  }
+}
