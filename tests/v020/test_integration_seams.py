@@ -122,5 +122,50 @@ class TestSteadySeam(SeamCase):
         self.assertNotIn(C.MSG_PLAY_AT, after)
 
 
+class TestTransportSeam(SeamCase):
+    """Seek, pause and resume reach both sides, and none of them reloads anything."""
+
+    def test_seek_moves_both_and_never_loads(self):
+        fx = self.fixture()
+        tick(fx, 40, TICK_S)                      # 10 s of playing
+        before = len(fx.link.inbox)
+        group_calls_before = list(fx.group.calls)
+        fx.sender.control("seek", position=300.0)
+        after = [m for m in fx.link.inbox[before:]]
+        kinds = [m["type"] for m in after]
+        # §1: a seek is a re-landing, so the law may schedule it (play_at) instead of seeking
+        self.assertTrue(C.MSG_SEEK in kinds or C.MSG_PLAY_AT in kinds, kinds)
+        self.assertNotIn(C.MSG_LOAD, kinds)
+        self.assertIn("seek", fx.group.calls[len(group_calls_before):])
+        anchored = [m for m in after if m["type"] in (C.MSG_SEEK, C.MSG_PLAY_AT)][-1]
+        self.assertAlmostEqual(anchored["media"], 300.0, delta=0.05)
+
+    def test_pause_and_resume_round_trip(self):
+        fx = self.fixture()
+        tick(fx, 40, TICK_S)
+        before = len(fx.link.inbox)               # the parked load is before this point
+        fx.sender.control("pause")
+        self.assertEqual(fx.sender.status()["state"], C.STATE_PAUSED)
+        self.assertIn("pause", fx.group.calls)
+        self.assertIn(C.MSG_PAUSE, [m["type"] for m in fx.link.inbox])
+        tick(fx, 8, TICK_S)
+        fx.sender.control("play")
+        self.assertEqual(fx.sender.status()["state"], C.STATE_PLAYING)
+        after = [m["type"] for m in fx.link.inbox[before:]]
+        self.assertIn(C.MSG_PLAY_AT, after)        # the resume re-anchors the video
+        self.assertNotIn(C.MSG_LOAD, after)
+
+    def test_stop_silences_both(self):
+        fx = self.fixture()
+        tick(fx, 8, TICK_S)
+        fx.sender.control("stop")
+        self.assertEqual(fx.sender.status()["state"], C.STATE_ENDED)
+        tick(fx, 16, TICK_S)      # ENDED_LINGER_S (2 s) plus slack
+        self.assertIn("stop", fx.group.calls)
+        # §3.1: `idle` is `stop` plus "ready for a new share"; either satisfies the acceptance
+        self.assertTrue({C.MSG_STOP, C.MSG_IDLE} & {m["type"] for m in fx.link.inbox})
+        self.assertEqual(fx.sender.status()["state"], C.STATE_IDLE)
+
+
 if __name__ == "__main__":
     unittest.main()
