@@ -57,3 +57,39 @@ supprimer. Ils ont été remplacés par `04`.
 
 Plusieurs preuves sont des « runs » ponctuels sans horodatage interne. Pour les régénérer :
 `tools/prove.sh` (tout ce qui est hors ligne) et les scripts `probe/*.py` (ce qui touche le LAN).
+
+## v0.2.0 — preuves de la nuit du 2026-10-25 (aucune enceinte touchée)
+
+Règle de cette nuit : **rien d'audible**. Le groupe « Cuisine » n'a reçu aucun paquet ; le
+Chromecast `.80`, débranché de la TV par le propriétaire, n'a donc aucun chemin de sortie audio.
+
+| Fichier | Contenu | Producteur |
+|---|---|---|
+| `40-resolve.json` | 3 vidéos réelles résolues sur CT 121 en **0,96–1,55 s** (budget 5 s), `avc1` 1080p + AAC 140, plafond 720p respecté | `probe/v020_media_probe.py` |
+| `40-mpd.json` | le MPD synthétisé lu par `ffprobe` (deux pistes listées) | idem |
+| `40-seek-7200.json` | seek à 7200 s : octets exacts comparés à la source | idem |
+| `40-expiry.json` | mort forcée du flux en pleine réponse, récupérée dans la même réponse, **sha256 identique** | idem |
+| `40-rss.json` | RSS **75,7 Mo** avec deux lecteurs concurrents (budget 150) | idem |
+| `40-token-scan.txt` | aucun jeton `googlevideo` dans les fichiers archivés | idem |
+| `41-preflight.json` | `.80` : `Backdrop`, inactif, volume 0,25 non muet, build Cast 1.56.291998, **uptime 17 h** | `tools/receiver_probe.py --probe-only` |
+| `41-preflight-unavailable.json` | `28028CD2` → **`APP_UNAVAILABLE`**, `LAUNCH` → `NOT_FOUND` (l'app n'est pas encore connue de l'appareil) | idem |
+| `41a-codec-matrix-dmr.json` | H.264 **joué** ; HEVC, VP9 (mp4 et webm), AV1 **refusés** | idem, backend DMR |
+| `41b-rate-trim-dmr.json` | **`playbackRate` est honoré** : 0,998 → −0,001911 ± 0,000138 ; 1,002 → +0,002044 ± 0,000140 (3 séries) | idem |
+| `41c-rate-stall-dmr.json` | un changement de cadence ne coupe pas la lecture (`PLAYING`, pas de retour en arrière de tête) | idem |
+| `41y-page-selftest.json` | la logique de `receiver.html` exécutée hors ligne avec un CAF simulé : 33/33 | `receiver/selftest.js` |
+| `41z-final-state.json` | `.80` laissé sur `Backdrop`, aucune app lancée | idem |
+| `42-eureka-info-80.json` | lecture seule de `.80` (aucun lancement) | `tools/… --probe` (tâche D) |
+| `42-sender-link-fake.json` (+ `.log`) | sur un récepteur CASTv2 local : erreur d'horloge **médiane 0,49 ms**, prise de contrôle détectée en **1 poll**, boîte de réception bornée | tâche D |
+| `43-group-*` | estimateur de tête de lecture (médiane 5 échantillons, rejet, hystérésis 2 lectures) ; sonde `--dry-run` prouvée inerte ; suite + `prove.sh` | tâche E |
+| `44-sim.json` | loi de commande simulée avec le bruit mesuré : p95 ≤ 5,4 ms (nominal), **0** `load`/`seek`/`play_at` en régime, 3 cas d'échec attendus et documentés | `tests/v020/sim_v020.py` |
+| `45-relay-yield-offline.txt` | le relais v0.1 lit `state/group.owner` et **ne touche plus au groupe** quand v0.2 le possède | tâche H |
+| `47-sender-selftest.json`, `47b`, `47c` | l'app propriétaire hors ligne : 43/43 cas HTTP, garde « zéro rechargement » prouvée contre un contrôleur hostile (2400 tics), 121 tests, `prove.sh` | tâche G |
+| `48-*` | les instruments de la porte : analyseur (échec forcé sur un rechargement caché), acoustique (+6 ms de biais), transport, prise de contrôle étrangère, heures calmes, rollback — **auto-tests uniquement** | tâche J |
+
+### Ce que ces fichiers ne prouvent pas
+
+- Rien sur **notre page** de récepteur : elle n'a jamais pu être lancée (`APP_UNAVAILABLE`). Les
+  chiffres de `41b`/`41c` sont ceux du lecteur **de la plateforme** sur le même appareil.
+- Rien d'**audible** : aucun son n'est sorti pendant cette nuit, par construction.
+- Aucune mesure **acoustique**, aucun transport réel, aucun rollback réel : la porte matérielle
+  n'a pas été franchie.
