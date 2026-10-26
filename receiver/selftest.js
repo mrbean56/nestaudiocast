@@ -126,8 +126,12 @@ function load(world) {
 function globalDocOf(world) {
   return {
     getElementById: (id) => world.els[id] || { className: '', textContent: '' },
-    querySelector: (sel) => (String(sel).indexOf('video') >= 0 ? world.video : null),
-    createElement: () => ({ canPlayType: () => 'probably' }),
+    querySelector: (sel) => {
+      if (world.noVideoInDom) { return null; }
+      return String(sel).indexOf('video') >= 0 ? world.video : null;
+    },
+    body: { appendChild() {} },
+    createElement: (tag) => (String(tag) === 'video' ? world.video : { canPlayType: () => 'probably' }),
   };
 }
 
@@ -255,6 +259,16 @@ async function main() {
   check('error_reaches_a_non_caf_sender',
         w.sent.some(m => m.senderId === 'raw-controller' && m.msg.type === 'error'),
         w.of('error').length - errsBefore2);
+
+  // 15. no <video> in the DOM at all (a custom receiver page, measured on the device): the page
+  //     must create and use its own element instead of answering no_media_element
+  w.noVideoInDom = true;
+  const errsBefore3 = w.of('error').length;
+  w.emit(NS, { type: 'load', seq: 53, url: 'http://192.168.2.21:7640/media/c.mp4',
+               content_type: 'video/mp4', media: 0, autoplay: true }, 'raw-controller');
+  w.ticks.forEach((cb) => cb());
+  check('own_element_when_dom_has_none', w.of('error').length === errsBefore3,
+        { errors: w.of('error').length - errsBefore3, src: w.video.src });
 
   const failed = checks.filter(c => !c.ok);
   const out = { page: 'receiver/receiver.html', checks: checks.length,

@@ -91,10 +91,37 @@
     return { rx_ms: rx_ms, media: media };
   }
 
+  // The Styled Receiver ships a <cast-media-player><video>; a plain custom receiver page has
+  // none, and `getMediaElement()`-style helpers are not enough here: measured on the device
+  // (2026-10-26) the page answered `no_media_element` to the first LOAD. So the page owns its
+  // element: created once, reused, and preferred over nothing. If CAF later inserts its own
+  // (on a DASH load), that one wins, so the state we report is always the element we drive.
+  var ownEl = null;
+
+  function ownElement() {
+    if (ownEl) { return ownEl; }
+    var v = document.createElement('video');
+    try {
+      v.id = 'nac-media';
+      v.setAttribute('playsinline', '');
+      v.style.width = '100%';
+      v.style.height = '100%';
+      document.body.appendChild(v);
+    } catch (e) { /* a body that refuses it still leaves us the element */ }
+    ownEl = v;
+    return v;
+  }
+
   function mediaEl() {
     var v = document.querySelector('cast-media-player video');
+    if (!v) { v = document.querySelector('#nac-media'); }
     if (!v) { v = document.querySelector('video'); }
-    return v || null;
+    return v || ownElement();
+  }
+
+  function elementInfo() {
+    var caf = document.querySelector('cast-media-player video') || document.querySelector('video');
+    return { caf: !!caf, own: ownEl ? 'created' : (caf ? 'not-needed' : 'lazy') };
   }
 
   // ---- protocol ----------------------------------------------------------------------------
@@ -133,7 +160,7 @@
     var s = sample();
     var body = {
       rx_ms: s.rx_ms, ua: navigator.userAgent, codecs: codecClaims(),
-      version: VERSION, app: APP_NAME, app_id: '28028CD2'
+      version: VERSION, app: APP_NAME, app_id: '28028CD2', element: elementInfo()
     };
     if (senderId) { sendTo(senderId, envelope('hello', body)); }
     else { broadcast('hello', body); }
@@ -259,7 +286,7 @@
         }));
       } else {
         var v = mediaEl();
-        if (!v) { sendError('no_media_element', 'the CAF player has no <video> element'); return; }
+        if (!v) { sendError('no_media_element', 'no <video> element could be obtained'); return; }
         v.src = url;
         v.load();
         v.playbackRate = 1;
