@@ -21,3 +21,5 @@ evidence/*.jpg
 evidence/*.png
 assets/*.m4a
 state/
+# worktree venv symlink (see docs/v020-contracts.md)
+.venv
