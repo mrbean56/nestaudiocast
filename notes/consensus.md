@@ -163,3 +163,65 @@ permanence**, pas seulement par trois mesures manuelles. Ce que ça coûte : un 
 (ordre de 25 $ CA, prix non vérifié) — donc, selon les règles du projet, **aucun achat sans
 consensus et accord explicite du propriétaire**. Non décidé, non commandé.
 
+
+---
+
+## 8. v0.2.0 — l'expéditeur maison (décision du propriétaire, 2026-10-25 soir)
+
+Le propriétaire a ouvert le cahier des charges de **v0.2.0** : ce n'est plus le relais qui suit une
+session YouTube démarrée sur la TV, c'est **notre app qui possède la session**. Il a tranché les
+points qui demandaient son accord, et il a fait l'action non automatisable.
+
+### 8.1 Ce que le propriétaire a décidé et fait
+
+| Décision | Valeur | Où c'est écrit |
+|---|---|---|
+| Compte développeur Cast | **acheté** (5 $ US, non remboursable) — l'achat exigé par la règle « aucun achat sans consensus » est donc autorisé et fait | ce paragraphe |
+| Récepteur personnalisé | **VideoNetCaster**, `APP_ID = 28028CD2`, Custom Receiver, *Unpublished* | console Cast |
+| URL du récepteur | **`http://192.168.2.21:7640/receiver.html`** — **gelée** : la changer coûte 15 min de propagation | idem |
+| Appareil enregistré | **Chromecast Salon** `192.168.2.80`, numéro de série saisi par le propriétaire → il exécute les apps normales **et** la nôtre, une à la fois | idem |
+| Achat matériel | **aucun** : on enregistre le Chromecast déjà sur la TV (« no purchase, no spare ») | cahier des charges v0.2.0 |
+| GPU | une RTX 3070 Ti **peut** être passée au CT 121 (partagée avec Jellyfin et Ollama : l'ajouter est permis, les déranger ne l'est pas) | idem |
+| Live | hors portée | idem |
+| Heures calmes | **fenêtre et politique encore à choisir** (`refuse` par défaut ; `QUIET_START`/`QUIET_END` vides = désactivé) | à trancher |
+
+### 8.2 Le renversement d'architecture, et pourquoi il est forcé
+
+v0.1 suivait la TV parce qu'on ne pouvait pas posséder la session. v0.2 la possède : les deux
+sessions sont les nôtres, donc **le départ se choisit** au lieu de se subir. Conséquence
+structurelle, imposée par les mesures déjà au dossier :
+
+- `SET_PLAYBACK_RATE` est un **no-op sur le groupe** (demandé 1.005, mesuré 0.999957, `evidence/17`) ;
+- le cahier des charges v0.2.0 **interdit** tout rechargement après le départ (« corrections = rate
+  trims, never reloads »).
+
+Il ne reste donc **qu'un seul actionneur fin possible : `playbackRate` sur notre récepteur**. Le
+groupe devient la **référence libre** (dérive mesurée −12,4 ± 1,0 ms/10 min) et la vidéo suit. C'est
+le pari central de v0.2.0, et il est **non vérifié à ce jour** : tâche C, à mesurer avant toute
+autre conclusion. Si le Chromecast ignore `playbackRate` comme le groupe, le critère ne peut pas
+être tenu et le propriétaire doit le savoir avant qu'un contournement ne soit écrit.
+
+### 8.3 Critère resserré (v0.2.0, remplace le 150 ms du PoC)
+
+| Grandeur | Seuil | Ce que ça change |
+|---|---|---|
+| erreur **numérique** en régime | **≤ 20 ms** (médiane par fenêtre de 5 s) | dix fois plus serré que les 30-70 ms de v0.1 ; c'est ce que la boucle asservit |
+| offset **perçu** | **≤ 15 ms** à **un** point calibré, 3 points acoustiques sur ≥ 10 min | l'instrument a un biais connu de **+6 ms** (A9/A28) : la marge réelle est mince, il faut le dire |
+| premier frame | **≤ 15 s** après le partage | téléchargement interdit sur disque → proxy de plages + MPD DASH |
+| coupures après le départ | **aucune** | d'où l'interdiction de recharger |
+
+Conséquences assumées, à ne pas redécouvrir plus tard : le coût de ces seuils est que **toute**
+erreur de départ doit être absorbée par une variation de cadence, donc par une variation de hauteur
+(±0,2 % = ±3,5 cents, inaudible) — et que la latence de rendu du Chromecast devient une constante
+qu'aucune boucle ne voit (consensus §5.6, toujours vrai).
+
+### 8.4 Ce qui reste non prouvé, et qui décide de la livraison
+
+1. `playbackRate` est-il honoré sur le Chromecast ? (tâche C, la mesure décisive)
+2. Le codec : `avc1` ≤ 1080p suffit-il, ou faut-il transcoder (donc le GPU) ? (tâche C puis B)
+3. La dispersion de départ côté vidéo (`play_at`) — inconnue, mesurée en C.
+4. L'offset perçu à 15 ms : mesurable, mais l'instrument est à ±3-6 ms et biaisé +6 ms.
+5. Le comportement quand un autre expéditeur prend le Chromecast : exigé, non mesuré.
+
+Rien de tout cela n'est affirmé. Chaque tâche doit rapporter « non vérifié, parce que… » plutôt
+qu'un chiffre inventé.
