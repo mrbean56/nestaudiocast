@@ -218,19 +218,32 @@ def main(argv: list[str] | None = None) -> int:
     log = EventLog(directory=config.evidence_dir,
                    echo=os.environ.get("SENDER_LOG_ECHO", "") == "1")
     service = build_service(config, offline=offline, log=log)
-    service.boot_cleanup()
     log("service_starting", version=__version__, offline=offline, pid=os.getpid(),
         config=config.as_mapping(), state_dir=service.state_dir,
         evidence=os.path.basename(str(getattr(log, "path", ""))))
 
     if args.cleanup:
+        # ExecStopPost runs exactly this: one cleanup, reported, then leave.
         result = service.boot_cleanup()
-        print(json.dumps({"cleanup": result}, indent=2, ensure_ascii=False))
         log("service_cleanup", **result)
+        print(json.dumps({"cleanup": result}, indent=2, ensure_ascii=False))
+        service.stop_event.set()
         log.close()
         return 0
 
-    server = service.api.make_server()
+    # A restart finds whatever a crashed instance left behind (§8).
+    service.boot_cleanup()
+
+    try:
+        server = service.api.make_server()
+    except OSError as exc:
+        log("service_bind_failed", bind=config.http_bind, port=config.http_port,
+            error=f"{type(exc).__name__}: {exc}")
+        print(json.dumps({"error": "bind", "detail": str(exc), "bind": config.http_bind,
+                          "port": config.http_port}, indent=2), file=sys.stderr)
+        service.close()
+        log.close()
+        return 3
     log("service_ready", bind=server.server_address[0], port=server.server_address[1],
         lan_only=True, offline=offline)
 

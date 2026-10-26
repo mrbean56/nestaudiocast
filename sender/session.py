@@ -138,7 +138,7 @@ class SessionManager:
         self._resolver = resolver
         self._quiet = quiet or config.quiet
         self._clock = clock
-        self._wall = wall
+        self._wall = wall or time.time
         self._spawn = spawn or _spawn_thread
         self._tick_s = float(tick_s)
         self._transition_s = float(transition_s)

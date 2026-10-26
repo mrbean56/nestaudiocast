@@ -147,6 +147,30 @@ class TestEntryPoint(TempDir, unittest.TestCase):
             else:
                 os.environ["SENDER_OFFLINE"] = original
 
+    def test_cleanup_mode_undoes_our_record(self):
+        """What ExecStopPost runs: it must act on our record and say what it did."""
+        import contextlib
+        import io
+
+        from sender.group_lock import write_session_record
+        from sender.service import main
+
+        state = os.path.join(self.root, "state")
+        record = os.path.join(state, "session.json")
+        write_session_record(record, {"owner": "cast-sender", "pid": 1, "session_id": "sold",
+                                      "sid": "s9", "group_prepared": True,
+                                      "receiver_launched": True, "mutes": []})
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = main(["--offline", "--cleanup", "--bind", "127.0.0.1", "--port", "0",
+                         "--state-dir", state, "--evidence-dir",
+                         os.path.join(self.root, "evidence")])
+        self.assertEqual(code, 0)
+        payload = json.loads(out.getvalue())["cleanup"]
+        self.assertEqual(payload["actions"], ["group_stopped", "receiver_stopped",
+                                              "proxy_closed"])
+        self.assertFalse(os.path.exists(record))
+
     def test_cleanup_mode_does_nothing_without_a_record(self):
         from sender.service import main
 
