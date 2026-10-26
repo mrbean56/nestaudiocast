@@ -159,6 +159,13 @@ class TestSharePolicy(TempDir, unittest.TestCase):
         self.assertEqual(fixture.group.transport_calls(), ["prepare", "play"])
         fixture.sender.close()
 
+    def test_measure_does_not_bypass_video_only(self):
+        fixture = self._fixture("00:00", "00:01", "video_only")
+        fixture.sender.share(YOUTUBE, measure=True)
+        self.assertEqual(fixture.sender.status()["state"], C.STATE_PLAYING)
+        self.assertEqual(fixture.group.calls, [])            # measure does not load the group
+        self.assertEqual(fixture.sender._session.mode, "video_only")
+
     def test_a_running_session_is_not_stopped_by_the_window(self):
         fixture = make_sender(self.root)
         fixture.sender.share(YOUTUBE)

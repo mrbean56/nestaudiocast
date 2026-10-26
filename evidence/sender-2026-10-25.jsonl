@@ -1,0 +1,148 @@
+{"t":"2026-10-26T02:06:01.859Z","mono":464848.972,"event":"selftest_start","stamp":"2026-10-25T22:06:01","mode":"sender skeleton","audible":false}
+{"t":"2026-10-26T02:06:01.863Z","mono":464848.976,"event":"http_error","code":404,"error":"receiver_missing","path":"/receiver.html","method":"GET","client":"127.0.0.1"}
+{"t":"2026-10-26T02:06:01.864Z","mono":464848.977,"event":"lock_acquired","owner":"cast-sender","pid":323929,"path":"/tmp/cast-sender-matrix-j252fcy6/state/group.owner"}
+{"t":"2026-10-26T02:06:01.864Z","mono":464848.977,"event":"share_accepted","session_id":"sccbb0dd73f","mode":"normal","start":5.0,"measure":false,"quiet":"ok"}
+{"t":"2026-10-26T02:06:01.864Z","mono":464848.977,"event":"media_resolved","session_id":"sccbb0dd73f","video_id":"QzomK1fdSUg","sid":"s1","duration_s":600.0,"mode":"normal"}
+{"t":"2026-10-26T02:06:01.864Z","mono":464848.977,"event":"receiver_ready","session_id":"sccbb0dd73f","host":"192.168.2.80","app_id":"28028CD2"}
+{"t":"2026-10-26T02:06:01.864Z","mono":464848.977,"event":"group_prepared","session_id":"sccbb0dd73f","ok":true,"at":5.0}
+{"t":"2026-10-26T02:06:01.864Z","mono":464848.977,"event":"controller_unavailable","session_id":"sccbb0dd73f","fallback":"stopgap_start","task":"F"}
+{"t":"2026-10-26T02:06:01.864Z","mono":464848.977,"event":"session_started","session_id":"sccbb0dd73f","video_id":"QzomK1fdSUg","mode":"normal","group_ready":true,"start":5.0,"state":"playing"}
+{"t":"2026-10-26T02:06:01.866Z","mono":464848.979,"event":"http_error","code":410,"error":"session_gone","path":"/media/nope/manifest.mpd","method":"GET","client":"127.0.0.1"}
+{"t":"2026-10-26T02:06:01.866Z","mono":464848.979,"event":"http_error","code":501,"error":"media_stream_unavailable","path":"/media/s1/audio.m4a","method":"GET","client":"127.0.0.1"}
+{"t":"2026-10-26T02:06:01.867Z","mono":464848.98,"event":"http_error","code":403,"error":"forbidden","path":"/assets/measure/notes.txt","method":"GET","client":"127.0.0.1"}
+{"t":"2026-10-26T02:06:01.867Z","mono":464848.98,"event":"http_error","code":400,"error":"invalid_path","path":"/assets/measure/..%2Fstate","method":"GET","client":"127.0.0.1"}
+{"t":"2026-10-26T02:06:01.868Z","mono":464848.981,"event":"controller_unavailable","fallback":"on_pause","task":"F"}
+{"t":"2026-10-26T02:06:01.868Z","mono":464848.981,"event":"control_pause","session_id":"sccbb0dd73f"}
+{"t":"2026-10-26T02:06:01.868Z","mono":464848.981,"event":"transition_open","why":"resume","budget":2,"window_s":5.0,"session_id":"sccbb0dd73f"}
+{"t":"2026-10-26T02:06:01.868Z","mono":464848.981,"event":"controller_unavailable","fallback":"on_resume","task":"F"}
+{"t":"2026-10-26T02:06:01.868Z","mono":464848.981,"event":"reload_allowed","session_id":"sccbb0dd73f","kind":"play_at","remaining":1}
+{"t":"2026-10-26T02:06:01.868Z","mono":464848.981,"event":"control_play","session_id":"sccbb0dd73f","position":5.003}
+{"t":"2026-10-26T02:06:01.868Z","mono":464848.982,"event":"transition_open","why":"seek","budget":2,"window_s":5.0,"session_id":"sccbb0dd73f"}
+{"t":"2026-10-26T02:06:01.868Z","mono":464848.982,"event":"controller_unavailable","fallback":"on_seek","task":"F"}
+{"t":"2026-10-26T02:06:01.869Z","mono":464848.982,"event":"reload_allowed","session_id":"sccbb0dd73f","kind":"seek","remaining":1}
+{"t":"2026-10-26T02:06:01.869Z","mono":464848.982,"event":"reload_allowed","session_id":"sccbb0dd73f","kind":"seek","remaining":0}
+{"t":"2026-10-26T02:06:01.869Z","mono":464848.982,"event":"control_seek","session_id":"sccbb0dd73f","position":42.5}
+{"t":"2026-10-26T02:06:01.869Z","mono":464848.982,"event":"control_volume","session_id":"sccbb0dd73f","level":0.3,"muted":null}
+{"t":"2026-10-26T02:06:01.869Z","mono":464848.983,"event":"control_volume","session_id":"sccbb0dd73f","level":0.3,"muted":true}
+{"t":"2026-10-26T02:06:01.870Z","mono":464848.983,"event":"control_volume","session_id":"sccbb0dd73f","level":0.4,"muted":false}
+{"t":"2026-10-26T02:06:01.870Z","mono":464848.983,"event":"session_stopping","session_id":"sccbb0dd73f","reason":"control_stop"}
+{"t":"2026-10-26T02:06:01.870Z","mono":464848.984,"event":"lock_released","owner":"cast-sender","pid":323929}
+{"t":"2026-10-26T02:06:01.870Z","mono":464848.984,"event":"session_ended","session_id":"sccbb0dd73f","reason":"control_stop","state":"ended"}
+{"t":"2026-10-26T02:06:01.871Z","mono":464848.985,"event":"http_error","code":409,"error":"conflict","path":"/api/control","method":"POST","client":"127.0.0.1"}
+{"t":"2026-10-26T02:06:01.872Z","mono":464848.985,"event":"http_error","code":400,"error":"invalid_body","path":"/api/share","method":"POST","client":"127.0.0.1"}
+{"t":"2026-10-26T02:06:01.872Z","mono":464848.985,"event":"http_error","code":400,"error":"invalid_json","path":"/api/share","method":"POST","client":"127.0.0.1"}
+{"t":"2026-10-26T02:06:01.873Z","mono":464848.986,"event":"http_error","code":400,"error":"invalid_json","path":"/api/share","method":"POST","client":"127.0.0.1"}
+{"t":"2026-10-26T02:06:01.873Z","mono":464848.986,"event":"http_error","code":400,"error":"invalid_body","path":"/api/share","method":"POST","client":"127.0.0.1"}
+{"t":"2026-10-26T02:06:01.873Z","mono":464848.987,"event":"http_error","code":400,"error":"invalid_body","path":"/api/share","method":"POST","client":"127.0.0.1"}
+{"t":"2026-10-26T02:06:01.874Z","mono":464848.987,"event":"http_error","code":400,"error":"invalid_body","path":"/api/share","method":"POST","client":"127.0.0.1"}
+{"t":"2026-10-26T02:06:01.874Z","mono":464848.987,"event":"http_error","code":400,"error":"invalid_body","path":"/api/share","method":"POST","client":"127.0.0.1"}
+{"t":"2026-10-26T02:06:01.875Z","mono":464848.988,"event":"http_error","code":400,"error":"invalid_body","path":"/api/share","method":"POST","client":"127.0.0.1"}
+{"t":"2026-10-26T02:06:01.875Z","mono":464848.988,"event":"http_error","code":415,"error":"unsupported_media_type","path":"/api/share","method":"POST","client":"127.0.0.1"}
+{"t":"2026-10-26T02:06:01.875Z","mono":464848.989,"event":"http_error","code":413,"error":"payload_too_large","path":"/api/share","method":"POST","client":"127.0.0.1"}
+{"t":"2026-10-26T02:06:01.876Z","mono":464848.989,"event":"http_error","code":400,"error":"invalid_body","path":"/api/control","method":"POST","client":"127.0.0.1"}
+{"t":"2026-10-26T02:06:01.876Z","mono":464848.989,"event":"http_error","code":400,"error":"invalid","path":"/api/control","method":"POST","client":"127.0.0.1"}
+{"t":"2026-10-26T02:06:01.877Z","mono":464848.99,"event":"http_error","code":400,"error":"invalid","path":"/api/control","method":"POST","client":"127.0.0.1"}
+{"t":"2026-10-26T02:06:01.877Z","mono":464848.99,"event":"http_error","code":400,"error":"invalid","path":"/api/control","method":"POST","client":"127.0.0.1"}
+{"t":"2026-10-26T02:06:01.877Z","mono":464848.991,"event":"http_error","code":400,"error":"invalid_body","path":"/api/control","method":"POST","client":"127.0.0.1"}
+{"t":"2026-10-26T02:06:01.878Z","mono":464848.991,"event":"http_error","code":404,"error":"not_found","path":"/nope","method":"GET","client":"127.0.0.1"}
+{"t":"2026-10-26T02:06:01.878Z","mono":464848.991,"event":"http_error","code":405,"error":"method_not_allowed","path":"/api/share","method":"GET","client":"127.0.0.1"}
+{"t":"2026-10-26T02:06:01.879Z","mono":464848.992,"event":"http_error","code":405,"error":"method_not_allowed","path":"/api/status","method":"POST","client":"127.0.0.1"}
+{"t":"2026-10-26T02:06:01.879Z","mono":464848.992,"event":"http_error","code":405,"error":"method_not_allowed","path":"/","method":"DELETE","client":"127.0.0.1"}
+{"t":"2026-10-26T02:06:01.879Z","mono":464848.992,"event":"http_error","code":405,"error":"method_not_allowed","path":"/api/status","method":"HEAD","client":"127.0.0.1"}
+{"t":"2026-10-26T02:06:01.880Z","mono":464848.993,"event":"http_denied","client":"127.0.0.1","path":"/healthz","method":"GET"}
+{"t":"2026-10-26T02:06:01.880Z","mono":464848.993,"event":"http_error","code":403,"error":"forbidden","path":"/healthz","method":"GET","client":"127.0.0.1"}
+{"t":"2026-10-26T02:06:01.900Z","mono":464849.013,"event":"lock_release_skipped","holder":null}
+{"t":"2026-10-26T02:06:01.900Z","mono":464849.013,"event":"sender_closed"}
+{"t":"2026-10-26T02:06:01.900Z","mono":464849.013,"event":"lock_acquired","owner":"cast-sender","pid":323929,"path":"/tmp/cast-sender-10min-gtzz699f/state/group.owner"}
+{"t":"2026-10-26T02:06:01.900Z","mono":464849.013,"event":"share_accepted","session_id":"sa8e7f5e238","mode":"normal","start":0.0,"measure":false,"quiet":"ok"}
+{"t":"2026-10-26T02:06:01.900Z","mono":464849.013,"event":"media_resolved","session_id":"sa8e7f5e238","video_id":"QzomK1fdSUg","sid":"s1","duration_s":600.0,"mode":"normal"}
+{"t":"2026-10-26T02:06:01.900Z","mono":464849.013,"event":"receiver_ready","session_id":"sa8e7f5e238","host":"192.168.2.80","app_id":"28028CD2"}
+{"t":"2026-10-26T02:06:01.900Z","mono":464849.013,"event":"group_prepared","session_id":"sa8e7f5e238","ok":true,"at":0.0}
+{"t":"2026-10-26T02:06:01.900Z","mono":464849.014,"event":"session_started","session_id":"sa8e7f5e238","video_id":"QzomK1fdSUg","mode":"normal","group_ready":true,"start":0.0,"state":"playing"}
+{"t":"2026-10-26T02:06:01.901Z","mono":464849.014,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":1,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.901Z","mono":464849.014,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":121,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.901Z","mono":464849.014,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":241,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.902Z","mono":464849.015,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":361,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.902Z","mono":464849.015,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":481,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.902Z","mono":464849.015,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":601,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.902Z","mono":464849.016,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":721,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.903Z","mono":464849.016,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":841,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.903Z","mono":464849.016,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":961,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.903Z","mono":464849.016,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":1081,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.903Z","mono":464849.017,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":1201,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.904Z","mono":464849.017,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":1321,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.904Z","mono":464849.017,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":1441,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.904Z","mono":464849.017,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":1561,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.904Z","mono":464849.018,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":1681,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.905Z","mono":464849.018,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":1801,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.905Z","mono":464849.018,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":1921,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.906Z","mono":464849.019,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":2041,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.906Z","mono":464849.019,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":2161,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.906Z","mono":464849.019,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":2281,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.907Z","mono":464849.02,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":2401,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.907Z","mono":464849.02,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":2521,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.907Z","mono":464849.02,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":2641,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.907Z","mono":464849.02,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":2761,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.908Z","mono":464849.021,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":2881,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.908Z","mono":464849.021,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":3001,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.908Z","mono":464849.021,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":3121,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.908Z","mono":464849.021,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":3241,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.909Z","mono":464849.022,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":3361,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.909Z","mono":464849.022,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":3481,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.909Z","mono":464849.022,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":3601,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.909Z","mono":464849.022,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":3721,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.910Z","mono":464849.023,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":3841,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.910Z","mono":464849.023,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":3961,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.910Z","mono":464849.023,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":4081,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.910Z","mono":464849.023,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":4201,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.910Z","mono":464849.024,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":4321,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.911Z","mono":464849.024,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":4441,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.911Z","mono":464849.024,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":4561,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.911Z","mono":464849.024,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":4681,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.911Z","mono":464849.025,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":4801,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.912Z","mono":464849.025,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":4921,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.912Z","mono":464849.025,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":5041,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.912Z","mono":464849.025,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":5161,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.913Z","mono":464849.026,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":5281,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.913Z","mono":464849.026,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":5401,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.913Z","mono":464849.026,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":5521,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.913Z","mono":464849.026,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":5641,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.913Z","mono":464849.027,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":5761,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.914Z","mono":464849.027,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":5881,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.914Z","mono":464849.027,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":6001,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.914Z","mono":464849.027,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":6121,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.914Z","mono":464849.028,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":6241,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.915Z","mono":464849.028,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":6361,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.915Z","mono":464849.028,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":6481,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.915Z","mono":464849.028,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":6601,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.915Z","mono":464849.029,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":6721,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.916Z","mono":464849.029,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":6841,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.916Z","mono":464849.029,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":6961,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.916Z","mono":464849.029,"event":"reload_refused","session_id":"sa8e7f5e238","kind":"load","total":7081,"reason":"after the start event only rate trims are allowed (§1)"}
+{"t":"2026-10-26T02:06:01.917Z","mono":464849.03,"event":"session_stopping","session_id":"sa8e7f5e238","reason":"service_stop"}
+{"t":"2026-10-26T02:06:01.917Z","mono":464849.03,"event":"lock_released","owner":"cast-sender","pid":323929}
+{"t":"2026-10-26T02:06:01.917Z","mono":464849.03,"event":"session_ended","session_id":"sa8e7f5e238","reason":"service_stop","state":"ended"}
+{"t":"2026-10-26T02:06:01.917Z","mono":464849.03,"event":"sender_closed"}
+{"t":"2026-10-26T02:06:01.917Z","mono":464849.03,"event":"lock_acquired","owner":"cast-sender","pid":323929,"path":"/tmp/cast-sender-10min-qut86r1e/state/group.owner"}
+{"t":"2026-10-26T02:06:01.917Z","mono":464849.03,"event":"share_accepted","session_id":"sb8ec838d4d","mode":"normal","start":0.0,"measure":false,"quiet":"ok"}
+{"t":"2026-10-26T02:06:01.917Z","mono":464849.03,"event":"media_resolved","session_id":"sb8ec838d4d","video_id":"QzomK1fdSUg","sid":"s1","duration_s":600.0,"mode":"normal"}
+{"t":"2026-10-26T02:06:01.917Z","mono":464849.03,"event":"receiver_ready","session_id":"sb8ec838d4d","host":"192.168.2.80","app_id":"28028CD2"}
+{"t":"2026-10-26T02:06:01.917Z","mono":464849.03,"event":"group_prepared","session_id":"sb8ec838d4d","ok":true,"at":0.0}
+{"t":"2026-10-26T02:06:01.917Z","mono":464849.031,"event":"session_started","session_id":"sb8ec838d4d","video_id":"QzomK1fdSUg","mode":"normal","group_ready":true,"start":0.0,"state":"playing"}
+{"t":"2026-10-26T02:06:01.933Z","mono":464849.046,"event":"session_stopping","session_id":"sb8ec838d4d","reason":"service_stop"}
+{"t":"2026-10-26T02:06:01.933Z","mono":464849.046,"event":"lock_released","owner":"cast-sender","pid":323929}
+{"t":"2026-10-26T02:06:01.933Z","mono":464849.046,"event":"session_ended","session_id":"sb8ec838d4d","reason":"service_stop","state":"ended"}
+{"t":"2026-10-26T02:06:01.933Z","mono":464849.046,"event":"sender_closed"}
+{"t":"2026-10-26T02:06:01.933Z","mono":464849.046,"event":"lock_acquired","owner":"cast-sender","pid":323929,"path":"/tmp/cast-sender-boot-olcj3_ry/state/group.owner"}
+{"t":"2026-10-26T02:06:01.933Z","mono":464849.047,"event":"share_accepted","session_id":"s97fc1247c3","mode":"normal","start":0.0,"measure":false,"quiet":"ok"}
+{"t":"2026-10-26T02:06:01.933Z","mono":464849.047,"event":"media_resolved","session_id":"s97fc1247c3","video_id":"QzomK1fdSUg","sid":"s1","duration_s":600.0,"mode":"normal"}
+{"t":"2026-10-26T02:06:01.933Z","mono":464849.047,"event":"receiver_ready","session_id":"s97fc1247c3","host":"192.168.2.80","app_id":"28028CD2"}
+{"t":"2026-10-26T02:06:01.933Z","mono":464849.047,"event":"group_prepared","session_id":"s97fc1247c3","ok":true,"at":0.0}
+{"t":"2026-10-26T02:06:01.933Z","mono":464849.047,"event":"session_started","session_id":"s97fc1247c3","video_id":"QzomK1fdSUg","mode":"normal","group_ready":true,"start":0.0,"state":"playing"}
+{"t":"2026-10-26T02:06:01.934Z","mono":464849.047,"event":"boot_cleanup_start","session_id":"s97fc1247c3","sid":"s1","group_prepared":true}
+{"t":"2026-10-26T02:06:01.934Z","mono":464849.047,"event":"boot_cleanup_done","session_id":"s97fc1247c3","actions":["group_stopped","receiver_stopped","proxy_closed","mute_undone:Cuisine"]}
+{"t":"2026-10-26T02:06:01.934Z","mono":464849.047,"event":"boot_cleanup_foreign_record","path":"/tmp/cast-sender-boot-olcj3_ry/state2/session.json","record_owner":"cast-relay"}
+{"t":"2026-10-26T02:06:01.934Z","mono":464849.047,"event":"session_stopping","session_id":"s97fc1247c3","reason":"service_stop"}
+{"t":"2026-10-26T02:06:01.934Z","mono":464849.047,"event":"lock_released","owner":"cast-sender","pid":323929}
+{"t":"2026-10-26T02:06:01.934Z","mono":464849.047,"event":"session_ended","session_id":"s97fc1247c3","reason":"service_stop","state":"ended"}
+{"t":"2026-10-26T02:06:01.934Z","mono":464849.047,"event":"sender_closed"}

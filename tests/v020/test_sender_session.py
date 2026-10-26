@@ -81,6 +81,24 @@ class TestStart(SessionCase):
         self.assertFalse(fixture.link.launched)
         self.assertEqual(fixture.sender.status()["state"], C.STATE_IDLE)
 
+    def test_measure_sends_the_click_train_to_the_group(self):
+        fixture = make_sender(self.root)
+        seen = {}
+        real = fixture.group.prepare
+
+        def spy(url, content_type, at_time):
+            seen.update(url=url, content_type=content_type, at=at_time)
+            return real(url, content_type, at_time)
+
+        fixture.group.prepare = spy
+        fixture.sender.share(YOUTUBE, measure=True)
+        self.assertEqual(fixture.sender.status()["state"], C.STATE_PLAYING)
+        self.assertTrue(seen["url"].endswith("/assets/measure/click_train_2310.m4a"), seen)
+        self.assertEqual(seen["content_type"], "audio/mp4")
+        # the video keeps the session's own media: the manifest is what the receiver loaded
+        self.assertTrue(fixture.link.loaded_url.endswith("/manifest.mpd"), fixture.link.loaded_url)
+        self.assertTrue(events_named(fixture.log.path, "media_resolved")[0]["mode"] == "measure")
+
     def test_ids_only_are_logged_never_urls(self):
         fixture = self.started()
         with open(fixture.log.path, "r", encoding="utf-8") as handle:

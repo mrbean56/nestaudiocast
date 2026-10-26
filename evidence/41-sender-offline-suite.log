@@ -1,0 +1,181 @@
+test_frozen_url_and_port (test_contracts.TestConstants.test_frozen_url_and_port) ... ok
+test_receiver_namespace_and_messages (test_contracts.TestConstants.test_receiver_namespace_and_messages) ... ok
+test_states_and_actions (test_contracts.TestConstants.test_states_and_actions) ... ok
+test_timeline (test_contracts.TestConstants.test_timeline) ... ok
+test_fake_group_refuses_unsafe (test_contracts.TestFakes.test_fake_group_refuses_unsafe) ... ok
+test_fake_proxy_roundtrip (test_contracts.TestFakes.test_fake_proxy_roundtrip) ... ok
+test_fake_receiver_rate_gain_idempotent (test_contracts.TestFakes.test_fake_receiver_rate_gain_idempotent) ... ok
+test_controller (test_contracts.TestSignatures.test_controller) ... ok
+test_group (test_contracts.TestSignatures.test_group) ... ok
+test_proxy (test_contracts.TestSignatures.test_proxy) ... ok
+test_resolver (test_contracts.TestSignatures.test_resolver) ... ok
+test_sender_link (test_contracts.TestSignatures.test_sender_link) ... ok
+test_bad_control_bodies (test_sender_api.TestControl.test_bad_control_bodies) ... ok
+test_control_without_a_session_is_409 (test_sender_api.TestControl.test_control_without_a_session_is_409) ... ok
+test_the_transport_matrix (test_sender_api.TestControl.test_the_transport_matrix) ... ok
+test_a_loopback_client_is_not_a_lan_client (test_sender_api.TestLanOnly.test_a_loopback_client_is_not_a_lan_client) ... ok
+test_the_allow_list_itself (test_sender_api.TestLanOnly.test_the_allow_list_itself) ... ok
+test_a_proxy_that_speaks_http_is_used (test_sender_api.TestMediaAndMeasure.test_a_proxy_that_speaks_http_is_used) ... ok
+test_a_revoked_sid_is_410 (test_sender_api.TestMediaAndMeasure.test_a_revoked_sid_is_410) ... ok
+test_byte_ranges_say_what_is_missing (test_sender_api.TestMediaAndMeasure.test_byte_ranges_say_what_is_missing) ... ok
+test_the_manifest_is_served_for_an_open_session (test_sender_api.TestMediaAndMeasure.test_the_manifest_is_served_for_an_open_session) ... ok
+test_the_measure_asset (test_sender_api.TestMediaAndMeasure.test_the_measure_asset) ... ok
+test_healthz (test_sender_api.TestReadEndpoints.test_healthz) ... ok
+test_receiver_html_is_404_with_a_clear_message_until_it_exists (test_sender_api.TestReadEndpoints.test_receiver_html_is_404_with_a_clear_message_until_it_exists) ... ok
+test_status_has_the_contract_fields (test_sender_api.TestReadEndpoints.test_status_has_the_contract_fields) ... ok
+test_the_ui_is_one_self_contained_page (test_sender_api.TestReadEndpoints.test_the_ui_is_one_self_contained_page) ... ok
+test_unknown_path_and_wrong_methods (test_sender_api.TestReadEndpoints.test_unknown_path_and_wrong_methods) ... ok
+test_a_good_share_answers_202_resolving (test_sender_api.TestShare.test_a_good_share_answers_202_resolving) ... ok
+test_a_quiet_share_answers_202_quiet_refused (test_sender_api.TestShare.test_a_quiet_share_answers_202_quiet_refused) ... ok
+test_an_oversized_body_does_not_poison_the_next_request (test_sender_api.TestShare.test_an_oversized_body_does_not_poison_the_next_request) ... ok
+test_bad_bodies (test_sender_api.TestShare.test_bad_bodies) ... ok
+test_measure_is_accepted (test_sender_api.TestShare.test_measure_is_accepted) ... ok
+test_defaults_match_the_contract (test_sender_config.TestDefaults.test_defaults_match_the_contract) ... ok
+test_the_example_only_names_the_frozen_keys (test_sender_config.TestExampleFile.test_the_example_only_names_the_frozen_keys) ... ok
+test_the_example_parses_and_matches_the_defaults (test_sender_config.TestExampleFile.test_the_example_parses_and_matches_the_defaults) ... ok
+test_a_bad_line_is_refused (test_sender_config.TestParsing.test_a_bad_line_is_refused) ... ok
+test_comments_quotes_and_inline_comments (test_sender_config.TestParsing.test_comments_quotes_and_inline_comments) ... ok
+test_environment_and_overrides (test_sender_config.TestParsing.test_environment_and_overrides) ... ok
+test_policies_come_from_the_contract (test_sender_config.TestParsing.test_policies_come_from_the_contract) ... ok
+test_unknown_keys_are_refused (test_sender_config.TestParsing.test_unknown_keys_are_refused) ... ok
+test_validation (test_sender_config.TestParsing.test_validation) ... ok
+test_a_fresh_foreign_lock_is_respected (test_sender_lock.TestAcquire.test_a_fresh_foreign_lock_is_respected) ... ok
+test_a_fresh_relay_lock_is_preempted (test_sender_lock.TestAcquire.test_a_fresh_relay_lock_is_preempted)
+§7: the v0.2 owner always wins, because its lock comes from an explicit share. ... ok
+test_a_stale_lock_is_taken_over_and_logged (test_sender_lock.TestAcquire.test_a_stale_lock_is_taken_over_and_logged) ... ok
+test_creates_the_three_documented_keys (test_sender_lock.TestAcquire.test_creates_the_three_documented_keys) ... ok
+test_heartbeat_refreshes_and_notices_a_loss (test_sender_lock.TestAcquire.test_heartbeat_refreshes_and_notices_a_loss) ... ok
+test_heartbeat_thread_keeps_the_file_fresh (test_sender_lock.TestAcquire.test_heartbeat_thread_keeps_the_file_fresh) ... ok
+test_idempotent_for_the_same_owner (test_sender_lock.TestAcquire.test_idempotent_for_the_same_owner) ... ok
+test_no_takeover_just_below_the_threshold (test_sender_lock.TestAcquire.test_no_takeover_just_below_the_threshold) ... ok
+test_release_only_when_ours (test_sender_lock.TestAcquire.test_release_only_when_ours) ... ok
+test_a_broken_seam_is_reported_not_raised (test_sender_lock.TestBootCleanup.test_a_broken_seam_is_reported_not_raised) ... ok
+test_a_foreign_record_is_left_alone (test_sender_lock.TestBootCleanup.test_a_foreign_record_is_left_alone) ... ok
+test_a_session_that_never_prepared_the_group_is_not_stopped (test_sender_lock.TestBootCleanup.test_a_session_that_never_prepared_the_group_is_not_stopped) ... ok
+test_nothing_recorded_touches_nothing (test_sender_lock.TestBootCleanup.test_nothing_recorded_touches_nothing) ... ok
+test_only_our_mutes_are_undone (test_sender_lock.TestBootCleanup.test_only_our_mutes_are_undone) ... ok
+test_our_record_is_undone_in_order (test_sender_lock.TestBootCleanup.test_our_record_is_undone_in_order) ... ok
+test_appends (test_sender_log.TestEventLog.test_appends) ... ok
+test_default_path_is_dated_evidence (test_sender_log.TestEventLog.test_default_path_is_dated_evidence) ... ok
+test_last_event_and_callable (test_sender_log.TestEventLog.test_last_event_and_callable) ... ok
+test_one_json_object_per_line (test_sender_log.TestEventLog.test_one_json_object_per_line) ... ok
+test_urls_never_reach_the_file (test_sender_log.TestEventLog.test_urls_never_reach_the_file) ... ok
+test_remembers_without_writing (test_sender_log.TestNullLog.test_remembers_without_writing) ... ok
+test_a_url_named_field_is_redacted_even_without_a_scheme (test_sender_log.TestRedaction.test_a_url_named_field_is_redacted_even_without_a_scheme) ... ok
+test_nested_structures (test_sender_log.TestRedaction.test_nested_structures) ... ok
+test_plain_values_survive (test_sender_log.TestRedaction.test_plain_values_survive) ... ok
+test_url_becomes_scheme_host_six_chars (test_sender_log.TestRedaction.test_url_becomes_scheme_host_six_chars) ... ok
+test_bad_quiet_config_is_refused (test_sender_quiet.TestConfigFeedsQuiet.test_bad_quiet_config_is_refused) ... ok
+test_config_builds_the_window (test_sender_quiet.TestConfigFeedsQuiet.test_config_builds_the_window) ... ok
+test_format_roundtrip (test_sender_quiet.TestParse.test_format_roundtrip) ... ok
+test_invalid (test_sender_quiet.TestParse.test_invalid) ... ok
+test_valid (test_sender_quiet.TestParse.test_valid) ... ok
+test_a_running_session_is_not_stopped_by_the_window (test_sender_quiet.TestSharePolicy.test_a_running_session_is_not_stopped_by_the_window) ... ok
+test_measure_does_not_bypass_video_only (test_sender_quiet.TestSharePolicy.test_measure_does_not_bypass_video_only) ... ok
+test_open_window_starts_normally (test_sender_quiet.TestSharePolicy.test_open_window_starts_normally) ... ok
+test_refuse_touches_nothing (test_sender_quiet.TestSharePolicy.test_refuse_touches_nothing) ... ok
+test_video_only_never_loads_the_group (test_sender_quiet.TestSharePolicy.test_video_only_never_loads_the_group) ... ok
+test_bad_policy (test_sender_quiet.TestWindow.test_bad_policy) ... ok
+test_describe (test_sender_quiet.TestWindow.test_describe) ... ok
+test_disabled_when_empty (test_sender_quiet.TestWindow.test_disabled_when_empty) ... ok
+test_epoch_seconds_are_local_time (test_sender_quiet.TestWindow.test_epoch_seconds_are_local_time) ... ok
+test_half_a_window_is_refused (test_sender_quiet.TestWindow.test_half_a_window_is_refused) ... ok
+test_inside_the_window_is_allowed (test_sender_quiet.TestWindow.test_inside_the_window_is_allowed) ... ok
+test_refuse_policy (test_sender_quiet.TestWindow.test_refuse_policy) ... ok
+test_video_only_policy (test_sender_quiet.TestWindow.test_video_only_policy) ... ok
+test_wraps_midnight (test_sender_quiet.TestWindow.test_wraps_midnight) ... ok
+test_zero_length_window_gates_nothing (test_sender_quiet.TestWindow.test_zero_length_window_gates_nothing) ... ok
+test_a_level_of_zero_is_refused (test_sender_session.TestControl.test_a_level_of_zero_is_refused)
+A37: muting is how we silence; a zeroed level stays silent after an unmute. ... ok
+test_a_mute_without_a_known_level_says_so (test_sender_session.TestControl.test_a_mute_without_a_known_level_says_so) ... ok
+test_control_without_a_session (test_sender_session.TestControl.test_control_without_a_session) ... ok
+test_pause_and_resume (test_sender_session.TestControl.test_pause_and_resume) ... ok
+test_pause_twice_is_idempotent (test_sender_session.TestControl.test_pause_twice_is_idempotent) ... ok
+test_seek_moves_both_sides_once (test_sender_session.TestControl.test_seek_moves_both_sides_once) ... ok
+test_stop_phases_everything_out (test_sender_session.TestControl.test_stop_phases_everything_out) ... ok
+test_unknown_action_and_bad_position (test_sender_session.TestControl.test_unknown_action_and_bad_position) ... ok
+test_volume (test_sender_session.TestControl.test_volume) ... ok
+test_volume_validation (test_sender_session.TestControl.test_volume_validation) ... ok
+test_ten_minutes_with_a_hostile_controller (test_sender_session.TestNoReloadAfterStart.test_ten_minutes_with_a_hostile_controller) ... ok
+test_ten_minutes_with_a_trimming_controller (test_sender_session.TestNoReloadAfterStart.test_ten_minutes_with_a_trimming_controller) ... ok
+test_the_group_playhead_advances_with_the_video (test_sender_session.TestNoReloadAfterStart.test_the_group_playhead_advances_with_the_video) ... ok
+test_a_foreign_takeover_ends_the_session_without_relaunching (test_sender_session.TestSessionEdges.test_a_foreign_takeover_ends_the_session_without_relaunching) ... ok
+test_a_new_share_stops_the_old_session_first (test_sender_session.TestSessionEdges.test_a_new_share_stops_the_old_session_first) ... ok
+test_a_quiet_refusal_keeps_a_running_session (test_sender_session.TestSessionEdges.test_a_quiet_refusal_keeps_a_running_session) ... ok
+test_a_resolve_failure_ends_cleanly_and_says_why (test_sender_session.TestSessionEdges.test_a_resolve_failure_ends_cleanly_and_says_why) ... ok
+test_a_stub_controller_still_starts (test_sender_session.TestSessionEdges.test_a_stub_controller_still_starts)
+The service must run today: a Controller that raises is handled, not fatal. ... ok
+test_a_stub_resolver_is_reported_as_such (test_sender_session.TestSessionEdges.test_a_stub_resolver_is_reported_as_such) ... ok
+test_an_intent_is_mirrored_on_the_group (test_sender_session.TestSessionEdges.test_an_intent_is_mirrored_on_the_group) ... ok
+test_group_lock_is_released_on_failure (test_sender_session.TestSessionEdges.test_group_lock_is_released_on_failure) ... ok
+test_the_video_ending_ends_the_session (test_sender_session.TestSessionEdges.test_the_video_ending_ends_the_session) ... ok
+test_two_idle_reads_of_our_own_receiver_end_the_session (test_sender_session.TestSessionEdges.test_two_idle_reads_of_our_own_receiver_end_the_session) ... ok
+test_a_bad_url_is_refused_before_anything_starts (test_sender_session.TestStart.test_a_bad_url_is_refused_before_anything_starts) ... ok
+test_a_share_starts_a_session (test_sender_session.TestStart.test_a_share_starts_a_session) ... ok
+test_ids_only_are_logged_never_urls (test_sender_session.TestStart.test_ids_only_are_logged_never_urls) ... ok
+test_measure_sends_the_click_train_to_the_group (test_sender_session.TestStart.test_measure_sends_the_click_train_to_the_group) ... ok
+test_status_has_every_field_of_the_contract (test_sender_session.TestStart.test_status_has_every_field_of_the_contract) ... ok
+test_steady_since_appears_after_thirty_seconds (test_sender_session.TestStart.test_steady_since_appears_after_thirty_seconds) ... ok
+test_cleanup_mode_does_nothing_without_a_record (test_sender_smoke.TestEntryPoint.test_cleanup_mode_does_nothing_without_a_record) ... ok
+test_cleanup_mode_undoes_our_record (test_sender_smoke.TestEntryPoint.test_cleanup_mode_undoes_our_record)
+What ExecStopPost runs: it must act on our record and say what it did. ... ok
+test_offline_is_the_environment_default_for_tests (test_sender_smoke.TestEntryPoint.test_offline_is_the_environment_default_for_tests) ... ok
+test_once_mode_answers_status (test_sender_smoke.TestEntryPoint.test_once_mode_answers_status) ... ok
+test_a_share_runs_the_whole_machine (test_sender_smoke.TestOfflineService.test_a_share_runs_the_whole_machine) ... ok
+/usr/lib/python3.13/unittest/suite.py:107: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/cast-sender-test-pwm7zn56/evidence/sender-2026-10-25.jsonl' mode='a' encoding='utf-8'>
+  for index, test in enumerate(self):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+test_boot_cleanup_is_run_by_the_service (test_sender_smoke.TestOfflineService.test_boot_cleanup_is_run_by_the_service) ... ok
+/usr/lib/python3.13/unittest/suite.py:107: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/cast-sender-test-ouxst1n3/evidence/sender-2026-10-25.jsonl' mode='a' encoding='utf-8'>
+  for index, test in enumerate(self):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+test_every_endpoint_answers (test_sender_smoke.TestOfflineService.test_every_endpoint_answers) ... ok
+/usr/lib/python3.13/unittest/suite.py:107: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/cast-sender-test-veiifl_8/evidence/sender-2026-10-25.jsonl' mode='a' encoding='utf-8'>
+  for index, test in enumerate(self):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+test_the_lock_file_lives_where_the_contract_says (test_sender_smoke.TestOfflineService.test_the_lock_file_lives_where_the_contract_says) ... ok
+/usr/lib/python3.13/unittest/suite.py:107: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/cast-sender-test-8v37zqpn/evidence/sender-2026-10-25.jsonl' mode='a' encoding='utf-8'>
+  for index, test in enumerate(self):
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+test_the_seams_are_the_fakes (test_sender_smoke.TestOfflineService.test_the_seams_are_the_fakes) ... ok
+/usr/lib/python3.13/unittest/suite.py:84: ResourceWarning: unclosed file <_io.TextIOWrapper name='/tmp/cast-sender-test-r1skshpz/evidence/sender-2026-10-25.jsonl' mode='a' encoding='utf-8'>
+  return self.run(*args, **kwds)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+
+----------------------------------------------------------------------
+Ran 124 tests in 3.455s
+
+OK
+{
+  "cleanup": {
+    "session": null,
+    "actions": [],
+    "record": null
+  }
+}
+{
+  "status_code": 200,
+  "body": {
+    "state": "idle",
+    "session_id": null,
+    "video_id": null,
+    "position_video": null,
+    "position_group": null,
+    "digital_error_ms": null,
+    "p95_ms": null,
+    "rate": null,
+    "steady_since": null,
+    "quiet": {
+      "enabled": false,
+      "start": "",
+      "end": "",
+      "policy": "refuse",
+      "allowed_now": true,
+      "decision": "ok"
+    },
+    "group_owner": null,
+    "delta_v2": 0.0,
+    "last_event": "service_ready",
+    "last_error": null
+  }
+}
