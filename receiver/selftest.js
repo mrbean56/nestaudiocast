@@ -18,12 +18,14 @@
 const fs = require('fs');
 const path = require('path');
 
-const PAGE = path.join(__dirname, 'receiver.html');
+const PAGE = path.join(__dirname, 'receiver.js');
 const NS = 'urn:x-cast:com.beansden.nestaudiocast.v1';
 
 function extractScript(html) {
+  // receiver.html is a stable loader; the page itself is receiver.js (a plain IIFE, no markup)
+  if (!/<script>/.test(html)) { return html; }
   const blocks = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];
-  if (!blocks.length) { throw new Error('no inline <script> in receiver.html'); }
+  if (!blocks.length) { throw new Error('no script found'); }
   return blocks[blocks.length - 1][1];
 }
 
@@ -130,6 +132,8 @@ function globalDocOf(world) {
       if (world.noVideoInDom) { return null; }
       return String(sel).indexOf('video') >= 0 ? world.video : null;
     },
+    // in the device, a <video> element exists in the DOM even when our own is not driving it
+    querySelectorAll: (sel) => (String(sel).indexOf('video') >= 0 ? [world.video] : []),
     body: { appendChild() {} },
     createElement: (tag) => (String(tag) === 'video' ? world.video : { canPlayType: () => 'probably' }),
   };
@@ -269,6 +273,15 @@ async function main() {
   w.ticks.forEach((cb) => cb());
   check('own_element_when_dom_has_none', w.of('error').length === errsBefore3,
         { errors: w.of('error').length - errsBefore3, src: w.video.src });
+
+  // 16. the element that is driven is the element whose events are bound: a LOAD at 20 s must
+  //     park at 20 s, not at 0 (measured on the device as a 20 000 ms "start error")
+  w.noVideoInDom = false;
+  w.video.readyState = 1;
+  w.emit(NS, { type: 'load', seq: 54, url: 'http://192.168.2.21:7640/media/d.mp4',
+               content_type: 'video/mp4', media: 20, autoplay: false }, 'raw-controller');
+  check('load_parks_where_asked', Math.abs((w.video.currentTime || 0) - 20) < 0.01,
+        w.video.currentTime);
 
   const failed = checks.filter(c => !c.ok);
   const out = { page: 'receiver/receiver.html', checks: checks.length,

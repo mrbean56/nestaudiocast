@@ -26,6 +26,13 @@ HERE=$(cd "$(dirname "$0")/.." && pwd)
 
 ssh_() { ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new "root@$HOST" "$@"; }
 
+stamp() {
+  # /build.txt is what makes a page update cost a relaunch instead of a reboot: the loader reads
+  # it no-store and fetches /receiver.js?v=<stamp>
+  sum=$( (sha1sum "$HERE/receiver/receiver.js" 2>/dev/null || openssl dgst -sha1 -r "$HERE/receiver/receiver.js") | cut -c1-12)
+  ssh_ "printf '%s\n' '$sum' > $DEST/receiver/build.txt" && echo "   build=$sum"
+}
+
 deploy() {
   echo "== deploy receiver/ -> $HOST:$DEST/receiver/"
   if command -v rsync >/dev/null 2>&1; then
@@ -38,6 +45,7 @@ deploy() {
     | ssh_ "mkdir -p $DEST/receiver && tar -C $DEST/receiver -xf -"
   ( cd "$HERE/receiver" && find . -type f -printf '%P\n' ) \
     | ssh_ "cd $DEST/receiver && while IFS= read -r f; do [ -e \"\$f\" ] || { echo \"   prune \$f\"; rm -f \"\$f\"; }; done"
+  stamp
 }
 
 probe_remote() {

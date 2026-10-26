@@ -91,6 +91,32 @@ class Page:
         self.send("load", url=MEDIA, content_type="video/mp4", media=media, autoplay=autoplay)
         return self.states(seconds_wait)
 
+    def wait_parked(self, position: float, timeout: float = 12.0) -> bool:
+        """Wait until the page reports a *buffered* parked position, as the real session does.
+
+        The executor (sender/session.py) waits for exactly this before the start plan; a
+        measurement that skips it measures the measurement, not the system.
+        """
+        end = time.time() + timeout
+        while time.time() < end:
+            for m in self.collect(0.5, hz=8.0):
+                if m.get("type") != "state":
+                    continue
+                buffered = m.get("buffered_end")
+                at = m.get("media")
+                # parked means: the playhead is *there*, it is paused, and it is buffered.
+                # (Sending another pause while waiting clears the page's pending seek: that is
+                # how the first version of this tool measured a 20 s error that did not exist.)
+                if (
+                    m.get("player_state") == "paused"
+                    and at is not None
+                    and abs(float(at) - position) <= 0.5
+                    and buffered is not None
+                    and float(buffered) >= position - 0.5
+                ):
+                    return True
+        return False
+
 
 # ---------------------------------------------------------------------------------------------
 def measure_clock(page: Page, n: int = 200, hz: float = 5.0) -> dict:
@@ -154,7 +180,7 @@ def _fit(points):
 
 
 def measure_noise(page: Page, seconds: float = 60.0) -> dict:
-    states = page.load()
+    states = page.load(autoplay=True)
     rows = [s for s in states if s.get("media") is not None]
     if not rows:
         return {"ok": False, "why": "no state messages: the page is not reporting"}
@@ -201,7 +227,11 @@ def measure_start(page: Page, tries: int = 10, target: float = 20.0) -> dict:
     errors, missed = [], 0
     for _ in range(tries):
         page.send("load", url=MEDIA, content_type="video/mp4", media=target, autoplay=False)
-        page.states(1.5)
+        if not page.wait_parked(target):
+            missed += 1
+            page.send("stop")
+            time.sleep(0.3)
+            continue
         page.send("pause")
         rx = page.d.est_rx()
         if rx is None:

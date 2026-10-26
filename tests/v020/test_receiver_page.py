@@ -22,7 +22,8 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 LIB = os.path.join(ROOT, "lib")
-PAGE_PATH = os.path.join(ROOT, "receiver", "receiver.html")
+LOADER_PATH = os.path.join(ROOT, "receiver", "receiver.html")  # the frozen URL: a stable loader
+PAGE_PATH = os.path.join(ROOT, "receiver", "receiver.js")  # the page itself (versioned)
 SERVE_PATH = os.path.join(ROOT, "receiver", "serve.py")
 
 if LIB not in sys.path:
@@ -40,11 +41,26 @@ def page() -> str:
         return fh.read()
 
 
+def markup() -> str:
+    with open(LOADER_PATH, encoding="utf-8") as fh:
+        return fh.read()
+
+
 class TestPageExists(unittest.TestCase):
     def test_page_is_served_at_the_frozen_path(self):
         # the URL in the Cast console cannot change without a 15 min propagation
-        self.assertTrue(os.path.isfile(PAGE_PATH), "receiver/receiver.html is missing")
+        self.assertTrue(os.path.isfile(LOADER_PATH), "receiver/receiver.html is missing")
+        self.assertTrue(os.path.isfile(PAGE_PATH), "receiver/receiver.js is missing")
         self.assertEqual(C.PATH_RECEIVER, "/receiver.html")
+
+    def test_the_frozen_page_is_a_loader_that_can_change_itself(self):
+        """The device caches receiver.html; only a *stable* loader keeps updates reboot-free."""
+        with open(LOADER_PATH, encoding="utf-8") as fh:
+            src = fh.read()
+        self.assertIn("/build.txt", src)
+        self.assertIn("/receiver.js?v=", src)
+        self.assertIn(CAF_LOADER, src)  # the SDK must still be loaded by the page
+        self.assertLess(len(src), 8000, "the loader must stay small and stable")
 
     def test_dev_server_serves_that_exact_path(self):
         with open(SERVE_PATH, encoding="utf-8") as fh:
@@ -128,21 +144,21 @@ class TestClock(unittest.TestCase):
         src = page()
         # the release is computed from the target and the receiver clock, not from a burst of seeks
         self.assertIn("target - rxNow()", src)
-        self.assertRegex(
-            src,
-            r"setTimeout\([^)]*wait",
-        )
+        # one scheduled release, from the clock — not a burst of seeks
+        self.assertRegex(src, r"setTimeout\(function \(\) \{ attempt\(\); \}, Math\.max\(0, wait\)\)")
 
 
 class TestSelfContained(unittest.TestCase):
+    """Markup lives in the frozen loader page; logic lives in receiver.js."""
+
     def test_only_external_url_is_the_caf_loader(self):
-        src = page()
+        src = markup()
         urls = re.findall(r"""https?://[^\s"'<>)\\]+""", src)
         external = [u for u in urls if not u.startswith(("http://192.168.2.", "http://localhost"))]
         self.assertEqual(external, [CAF_LOADER], "unexpected external URL(s): %r" % external)
 
     def test_no_other_remote_resource(self):
-        src = page()
+        src = markup()
         self.assertEqual(
             len(re.findall(r"<script[^>]+src=", src)), 1, "exactly one script src: the CAF loader"
         )
@@ -152,10 +168,10 @@ class TestSelfContained(unittest.TestCase):
             self.assertNotIn(tracker, src)
 
     def test_caf_loader_is_the_v3_receiver_framework(self):
-        self.assertIn(CAF_LOADER, page())
+        self.assertIn(CAF_LOADER, markup())
 
     def test_idle_page_names_the_app_and_says_ready(self):
-        src = page()
+        src = markup()
         idle = re.search(r'<div id="idle">(.*?)</div>\s*</div>', src, re.S)
         self.assertIsNotNone(idle, "no idle block")
         block = idle.group(1)
@@ -163,7 +179,7 @@ class TestSelfContained(unittest.TestCase):
         self.assertIn("ready", block)
 
     def test_no_secret_or_token_is_embedded(self):
-        src = page()
+        src = page() + markup()
         for marker in ("googlevideo", "api_key", "apikey", "Bearer ", "token="):
             self.assertNotIn(marker, src)
 

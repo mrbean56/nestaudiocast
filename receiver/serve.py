@@ -127,6 +127,14 @@ class Handler(BaseHTTPRequestHandler):
         if path in ("/", "/receiver.html", "/index.html"):
             self._file(os.path.join(ROOT, "receiver.html"), "text/html; charset=utf-8")
             return
+        # the loader fetches these: the script is versioned by its query string, the build stamp
+        # must never be cached (that is the whole point of it)
+        if path == "/receiver.js":
+            self._file(os.path.join(ROOT, "receiver.js"), "text/javascript; charset=utf-8")
+            return
+        if path == "/build.txt":
+            self._file(os.path.join(ROOT, "build.txt"), "text/plain; charset=utf-8")
+            return
         if path == "/healthz":
             self._json(
                 200,
