@@ -1,0 +1,8 @@
+# Pinned to the venv the evidence was produced with (CT 118 / CT 121, 2026-10-25).
+# python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+cryptography==50.0.2
+numpy==2.5.4
+protobuf==7.36.2
+PyChromecast==14.0.10
+yt-dlp==2026.10.21
+zeroconf==0.151.5
