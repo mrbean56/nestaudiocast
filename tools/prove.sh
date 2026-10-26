@@ -69,6 +69,26 @@ if grep -q "WARNING group members are silent" relay/cast_relay.py; then
 else
   echo "   FAIL: no silent-members warning"; fail=1
 fi
+if grep -q "def read_group_owner" relay/cast_relay.py && \
+   grep -q 'state", "group.owner"' relay/cast_relay.py; then
+  echo "   ok: the relay reads state/group.owner and yields the group to a live v0.2 owner"
+else
+  echo "   FAIL: no group.owner lock read — the relay would fight a v0.2 session for the group"
+  fail=1
+fi
+if grep -q "O_EXCL\|O_CREAT" relay/cast_relay.py; then
+  echo "   FAIL: the relay creates a file exclusively — contracts §7 gives the lock to the owner"
+  fail=1
+else
+  echo "   ok: the lock is read-only for the relay (never created, refreshed or deleted)"
+fi
+if [ -x tools/relay-stop-post.sh ] && grep -q "skip_mute_v020" tools/relay-stop-post.sh && \
+   grep -q "lib/emergency.py" tools/relay-stop-post.sh; then
+  echo "   ok: ExecStopPost wrapper skips emergency.py while v0.2 owns the group"
+else
+  echo "   FAIL: no ExecStopPost wrapper — stopping v0.1 would mute the kitchen under v0.2"
+  fail=1
+fi
 [ "$fail" = "0" ] && echo "   -> all safety regressions clear" || echo "   -> REGRESSION(S) PRESENT"
 echo
 echo "done — evidence in evidence/"

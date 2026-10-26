@@ -30,6 +30,7 @@ that calibration exists, delta is 0 and the offset is "digital only" (playheads)
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import json
 import os
 import re
@@ -80,6 +81,82 @@ BIAS_GAIN = 0.15     # landings scatter independently around a bias (evidence/26
 TV_WINDOW_S = 10.0   # TV playhead estimator window (evidence/19)
 TV_WARM_S = 2.5      # minimum history before the estimate is trusted (two sawtooth refreshes)
 TV_JUMP_S = 0.40     # a read this far from the estimate is a seek, not noise
+
+# ------------------------------------------------- group ownership (contracts §7)
+OWNER_FILE = os.path.join(ROOT, "state", "group.owner")
+OWNER_SENDER = "cast-sender"   # v0.2's name; the relay reads it and never writes it
+OWNER_RELAY = "cast-relay"
+OWNER_STALE_S = 15.0           # the owner beats every 5 s; 15 s without one = stale
+YIELD_LOG_S = 5.0              # heartbeat of an idle (yielded) relay, in its own log
+
+
+@dataclasses.dataclass(frozen=True)
+class GroupOwner:
+    """Read-only reading of `state/group.owner` (docs/v020-contracts.md §7)."""
+
+    present: bool                 # the file exists
+    ok: bool                      # it parses and names a known owner with a usable pid/since
+    owner: str | None = None
+    pid: int | None = None
+    since: float | None = None
+    age_s: float | None = None    # seconds since the last heartbeat
+    stale: bool = True
+    v020: bool = False            # a *live* cast-sender owner: the group is not ours
+    self_owned: bool = False      # the pid in the file is this process
+    reason: str = "absent"
+
+    def as_dict(self) -> dict:
+        return dataclasses.asdict(self)
+
+
+def read_group_owner(path=None, now=None, self_pid=None) -> GroupOwner:
+    """Interpret the group lock; never create, refresh or delete it.
+
+    Contracts §7 makes the owner the only writer: the file is created atomically by an explicit
+    user action (a share) and refreshed as a heartbeat every 5 s, stale after 15 s. A v0.1 relay
+    that wrote it would race that heartbeat and put its own pid in `pid`, so this function opens
+    the file read-only and only ever reports what it finds.
+
+    Freshness uses the file's mtime *or* `since`, whichever is later: either one advancing is a
+    heartbeat, and a file old by both is stale. A `since` in the future (clock skew) reads as
+    fresh, because staleness cannot be proven from it. Anything unreadable or malformed is not
+    ownership: the relay then behaves exactly as it did before this file existed.
+    """
+    path = path or OWNER_FILE
+    now = time.time() if now is None else now
+    self_pid = os.getpid() if self_pid is None else self_pid
+
+    def bad(reason, owner=None):
+        return GroupOwner(present=True, ok=False, owner=owner, reason=reason)
+
+    try:
+        with open(path, "rb") as fh:          # rb: a read must never create the file
+            raw = fh.read(4096)
+        mtime = os.stat(path).st_mtime
+    except FileNotFoundError:
+        return GroupOwner(present=False, ok=False, reason="absent")
+    except OSError as exc:
+        return GroupOwner(present=True, ok=False, reason=f"unreadable:{type(exc).__name__}")
+    try:
+        doc = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, ValueError):
+        return bad("malformed:not-json")
+    if not isinstance(doc, dict):
+        return bad("malformed:not-an-object")
+    owner, pid, since = doc.get("owner"), doc.get("pid"), doc.get("since")
+    if owner not in (OWNER_SENDER, OWNER_RELAY):
+        return bad("malformed:unknown-owner", owner if isinstance(owner, str) else None)
+    if isinstance(pid, bool) or not isinstance(pid, int):
+        return bad("malformed:pid", owner)
+    if isinstance(since, bool) or not isinstance(since, (int, float)) or since != since:
+        return bad("malformed:since", owner)
+    age = now - max(mtime, float(since))
+    stale = age > OWNER_STALE_S
+    return GroupOwner(present=True, ok=True, owner=owner, pid=pid, since=float(since),
+                      age_s=round(age, 3), stale=stale,
+                      v020=(owner == OWNER_SENDER and not stale),
+                      self_owned=(pid == self_pid),
+                      reason="fresh" if not stale else "stale")
 
 
 # --------------------------------------------------------------------------- TV
@@ -455,7 +532,8 @@ class AudioCache:
 class Relay:
     def __init__(self, tv, sink, audio, delta=0.0, poll=0.25, log_path=None,
                  dry_run=False, verbose=True, measure_url=None, use_rate=False,
-                 measure_dir=False, mirror_volume=False, volume_gain=1.0, volume_max=1.0):
+                 measure_dir=False, mirror_volume=False, volume_gain=1.0, volume_max=1.0,
+                 owner_path=None, start_yielded=False):
         self.tv = tv
         self.sink = sink
         self.audio = audio
@@ -488,6 +566,14 @@ class Relay:
         self._not_playing = 0
         self._fixes = 0
         self.need_start = False
+        self.owner_path = owner_path or OWNER_FILE
+        self.owner = read_group_owner(self.owner_path)      # last reading, for the log
+        self._yield_logged = 0.0
+        # Set by main() when v0.2 owned the group at startup and the sink was therefore never
+        # connected (its unmute of muted members is a packet). The first tick that finds the
+        # lock free establishes the link (see _resume_from_yield). Simulated sinks never pass
+        # this, so their behaviour is unchanged.
+        self._yielded = bool(start_yielded)
         self._fh = open(log_path, "a") if log_path else None
 
     LEAD_STATE = os.path.join(ROOT, "state", "lead_adj.json")
@@ -651,7 +737,80 @@ class Relay:
         except (CastError, OSError) as exc:
             self._log({"ev": "volume_mirror_failed", "error": str(exc)[:80]})
 
+    # ---- group ownership: read-only, contracts §7
+    def _lock_check(self) -> bool:
+        """Read `state/group.owner` once per poll; True while a live v0.2 owner holds the group.
+
+        Read-only on purpose: writing it would race the owner's 5 s heartbeat (contracts §7).
+        """
+        self.owner = read_group_owner(self.owner_path)
+        return self.owner.v020
+
+    def _yield_tick(self):
+        """v0.2 owns the group: behave exactly like "the TV is not playing YouTube".
+
+        Not one packet to the group — no LOAD, no SEEK, no PLAY, no PAUSE, no mute, no unmute,
+        no volume mirroring — because each of them would act on the session v0.2 is running
+        (the stop path already mutes the kitchen and stops the app on the safe group: see
+        notes/consensus.md §5bis.2 and ACCEPTANCE.md §7).
+        The relay keeps polling the TV and the lock and logs a heartbeat every YIELD_LOG_S, so
+        it picks the group back up by itself once the lock is released or goes stale. It never
+        writes the file: contracts §7 gives writing to the owner only.
+        """
+        self._yielded = True
+        self.need_start = True
+        self.clock.reset()
+        now = time.time()
+        if now - self._yield_logged >= YIELD_LOG_S:
+            self._yield_logged = now
+            o = self.owner
+            self._log({"ev": "relay_yielded", "owner": o.owner, "pid": o.pid,
+                       "age_s": o.age_s, "reason": o.reason,
+                       "note": "v0.2 owns the group: no group traffic"})
+
+    def _resume_from_yield(self):
+        """Lock free again: forget the session v0.2 left behind instead of inheriting it.
+
+        Inheriting it would mean a SEEK/PLAY on a session id that no longer exists — or worse,
+        on v0.2's. Dropping the local state sends the normal `need_start` path back to a LOAD of
+        our own media. The group link is opened here too, lazily, so a relay that started while
+        v0.2 owned the group never even connected (its unmute of muted members is a packet).
+        """
+        self._yielded = False
+        self._yield_logged = 0.0
+        self.need_start = True
+        self.clock.reset()
+        self._err_hist.clear()
+        self._g_prev = None
+        self._moving = 0
+        self._not_playing = 0
+        if self.dry_run or self.sink is None:
+            return
+        try:
+            link = getattr(self.sink, "link", None)
+            if link is None or getattr(link, "closed", False):
+                self.sink.connect()      # idle may have lasted hours: the old link is gone
+            self.sink.session = None
+            self.sink.transport = None
+            self.sink.content = None
+            self.sink.state = "NONE"
+            self._log({"ev": "relay_resumed", "owner": self.owner.owner,
+                       "reason": self.owner.reason,
+                       "note": "group handed back: reloading our own session"})
+        except Exception as exc:  # noqa: BLE001 - retried on the next tick, never silent
+            self._yielded = True          # try again on the next poll
+            if time.time() - getattr(self, "_yield_logged", 0.0) >= YIELD_LOG_S:
+                self._yield_logged = time.time()
+                self._log({"ev": "relay_resume_failed",
+                           "error": f"{type(exc).__name__}: {exc}"[:160]})
+
     def step(self):
+        if self._lock_check():
+            self._yield_tick()
+            return
+        if self._yielded:
+            self._resume_from_yield()
+            return
         if not self.dry_run and getattr(self.sink, "link", None) is not None:
             self.sink.link.keepalive()
         tv = self.tv.snapshot()
@@ -903,12 +1062,16 @@ def build_parser():
     p.add_argument("--use-rate", action="store_true",
                    help="use SET_PLAYBACK_RATE for fine correction. Verified to be a NO-OP on "
                         "this hardware (evidence/17); only correct for other devices")
+    p.add_argument("--owner-file", default=None,
+                   help="group ownership lock read at every poll (default: state/group.owner, "
+                        "docs/v020-contracts.md §7). Read-only: never created by the relay")
     return p
 
 
 def main():
     a = build_parser().parse_args()
     log_path = a.log or os.path.join(ROOT, "evidence", "relay-%s.jsonl" % time.strftime("%Y%m%d-%H%M%S"))
+    owner_path = a.owner_file or OWNER_FILE
     tv = RemoteTv(a.tv)
     bind = a.bind or local_ip()
     base = f"http://{bind}:{a.port}"
@@ -941,7 +1104,15 @@ def main():
     srv = AssetServer(os.path.join(ROOT, "assets"), host=bind, port=a.port,
                       log_path=os.path.join(ROOT, "logs", "asset-server.log")).start()
     sink = GroupSink(host, int(port), name=None if ":" in a.group else a.group)
-    sink.connect()
+    owner = read_group_owner(owner_path)
+    if owner.v020:
+        # v0.2 owns the group (contracts §7): start idle. No LOAD, no mute, no unmute, no
+        # volume — not one packet — and not even connect(): its unmute of muted members is
+        # exactly the packet that must not reach a v0.2 session.
+        print(f"v0.2 owns the group ({owner.owner} pid={owner.pid} age={owner.age_s}s): "
+              f"starting idle, polling only")
+    else:
+        sink.connect()
     measure_url = None
     if a.measure_tone:
         mpath = os.path.join(ROOT, a.measure_file)
@@ -956,12 +1127,18 @@ def main():
                   delta=a.delta, poll=a.poll, log_path=log_path, measure_url=measure_url,
                   use_rate=a.use_rate, measure_dir=a.measure_tracks,
                   mirror_volume=a.mirror_volume, volume_gain=a.volume_gain,
-                  volume_max=a.volume_max)
+                  volume_max=a.volume_max, owner_path=owner_path, start_yielded=owner.v020)
     try:
         relay.run(a.duration)
     finally:
         try:
-            sink.stop()          # never leave the kitchen playing behind us
+            # v0.2 owns the group: the app playing there is v0.2's, so stopping it (or muting
+            # the members, which is the stop hook's other job) is exactly the incident this
+            # task removes. Leave it alone; closing our own link is not a command to it.
+            if read_group_owner(owner_path).v020:
+                print("v0.2 owns the group: leaving its session alone (no stop, no mute)")
+            else:
+                sink.stop()          # never leave *our* kitchen playing behind us
         except Exception:  # noqa: BLE001
             pass
         sink.close()
