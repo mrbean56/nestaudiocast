@@ -8,8 +8,8 @@ a speaker, a group or the TV: the receiver is tests/v020/fake_receiver_net.py on
 from __future__ import annotations
 
 import os
-import threading
 import sys
+import threading
 import time
 import unittest
 
@@ -27,14 +27,14 @@ def _deps_ok() -> bool:
     try:
         import cryptography  # noqa: F401
         import pychromecast  # noqa: F401
-    except Exception:                     # noqa: BLE001
+    except Exception:  # noqa: BLE001
         return False
     return True
 
 
 HAVE_DEPS = _deps_ok()
 if HAVE_DEPS:
-    from fake_receiver_net import NS_OURS, FakeReceiverNet  # noqa: E402
+    from fake_receiver_net import FakeReceiverNet  # noqa: E402
 
 
 def quiet(*_a, **_k):
@@ -61,8 +61,13 @@ class WireCase(unittest.TestCase):
         return self.link.launch(timeout=5.0)
 
     def load(self, autoplay=True):
-        return self.link.send(C.MSG_LOAD, url="http://127.0.0.1/media/s1/audio.m4a",
-                              content_type="audio/mp4", media=10.0, autoplay=autoplay)
+        return self.link.send(
+            C.MSG_LOAD,
+            url="http://127.0.0.1/media/s1/audio.m4a",
+            content_type="audio/mp4",
+            media=10.0,
+            autoplay=autoplay,
+        )
 
 
 class TestLifecycle(WireCase):
@@ -75,15 +80,15 @@ class TestLifecycle(WireCase):
         self.assertEqual(self.link.hello["ua"], "fake_receiver_net/0.2")
         self.assertEqual(self.link.hello["version"], "0.2.0-fake-net")
         self.assertEqual(self.link.transport, self.fake.app["transportId"])
-        self.assertEqual(self.link.seq, 0)          # LAUNCH is castv2's own request counter
+        self.assertEqual(self.link.seq, 0)  # LAUNCH is castv2's own request counter
         self.assertTrue(self.link.is_ours())
-        self.load()                                  # the protocol counter starts with our first
-        self.assertEqual(self.link.seq, 1)           # controller message
+        self.load()  # the protocol counter starts with our first
+        self.assertEqual(self.link.seq, 1)  # controller message
 
     def test_launch_is_idempotent_when_our_app_runs(self):
         self.launch()
         transport = self.link.transport
-        self.launch()                                   # adopts, never relaunches
+        self.launch()  # adopts, never relaunches
         self.assertEqual(self.link.transport, transport)
         self.assertEqual(self.link.hellos, 2)
 
@@ -92,7 +97,7 @@ class TestLifecycle(WireCase):
         self.link.close()
         self.link.connect(timeout=5.0)
         self.assertTrue(self.link.is_ours())
-        self.assertEqual(self.link.hellos, 2)           # a fresh CONNECT earns a fresh hello
+        self.assertEqual(self.link.hellos, 2)  # a fresh CONNECT earns a fresh hello
 
     def test_connect_on_an_idle_device_is_lost_device(self):
         with self.assertRaises(X.LostDevice):
@@ -172,7 +177,7 @@ class TestPresenceOnTheWire(WireCase):
         self.assertTrue(self.link.is_ours())
         self.fake.takeover()
         started = time.monotonic()
-        ours = self.link.is_ours()                      # exactly one poll
+        ours = self.link.is_ours()  # exactly one poll
         poll_ms = (time.monotonic() - started) * 1000.0
         self.assertFalse(ours)
         self.assertLess(poll_ms, 1000.0)
@@ -184,7 +189,7 @@ class TestPresenceOnTheWire(WireCase):
         self.launch()
         self.fake.takeover()
         started = time.monotonic()
-        self.link.drain()                               # the unsolicited RECEIVER_STATUS
+        self.link.drain()  # the unsolicited RECEIVER_STATUS
         read_ms = (time.monotonic() - started) * 1000.0
         self.assertLess(read_ms, 1000.0)
         self.assertEqual(self.link.lost_reason, "foreign_app:9A1B2C3D")
@@ -225,14 +230,14 @@ class TestReconnect(WireCase):
         self.assertEqual(self.link.reconnects, 1)
         self.assertTrue(self.link.is_ours())
         self.assertEqual(self.link.hellos, hellos_before + 1)
-        self.assertEqual(self.link.send(C.MSG_PAUSE), seq_before + 1)   # seq never reset
+        self.assertEqual(self.link.send(C.MSG_PAUSE), seq_before + 1)  # seq never reset
 
     def test_reconnect_gives_up_after_the_bounded_backoff(self):
         self.launch()
         calls = []
 
-        def refused(timeout):               # castv2's own connect retries for ~4 s; the thing
-            calls.append(timeout)           # under test here is our backoff schedule
+        def refused(timeout):  # castv2's own connect retries for ~4 s; the thing
+            calls.append(timeout)  # under test here is our backoff schedule
             raise X.LinkDown("connection refused (simulated)")
 
         self.link._open = refused
@@ -241,11 +246,11 @@ class TestReconnect(WireCase):
             self.link.reconnect(attempts=3)
         elapsed = time.monotonic() - started
         self.assertEqual(len(calls), 3)
-        self.assertLess(elapsed, 2.0)       # 0.05 + 0.10 + 0.20, bounded, no runaway
+        self.assertLess(elapsed, 2.0)  # 0.05 + 0.10 + 0.20, bounded, no runaway
 
     def test_reconnect_to_a_dead_device_is_bounded(self):
         self.launch()
-        self.fake.stop()                    # nothing listens any more
+        self.fake.stop()  # nothing listens any more
         started = time.monotonic()
         with self.assertRaises(X.LinkDown):
             self.link.reconnect(attempts=1, timeout=0.3)
@@ -286,12 +291,12 @@ class TestProtocol(WireCase):
 
     def test_inbox_bounded_under_1000_injected_messages(self):
         self.launch()
-        self.link.drain()                   # drop the hello, count only the burst
+        self.link.drain()  # drop the hello, count only the burst
         injected = 1000
         writer = threading.Thread(target=self.fake.burst_states, args=(injected,), daemon=True)
         writer.start()
-        time.sleep(0.5)                     # let the burst pile up, as a client that is not
-        received = 0                        # draining would let it
+        time.sleep(0.5)  # let the burst pile up, as a client that is not
+        received = 0  # draining would let it
         largest = 0
         ordered = True
         last = -1.0

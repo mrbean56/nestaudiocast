@@ -27,7 +27,7 @@ import cast_relay as R  # noqa: E402
 
 
 class OwnerFile(unittest.TestCase):
-    now = 1_000_000.0          # a fixed clock: freshness is a parsed value, not the real time
+    now = 1_000_000.0  # a fixed clock: freshness is a parsed value, not the real time
 
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -51,7 +51,7 @@ class OwnerFile(unittest.TestCase):
     def test_contract_constants(self):
         self.assertEqual(R.OWNER_SENDER, "cast-sender")
         self.assertEqual(R.OWNER_RELAY, "cast-relay")
-        self.assertEqual(R.OWNER_STALE_S, 15.0)     # heartbeat 5 s, stale after 15 s
+        self.assertEqual(R.OWNER_STALE_S, 15.0)  # heartbeat 5 s, stale after 15 s
 
     # ---- 1. fresh lock ----------------------------------------------------------------
     def test_fresh_v020_lock_yields_the_group(self):
@@ -63,14 +63,14 @@ class OwnerFile(unittest.TestCase):
         self.assertEqual(o.pid, 4242)
         self.assertEqual(o.since, self.now - 3.0)
         self.assertFalse(o.stale)
-        self.assertEqual(o.age_s, 1.0)              # the heartbeat, from the mtime
+        self.assertEqual(o.age_s, 1.0)  # the heartbeat, from the mtime
         self.assertTrue(o.v020)
         self.assertFalse(o.self_owned)
         self.assertEqual(o.reason, "fresh")
 
     def test_staleness_boundary_is_fifteen_seconds(self):
         self.write({"owner": "cast-sender", "pid": 1, "since": self.now - 14.9}, age_s=14.9)
-        self.assertTrue(self.read().v020)                       # still live
+        self.assertTrue(self.read().v020)  # still live
         self.write({"owner": "cast-sender", "pid": 1, "since": self.now - 15.1}, age_s=15.1)
         o = self.read()
         self.assertTrue(o.ok)

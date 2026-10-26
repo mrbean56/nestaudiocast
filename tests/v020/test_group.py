@@ -26,11 +26,14 @@ for _p in (LIB, HERE):
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
+from fakes import FakeGroup  # noqa: E402
 from v020 import group as G  # noqa: E402
 from v020.contracts import (  # noqa: E402
-    PLAYER_IDLE, PLAYER_PAUSED, PLAYER_PLAYING, GroupSample,
+    PLAYER_IDLE,
+    PLAYER_PAUSED,
+    PLAYER_PLAYING,
+    GroupSample,
 )
-from fakes import FakeGroup  # noqa: E402
 
 PROBE = os.path.join(ROOT, "tools", "group_probe_v020.py")
 
@@ -57,12 +60,11 @@ class FakeDevice:
     is recorded in ``calls`` as ``(name, payload)`` so a test can assert what was *not* sent.
     """
 
-    def __init__(self, clock: FakeClock, status: dict | None = None,
-                 on_media_status=None) -> None:
+    def __init__(self, clock: FakeClock, status: dict | None = None, on_media_status=None) -> None:
         self.clock = clock
-        self.status = dict(status or {"mediaSessionId": 4242,
-                                      "playerState": PLAYER_PLAYING,
-                                      "currentTime": 0.0})
+        self.status = dict(
+            status or {"mediaSessionId": 4242, "playerState": PLAYER_PLAYING, "currentTime": 0.0}
+        )
         self.script: list[dict] = []
         self.on_media_status = on_media_status
         self.calls: list[tuple[str, object]] = []
@@ -73,8 +75,7 @@ class FakeDevice:
         self.closed = False
         self.error: Exception | None = None
         self.next_session = 4242
-        self.receiver = {"volume": {"level": 0.35, "muted": False},
-                         "applications": []}
+        self.receiver = {"volume": {"level": 0.35, "muted": False}, "applications": []}
 
     # -- transport ---------------------------------------------------------------------------
     def connect_platform(self) -> None:
@@ -89,8 +90,9 @@ class FakeDevice:
 
     def launch(self, app_id: str, timeout: float = 20.0) -> dict:
         self.launched.append(app_id)
-        self.receiver["applications"] = [{"appId": app_id, "displayName": "Default Media Receiver",
-                                          "transportId": "tr-1"}]
+        self.receiver["applications"] = [
+            {"appId": app_id, "displayName": "Default Media Receiver", "transportId": "tr-1"}
+        ]
         return {"applications": list(self.receiver["applications"])}
 
     def media_status(self, transport_id: str, timeout: float = 6.0) -> dict:
@@ -105,13 +107,21 @@ class FakeDevice:
 
     def load(self, transport_id: str, data: dict, timeout: float = 20.0) -> dict:
         self.calls.append(("load", json.loads(json.dumps(data))))
-        self.status = {"mediaSessionId": self.next_session,
-                       "playerState": PLAYER_PLAYING if data.get("autoplay") else PLAYER_PAUSED,
-                       "currentTime": float(data.get("currentTime") or 0.0)}
+        self.status = {
+            "mediaSessionId": self.next_session,
+            "playerState": PLAYER_PLAYING if data.get("autoplay") else PLAYER_PAUSED,
+            "currentTime": float(data.get("currentTime") or 0.0),
+        }
         return {"status": [dict(self.status)]}
 
-    def media_command(self, transport_id: str, cmd: str, media_session_id: int,
-                      fields: dict | None = None, timeout: float = 8.0) -> dict:
+    def media_command(
+        self,
+        transport_id: str,
+        cmd: str,
+        media_session_id: int,
+        fields: dict | None = None,
+        timeout: float = 8.0,
+    ) -> dict:
         fields = dict(fields or {})
         self.calls.append((cmd, {"session": media_session_id, **fields}))
         if cmd == "PLAY":
@@ -124,8 +134,9 @@ class FakeDevice:
                 self.status["playerState"] = PLAYER_PAUSED
         return {"status": [dict(self.status)]}
 
-    def set_receiver_volume(self, level: float | None = None, muted: bool | None = None,
-                            timeout: float = 6.0) -> dict:
+    def set_receiver_volume(
+        self, level: float | None = None, muted: bool | None = None, timeout: float = 6.0
+    ) -> dict:
         self.volume_calls.append({"level": level, "muted": muted})
         if level is not None:
             self.receiver["volume"]["level"] = level
@@ -157,23 +168,40 @@ class FakeDevice:
 class Harness(G.CastGroup):
     """A CastGroup whose three-network seams and clock are replaced; guard result is switchable."""
 
-    def __init__(self, clock: FakeClock, device: FakeDevice, found: dict | None = None,
-                 guard_ok: bool = True, name: str = "Cuisine",
-                 host: str | None = None, port: int | None = None,
-                 members: list[dict] | None = None) -> None:
+    def __init__(
+        self,
+        clock: FakeClock,
+        device: FakeDevice,
+        found: dict | None = None,
+        guard_ok: bool = True,
+        name: str = "Cuisine",
+        host: str | None = None,
+        port: int | None = None,
+        members: list[dict] | None = None,
+    ) -> None:
         super().__init__(name=name, host=host, port=port, log=lambda *a, **k: None)
         self.clock = clock
         self.device = device
         self.found = dict(found) if found is not None else {name: ("192.168.2.61", 32221)}
         self.guard_ok = guard_ok
-        self.members = members if members is not None else [
-            {"name": "Cuisine Fenetre Vert", "id": "u1", "audio_only": True,
-             "level": 0.25, "muted": False}]
+        self.members = (
+            members
+            if members is not None
+            else [
+                {
+                    "name": "Cuisine Fenetre Vert",
+                    "id": "u1",
+                    "audio_only": True,
+                    "level": 0.25,
+                    "muted": False,
+                }
+            ]
+        )
         self.discoveries = 0
         self.guard_calls: list[tuple[str, int]] = []
         self.links: list[tuple[str, int]] = []
-        self.now = clock                        # seam: the controller clock
-        self.sleep = clock.advance              # seam: a fake clock, sleeping advances it
+        self.now = clock  # seam: the controller clock
+        self.sleep = clock.advance  # seam: a fake clock, sleeping advances it
 
     def _discover(self, timeout: float = G.DISCOVER_TIMEOUT_S):
         self.discoveries += 1
@@ -191,8 +219,7 @@ class Harness(G.CastGroup):
         return self.device
 
 
-def build(clock: FakeClock | None = None, device: FakeDevice | None = None,
-          **kw) -> Harness:
+def build(clock: FakeClock | None = None, device: FakeDevice | None = None, **kw) -> Harness:
     clock = clock or FakeClock()
     return Harness(clock, device or FakeDevice(clock), **kw)
 
@@ -201,8 +228,15 @@ def sample_at(wall: float, media: float, state: str = PLAYER_PLAYING) -> GroupSa
     return GroupSample(wall=wall, media=media, player_state=state, session_id=4242)
 
 
-def synthetic(clock: FakeClock, seconds: float, hz: float, slope: float = 1.0,
-              noise_ms: float = 8.0, seed: int = 7, base: float = 5.0) -> list[GroupSample]:
+def synthetic(
+    clock: FakeClock,
+    seconds: float,
+    hz: float,
+    slope: float = 1.0,
+    noise_ms: float = 8.0,
+    seed: int = 7,
+    base: float = 5.0,
+) -> list[GroupSample]:
     """A playhead that drifts at ``slope`` with Gaussian noise (seeded: the test is repeatable)."""
     rnd = random.Random(seed)
     out = []
@@ -236,7 +270,7 @@ class TestPlayheadEstimator(unittest.TestCase):
         self.assertEqual(est.jumps, 0)
         after = est.playhead(self.series[4].wall)
         self.assertIsNotNone(after)
-        self.assertAlmostEqual(after, before, delta=0.002)   # one stale read moves nothing
+        self.assertAlmostEqual(after, before, delta=0.002)  # one stale read moves nothing
 
         # the very next good read is accepted again: the window never latched on the outlier
         good = sample_at(stale.wall + 0.25, stale.media + 0.25 - 0.156)
@@ -336,8 +370,8 @@ class TestRestartGate(unittest.TestCase):
 
     def test_one_non_playing_read_is_not_a_restart(self):
         self.gate.expect_playing(0.0)
-        self.assertFalse(self.gate.observe(2.5, PLAYER_PAUSED))   # one stale read (A36)
-        self.assertTrue(self.gate.observe(2.75, PLAYER_IDLE))     # two in a row (A36)
+        self.assertFalse(self.gate.observe(2.5, PLAYER_PAUSED))  # one stale read (A36)
+        self.assertTrue(self.gate.observe(2.75, PLAYER_IDLE))  # two in a row (A36)
 
     def test_a_playing_read_resets_the_streak(self):
         self.gate.expect_playing(0.0)
@@ -404,10 +438,24 @@ class TestConnect(unittest.TestCase):
 
     def test_warns_when_every_member_is_muted(self):
         """A37: a group whose members are muted plays happily and is silent — say it once."""
-        g = build(members=[{"name": "Cuisine Frigo Jaune", "id": "u2", "audio_only": True,
-                            "level": 0.55, "muted": True},
-                           {"name": "Cuisine Meuble Bleu", "id": "u3", "audio_only": True,
-                            "level": 0.55, "muted": True}])
+        g = build(
+            members=[
+                {
+                    "name": "Cuisine Frigo Jaune",
+                    "id": "u2",
+                    "audio_only": True,
+                    "level": 0.55,
+                    "muted": True,
+                },
+                {
+                    "name": "Cuisine Meuble Bleu",
+                    "id": "u3",
+                    "audio_only": True,
+                    "level": 0.55,
+                    "muted": True,
+                },
+            ]
+        )
         logs: list[str] = []
         g.log = logs.append
         g.connect()
@@ -479,7 +527,7 @@ class TestTransport(unittest.TestCase):
         calls = g.device.transport_calls()
         self.assertEqual(calls.count("load"), 1)
         self.assertEqual(calls.count("PLAY"), 1)
-        self.assertEqual(calls[calls.index("PLAY"):], ["PLAY"])
+        self.assertEqual(calls[calls.index("PLAY") :], ["PLAY"])
         self.assertEqual(g.device.keepalives, 0)
         g.sample()
         self.assertEqual(g.device.keepalives, 1, "every poll keeps the link alive (A23)")
@@ -498,14 +546,14 @@ class TestTransport(unittest.TestCase):
 
     def test_stop_never_touches_a_foreign_session(self):
         g = self.prepared()
-        g.device.status["mediaSessionId"] = 999          # another sender took the group over
+        g.device.status["mediaSessionId"] = 999  # another sender took the group over
         g.stop()
         self.assertEqual(g.device.stopped, [])
         self.assertIsNone(g.session)
 
     def test_stop_does_nothing_when_we_created_nothing(self):
         g = build()
-        g.connect()                                      # a session is already running here
+        g.connect()  # a session is already running here
         g.device.status["mediaSessionId"] = 777
         g.stop()
         self.assertEqual(g.device.stopped, [])
@@ -582,11 +630,11 @@ class TestObservation(unittest.TestCase):
     def test_one_non_playing_read_does_not_ask_for_a_restart(self):
         g = self.playing()
         g.device.status["playerState"] = PLAYER_PAUSED
-        self.assertIsNotNone(g.sample())          # the read is reported...
-        self.assertFalse(g.restart_needed())      # ...but it is not a restart decision (A36)
+        self.assertIsNotNone(g.sample())  # the read is reported...
+        self.assertFalse(g.restart_needed())  # ...but it is not a restart decision (A36)
         g.clock.advance(0.25)
         g.sample()
-        self.assertTrue(g.restart_needed())       # two in a row are a fact (A36)
+        self.assertTrue(g.restart_needed())  # two in a row are a fact (A36)
 
     def test_a_stale_read_is_rejected_by_sample(self):
         g = self.playing()
@@ -594,7 +642,7 @@ class TestObservation(unittest.TestCase):
             g.device.status["currentTime"] += 0.25
             g.sample()
             g.clock.advance(0.25)
-        g.device.status["currentTime"] += 0.25 + 0.150      # a 150 ms stale MEDIA_STATUS
+        g.device.status["currentTime"] += 0.25 + 0.150  # a 150 ms stale MEDIA_STATUS
         self.assertIsNone(g.sample())
         self.assertEqual(g.estimator.rejections, 1)
         g.device.status["currentTime"] += 0.25 - 0.150
@@ -640,8 +688,22 @@ class TestInterfaceParity(unittest.TestCase):
     def test_fake_group_and_cast_group_agree(self):
         real = {name for name in dir(G.CastGroup) if not name.startswith("_")}
         fake = {name for name in dir(FakeGroup) if not name.startswith("_")}
-        self.assertTrue({"connect", "reconnect", "prepare", "play", "pause", "seek",
-                         "set_volume", "stop", "sample", "playhead", "close"} <= real & fake)
+        self.assertTrue(
+            {
+                "connect",
+                "reconnect",
+                "prepare",
+                "play",
+                "pause",
+                "seek",
+                "set_volume",
+                "stop",
+                "sample",
+                "playhead",
+                "close",
+            }
+            <= real & fake
+        )
 
     def test_fake_group_drives_the_estimator_too(self):
         """A fake group is enough to exercise the playhead path: no device, no socket."""
@@ -660,8 +722,9 @@ class TestProbeScript(unittest.TestCase):
     """The probe is the gate's measurement: its gates are tested, its measurement is not run."""
 
     def run_probe(self, *args) -> subprocess.CompletedProcess:
-        return subprocess.run([sys.executable, PROBE, *args], cwd=ROOT,
-                              capture_output=True, text=True, timeout=120)
+        return subprocess.run(
+            [sys.executable, PROBE, *args], cwd=ROOT, capture_output=True, text=True, timeout=120
+        )
 
     def test_dry_run_is_the_default_and_constructs_no_transport(self):
         proc = self.run_probe()
@@ -677,8 +740,10 @@ class TestProbeScript(unittest.TestCase):
         self.assertIn("8 landings", steps)
         self.assertIn("3.0 min", steps)
         self.assertIn("groupguard", steps)
-        self.assertEqual(plan["refuses"], ["without --mute", "without --i-have-an-audio-window",
-                                           "any group that fails groupguard"])
+        self.assertEqual(
+            plan["refuses"],
+            ["without --mute", "without --i-have-an-audio-window", "any group that fails groupguard"],
+        )
         self.assertTrue(plan["needs_audio_window"])
 
     def test_refuses_to_run_without_mute(self):
@@ -699,6 +764,7 @@ class TestProbeScript(unittest.TestCase):
     def test_redacts_the_media_url(self):
         sys.path.insert(0, os.path.join(ROOT, "tools"))
         import group_probe_v020 as probe
+
         red = probe.redact("https://rr3---sn-abc.googlevideo.com/videoplayback?expire=1&sig=x")
         self.assertEqual(red, "https://rr3---sn-abc.googlevideo.com/videop…")
         self.assertNotIn("expire", red)

@@ -43,9 +43,20 @@ MEASURE_SUFFIXES = (".m4a", ".wav")
 DEFAULT_MAX_BODY = 64 * 1024
 
 _STATUS_FIELDS = (
-    "state", "session_id", "video_id", "position_video", "position_group",
-    "digital_error_ms", "p95_ms", "rate", "steady_since", "quiet", "group_owner", "delta_v2",
-    "last_event", "last_error",
+    "state",
+    "session_id",
+    "video_id",
+    "position_video",
+    "position_group",
+    "digital_error_ms",
+    "p95_ms",
+    "rate",
+    "steady_since",
+    "quiet",
+    "group_owner",
+    "delta_v2",
+    "last_event",
+    "last_error",
 )
 
 
@@ -62,9 +73,19 @@ class ApiError(Exception):
 class SenderAPI:
     """Routing, the LAN allow-list and the JSON contract — the state machine stays in session.py."""
 
-    def __init__(self, sender, *, config, log=None, proxy=None, receiver_dir: str | None = None,
-                 assets_dir: str | None = None, extra_allowed=(), max_body: int = DEFAULT_MAX_BODY,
-                 ui_title: str = "cast-sender") -> None:
+    def __init__(
+        self,
+        sender,
+        *,
+        config,
+        log=None,
+        proxy=None,
+        receiver_dir: str | None = None,
+        assets_dir: str | None = None,
+        extra_allowed=(),
+        max_body: int = DEFAULT_MAX_BODY,
+        ui_title: str = "cast-sender",
+    ) -> None:
         self.sender = sender
         self.config = config
         self.log = log or (lambda *a, **k: None)
@@ -87,7 +108,7 @@ class SenderAPI:
             return True
         try:
             return address in LAN_NETWORK
-        except TypeError:      # an IPv6 address is never in an IPv4 network
+        except TypeError:  # an IPv6 address is never in an IPv4 network
             return False
 
     # -- server -----------------------------------------------------------------------------
@@ -98,8 +119,9 @@ class SenderAPI:
 
     def serve_forever(self, bind: str | None = None, port: int | None = None) -> "SenderServer":
         server = self.make_server(bind, port)
-        self.logger("http_listening", bind=server.server_address[0],
-                    port=server.server_address[1], lan_only=True)
+        self.logger(
+            "http_listening", bind=server.server_address[0], port=server.server_address[1], lan_only=True
+        )
         server.serve_forever()
         return server
 
@@ -146,25 +168,25 @@ class _Handler(BaseHTTPRequestHandler):
         pass
 
     # -- verbs ------------------------------------------------------------------------------
-    def do_GET(self) -> None:            # noqa: N802 - stdlib naming
+    def do_GET(self) -> None:  # noqa: N802 - stdlib naming
         self._dispatch("GET")
 
-    def do_POST(self) -> None:           # noqa: N802
+    def do_POST(self) -> None:  # noqa: N802
         self._dispatch("POST")
 
-    def do_HEAD(self) -> None:           # noqa: N802
+    def do_HEAD(self) -> None:  # noqa: N802
         self._dispatch("HEAD")
 
-    def do_PUT(self) -> None:            # noqa: N802
+    def do_PUT(self) -> None:  # noqa: N802
         self._dispatch("PUT")
 
-    def do_PATCH(self) -> None:          # noqa: N802
+    def do_PATCH(self) -> None:  # noqa: N802
         self._dispatch("PATCH")
 
-    def do_DELETE(self) -> None:         # noqa: N802
+    def do_DELETE(self) -> None:  # noqa: N802
         self._dispatch("DELETE")
 
-    def do_OPTIONS(self) -> None:        # noqa: N802
+    def do_OPTIONS(self) -> None:  # noqa: N802
         self._dispatch("OPTIONS")
 
     # -- dispatch ---------------------------------------------------------------------------
@@ -177,8 +199,7 @@ class _Handler(BaseHTTPRequestHandler):
             client = str(self.client_address[0]) if self.client_address else ""
             if not self.api.allowed(client):
                 self.api.logger("http_denied", client=client, path=self.path, method=method)
-                raise ApiError(403, "forbidden",
-                               "only clients of 192.168.2.0/24 may use this service")
+                raise ApiError(403, "forbidden", "only clients of 192.168.2.0/24 may use this service")
             path = urlsplit(self.path).path or "/"
             if path.startswith(C.PATH_MEDIA_PREFIX):
                 return self._media(method, path)
@@ -209,16 +230,20 @@ class _Handler(BaseHTTPRequestHandler):
     def _h_receiver(self) -> None:
         path = os.path.join(self.api.receiver_dir, "receiver.html")
         if not os.path.isfile(path):
-            raise ApiError(404, "receiver_missing",
-                           f"{path} is missing: the receiver page is not built in this "
-                           f"checkout (it belongs to the receiver task)")
+            raise ApiError(
+                404,
+                "receiver_missing",
+                f"{path} is missing: the receiver page is not built in this "
+                f"checkout (it belongs to the receiver task)",
+            )
         with open(path, "rb") as handle:
             body = handle.read()
         self._send(200, "text/html; charset=utf-8", body, cache="no-cache")
 
     def _h_ui(self) -> None:
-        self._send(200, "text/html; charset=utf-8", _ui_page(self.api.ui_title).encode(),
-                   cache="no-store")
+        self._send(
+            200, "text/html; charset=utf-8", _ui_page(self.api.ui_title).encode(), cache="no-store"
+        )
 
     def _h_share(self) -> None:
         body = self._read_json()
@@ -249,11 +274,11 @@ class _Handler(BaseHTTPRequestHandler):
         _reject_unknown(body, {"action", "position", "level", "muted"})
         action = body.get("action")
         if not isinstance(action, str) or action not in C.ACTIONS:
-            raise ApiError(400, "invalid_body",
-                           f"action must be one of {list(C.ACTIONS)}")
+            raise ApiError(400, "invalid_body", f"action must be one of {list(C.ACTIONS)}")
         position, level, muted = body.get("position"), body.get("level"), body.get("muted")
-        if position is not None and (isinstance(position, bool)
-                                     or not isinstance(position, (int, float))):
+        if position is not None and (
+            isinstance(position, bool) or not isinstance(position, (int, float))
+        ):
             raise ApiError(400, "invalid_body", "position must be a number")
         if level is not None and (isinstance(level, bool) or not isinstance(level, (int, float))):
             raise ApiError(400, "invalid_body", "level must be a number")
@@ -264,7 +289,8 @@ class _Handler(BaseHTTPRequestHandler):
                 action,
                 position=None if position is None else float(position),
                 level=None if level is None else float(level),
-                muted=muted)
+                muted=muted,
+            )
         except ControlError as exc:
             raise ApiError(exc.code, exc.kind, str(exc)) from None
         self._json(200, {"ok": bool(reply.get("ok")), "state": reply.get("state")})
@@ -276,7 +302,7 @@ class _Handler(BaseHTTPRequestHandler):
         proxy = self.api.proxy
         if proxy is None:
             raise ApiError(503, "media_proxy_unavailable", "no media proxy is wired")
-        relative = path[len(C.PATH_MEDIA_PREFIX):]
+        relative = path[len(C.PATH_MEDIA_PREFIX) :]
         sid, _, name = relative.partition("/")
         if not sid or not name:
             raise ApiError(404, "not_found", "expected /media/<sid>/<name>")
@@ -284,13 +310,14 @@ class _Handler(BaseHTTPRequestHandler):
             try:
                 manifest = proxy.mpd_for(sid)
             except KeyError:
-                raise ApiError(410, "session_gone",
-                               "this media session id is not open (revoked on session end)")
+                raise ApiError(
+                    410, "session_gone", "this media session id is not open (revoked on session end)"
+                ) from None
             except NotImplementedError:
-                raise ApiError(501, "media_proxy_stub",
-                               "the media proxy is a stub (task B)")
-            self._send(200, "application/dash+xml; charset=utf-8", str(manifest).encode(),
-                       cache="no-store")
+                raise ApiError(501, "media_proxy_stub", "the media proxy is a stub (task B)") from None
+            self._send(
+                200, "application/dash+xml; charset=utf-8", str(manifest).encode(), cache="no-store"
+            )
             return
         serve = getattr(proxy, "serve_http", None)
         if serve is None:
@@ -302,8 +329,11 @@ class _Handler(BaseHTTPRequestHandler):
                 return
             if handle is not None:
                 raise ApiError(404, "not_found", f"{path} is not served by the media proxy")
-            raise ApiError(501, "media_stream_unavailable",
-                           "the media proxy has no byte endpoint (contracts §4/§5, §10.4)")
+            raise ApiError(
+                501,
+                "media_stream_unavailable",
+                "the media proxy has no byte endpoint (contracts §4/§5, §10.4)",
+            )
         try:
             status, headers, body = serve(method, path, dict(self.headers.items()))
         except KeyError:
@@ -324,7 +354,7 @@ class _Handler(BaseHTTPRequestHandler):
     def _measure_asset(self, method: str, path: str) -> None:
         if method not in ("GET", "HEAD"):
             raise ApiError(405, "method_not_allowed", f"{path} accepts GET")
-        name = path[len(MEASURE_PREFIX):]
+        name = path[len(MEASURE_PREFIX) :]
         if not name or "/" in name or "\\" in name or ".." in name:
             raise ApiError(400, "invalid_path", "a bare file name is expected")
         if not name.lower().endswith(MEASURE_SUFFIXES):
@@ -356,8 +386,7 @@ class _Handler(BaseHTTPRequestHandler):
             raise ApiError(400, "invalid_body", "Content-Length is negative")
         if length > self.api.max_body:
             self.close_connection = True
-            raise ApiError(413, "payload_too_large",
-                           f"at most {self.api.max_body} bytes are accepted")
+            raise ApiError(413, "payload_too_large", f"at most {self.api.max_body} bytes are accepted")
         raw = self.rfile.read(length) if length else b""
         if not raw.strip():
             raise ApiError(400, "invalid_body", "a JSON object is required")
@@ -384,9 +413,14 @@ class _Handler(BaseHTTPRequestHandler):
             self.close_connection = True
         # A browser asks for /favicon.ico on its own; that must not become "last_event".
         if code >= 400 and not self.path.startswith("/favicon"):
-            self.api.logger("http_error", code=code, error=message, path=self.path,
-                            method=self.command, client=str(self.client_address[0])
-                            if self.client_address else None)
+            self.api.logger(
+                "http_error",
+                code=code,
+                error=message,
+                path=self.path,
+                method=self.command,
+                client=str(self.client_address[0]) if self.client_address else None,
+            )
 
     def _send(self, code: int, content_type: str, body: bytes, *, cache: str = "no-store") -> None:
         try:
@@ -416,8 +450,7 @@ _ROUTES = {
 def _reject_unknown(body: dict, allowed: set[str]) -> None:
     unknown = sorted(set(body) - set(allowed))
     if unknown:
-        raise ApiError(400, "invalid_body",
-                       f"unknown field(s) {unknown}; accepted: {sorted(allowed)}")
+        raise ApiError(400, "invalid_body", f"unknown field(s) {unknown}; accepted: {sorted(allowed)}")
 
 
 def _ui_page(title: str) -> str:
@@ -592,7 +625,8 @@ def serve_in_thread(api: SenderAPI, *, bind: str = "127.0.0.1", port: int = 0):
     """Test/self-test helper: bind an ephemeral port and serve in a daemon thread."""
     server = api.make_server(bind, port)
     # a short poll interval: shutdown() waits for one poll, and a test suite shuts down a lot
-    thread = threading.Thread(target=server.serve_forever, kwargs={"poll_interval": 0.02},
-                              name="cast-sender-http", daemon=True)
+    thread = threading.Thread(
+        target=server.serve_forever, kwargs={"poll_interval": 0.02}, name="cast-sender-http", daemon=True
+    )
     thread.start()
     return server, thread

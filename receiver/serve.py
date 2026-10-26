@@ -15,6 +15,7 @@ short-lived token and a token in a log is a leaked secret).
 
     python3 serve.py --bind 192.168.2.21 --port 7640 [--root DIR]
 """
+
 from __future__ import annotations
 
 import argparse
@@ -80,8 +81,7 @@ class Handler(BaseHTTPRequestHandler):
             self._json(404, {"ok": False, "error": "not found"})
             return
         size = os.path.getsize(path)
-        ctype = ctype or MEDIA_TYPES.get(os.path.splitext(path)[1].lower(),
-                                         "application/octet-stream")
+        ctype = ctype or MEDIA_TYPES.get(os.path.splitext(path)[1].lower(), "application/octet-stream")
         rng = self.headers.get("Range")
         if rng and rng.startswith("bytes="):
             try:
@@ -128,12 +128,20 @@ class Handler(BaseHTTPRequestHandler):
             self._file(os.path.join(ROOT, "receiver.html"), "text/html; charset=utf-8")
             return
         if path == "/healthz":
-            self._json(200, {"ok": True, "owner": "receiver-dev", "root": ROOT,
-                             "media_dir": MEDIA_DIR, "media_files": _count_media()})
+            self._json(
+                200,
+                {
+                    "ok": True,
+                    "owner": "receiver-dev",
+                    "root": ROOT,
+                    "media_dir": MEDIA_DIR,
+                    "media_files": _count_media(),
+                },
+            )
             return
         if path.startswith("/media/"):
             name = os.path.basename(path)
-            if name != path[len("/media/"):] or not name:
+            if name != path[len("/media/") :] or not name:
                 self._json(404, {"ok": False, "error": "not found"})
                 return
             self._file(os.path.join(MEDIA_DIR, name))
@@ -175,8 +183,10 @@ def main(argv: list[str] | None = None) -> int:
         log("FATAL: %s is missing" % page)
         return 2
     srv = Server((args.bind, args.port), Handler)
-    log("serving %s on http://%s:%d/receiver.html  (media: %s, %d files)" %
-        (page, args.bind, args.port, MEDIA_DIR, _count_media()))
+    log(
+        "serving %s on http://%s:%d/receiver.html  (media: %s, %d files)"
+        % (page, args.bind, args.port, MEDIA_DIR, _count_media())
+    )
     try:
         srv.serve_forever(poll_interval=0.5)
     except KeyboardInterrupt:

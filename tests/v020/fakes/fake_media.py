@@ -9,18 +9,38 @@ from v020.contracts import ResolvedMedia, Track
 
 class FakeMedia:
     @staticmethod
-    def resolved(video_id: str = "QzomK1fdSUg", duration_s: float = 600.0,
-                 height: int = 1080) -> ResolvedMedia:
+    def resolved(
+        video_id: str = "QzomK1fdSUg", duration_s: float = 600.0, height: int = 1080
+    ) -> ResolvedMedia:
         now = time.time()
-        video = Track(itag=137, codecs="avc1.640028", content_type="video/mp4",
-                      url="https://rr1---sn-fake.googlevideo.com/videoplayback?token=REDACTED",
-                      width=1920, height=height, fps=30.0,
-                      init_range=(0, 740), index_range=(740, 1200))
-        audio = Track(itag=140, codecs="mp4a.40.2", content_type="audio/mp4",
-                      url="https://rr1---sn-fake.googlevideo.com/videoplayback?token=REDACTED",
-                      init_range=(0, 640), index_range=(640, 980))
-        return ResolvedMedia(video_id=video_id, title="fake video", duration_s=duration_s,
-                             video=video, audio=audio, fetched_at=now, expires_at=now + 6 * 3600)
+        video = Track(
+            itag=137,
+            codecs="avc1.640028",
+            content_type="video/mp4",
+            url="https://rr1---sn-fake.googlevideo.com/videoplayback?token=REDACTED",
+            width=1920,
+            height=height,
+            fps=30.0,
+            init_range=(0, 740),
+            index_range=(740, 1200),
+        )
+        audio = Track(
+            itag=140,
+            codecs="mp4a.40.2",
+            content_type="audio/mp4",
+            url="https://rr1---sn-fake.googlevideo.com/videoplayback?token=REDACTED",
+            init_range=(0, 640),
+            index_range=(640, 980),
+        )
+        return ResolvedMedia(
+            video_id=video_id,
+            title="fake video",
+            duration_s=duration_s,
+            video=video,
+            audio=audio,
+            fetched_at=now,
+            expires_at=now + 6 * 3600,
+        )
 
 
 class FakeProxy:
@@ -41,8 +61,10 @@ class FakeProxy:
         if sid not in self.sessions:
             raise KeyError(sid)
         d = self.sessions[sid].duration_s
-        return (f'<?xml version="1.0"?><MPD type="static" mediaPresentationDuration="PT{d}S"'
-                f'><Period><AdaptationSet/><Period/></MPD>')
+        return (
+            f'<?xml version="1.0"?><MPD type="static" mediaPresentationDuration="PT{d}S"'
+            f"><Period><AdaptationSet/><Period/></MPD>"
+        )
 
     def audio_url_for(self, sid: str) -> str:
         return f"http://{self.host}:{self.port}/media/{sid}/audio.m4a"

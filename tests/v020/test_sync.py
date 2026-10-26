@@ -17,17 +17,23 @@ for p in (LIB, HERE):
     if p not in sys.path:
         sys.path.insert(0, p)
 
-from v020 import contracts as C                       # noqa: E402
-from v020 import sync                                 # noqa: E402
-from v020.contracts import (                          # noqa: E402
-    PLAYER_IDLE, PLAYER_PAUSED, PLAYER_PLAYING, Command, GroupSample, Sample,
+from v020 import contracts as C  # noqa: E402
+from v020 import sync  # noqa: E402
+from v020.contracts import (  # noqa: E402
+    PLAYER_IDLE,
+    PLAYER_PAUSED,
+    PLAYER_PLAYING,
+    Command,
+    GroupSample,
+    Sample,
 )
 
 DT = 0.25
 
 
-def vsample(t: float, media: float, state: str = PLAYER_PLAYING, rate: float = 1.0,
-            offset_ms: float = 0.0) -> Sample:
+def vsample(
+    t: float, media: float, state: str = PLAYER_PLAYING, rate: float = 1.0, offset_ms: float = 0.0
+) -> Sample:
     return Sample(rx_ms=t * 1000.0 + offset_ms, media=media, rate=rate, player_state=state)
 
 
@@ -35,17 +41,26 @@ def gsample(t: float, media: float, state: str = PLAYER_PLAYING) -> GroupSample:
     return GroupSample(wall=t, media=media, player_state=state)
 
 
-def drive(ctl: sync.Controller, t0: float, t1: float, err_s, dt: float = DT,
-          video_state: str = PLAYER_PLAYING, group_state: str = PLAYER_PLAYING,
-          offset_ms: float = 0.0) -> list[Command]:
+def drive(
+    ctl: sync.Controller,
+    t0: float,
+    t1: float,
+    err_s,
+    dt: float = DT,
+    video_state: str = PLAYER_PLAYING,
+    group_state: str = PLAYER_PLAYING,
+    offset_ms: float = 0.0,
+) -> list[Command]:
     """Feed ticks where the video sits ``err_s`` behind the group (before DELTA_V2)."""
     out: list[Command] = []
     t = t0
     while t <= t1 + 1e-9:
         e = err_s(t) if callable(err_s) else err_s
-        cmds = ctl.step(t,
-                        vsample(t, t - e - ctl.delta_v2, video_state, offset_ms=offset_ms),
-                        gsample(t, t, group_state))
+        cmds = ctl.step(
+            t,
+            vsample(t, t - e - ctl.delta_v2, video_state, offset_ms=offset_ms),
+            gsample(t, t, group_state),
+        )
         out.extend(cmds)
         t = round(t + dt, 9)
     return out
@@ -81,8 +96,7 @@ class TestStartPlan(unittest.TestCase):
 
     def test_a_group_parked_elsewhere_is_parked_once_more(self):
         cmds = self.ctl.start(now=0.0, video_ready=5.0, group_ready=2.0)
-        self.assertEqual(kinds(cmds),
-                         [sync.CMD_GROUP_SEEK, sync.CMD_GROUP_PLAY, C.MSG_PLAY_AT])
+        self.assertEqual(kinds(cmds), [sync.CMD_GROUP_SEEK, sync.CMD_GROUP_PLAY, C.MSG_PLAY_AT])
         self.assertEqual(cmds[0].payload, {"media": 5.0, "pause": True, "at": 0.0})
         self.assertEqual(cmds[1].payload["media"], 5.0)
 
@@ -93,7 +107,7 @@ class TestStartPlan(unittest.TestCase):
         ctl.on_seek(40.0, 0.0)
         ctl.phase = sync.PHASE_STEADY
         ctl._event_at = -100.0
-        drive(ctl, 41.0, 60.0, err_s=0.050)          # 50 ms of error, engaged
+        drive(ctl, 41.0, 60.0, err_s=0.050)  # 50 ms of error, engaged
         self.assertLess(abs(ctl._u_cmd), 1e-12 + ctl.rate_max)  # a trim was commanded
         self.assertNotEqual(ctl._rate_sent, 1.0)
         cmds = ctl.start(now=100.0, video_ready=0.0, group_ready=0.0)
@@ -122,10 +136,10 @@ class TestErrorSign(unittest.TestCase):
         """
         ctl = sync.Controller(delta_v2=0.265)
         ctl.start(0.0, 0.0, 0.0)
-        ctl.on_seek(1.0, 0.0)                        # a fresh event: steady comes 30 s later
+        ctl.on_seek(1.0, 0.0)  # a fresh event: steady comes 30 s later
         ctl.phase = sync.PHASE_STEADY
         ctl._event_at = 1.0 - C.STEADY_AFTER_S - 1.0
-        cmds = drive(ctl, 2.0, 20.0, err_s=0.100)    # the kitchen is 100 ms ahead
+        cmds = drive(ctl, 2.0, 20.0, err_s=0.100)  # the kitchen is 100 ms ahead
         rates = [c.payload["value"] for c in cmds if c.kind == C.MSG_RATE]
         self.assertTrue(rates, "a 100 ms error must produce a trim")
         self.assertGreater(rates[0], 1.0)
@@ -163,7 +177,7 @@ class TestSteadyLaw(unittest.TestCase):
         self.assertLess(abs(rates[0] - 1.0), self.ctl.rate_max)
 
     def test_rate_is_clamped(self):
-        for err, sign in ((2.0, 1), (-2.0, -1)):       # two seconds of error, either way
+        for err, sign in ((2.0, 1), (-2.0, -1)):  # two seconds of error, either way
             ctl = sync.Controller(delta_v2=0.0)
             ctl.start(0.0, 0.0, 0.0)
             ctl.phase = sync.PHASE_STEADY
@@ -173,15 +187,14 @@ class TestSteadyLaw(unittest.TestCase):
             for c in cmds:
                 self.assertLessEqual(abs(c.payload["value"] - 1.0), ctl.rate_max + 1e-12)
             # and it saturates in the right direction instead of running away
-            self.assertAlmostEqual(cmds[-1].payload["value"] - 1.0, sign * ctl.rate_max,
-                                   places=9)
+            self.assertAlmostEqual(cmds[-1].payload["value"] - 1.0, sign * ctl.rate_max, places=9)
 
     def test_slew_is_bounded(self):
         cmds = drive(self.ctl, 1.0, 60.0, err_s=1.0)
         sent = [c.payload["value"] for c in cmds]
         self.assertGreater(len(sent), 1)
         limit = self.ctl.SLEW_PER_S * self.ctl.RATE_MIN_INTERVAL_S + 1e-12
-        for prev, nxt in zip([1.0] + sent, sent):
+        for prev, nxt in zip([1.0] + sent[:-1], sent, strict=True):
             self.assertLessEqual(abs(nxt - prev), limit + self.ctl.RATE_STEP_MIN)
 
     def test_steady_state_only_emits_rate(self):
@@ -214,8 +227,7 @@ class TestEvents(unittest.TestCase):
     def test_seek_moves_both_sides(self):
         self.ctl.start(0.0, 0.0, 0.0)
         cmds = self.ctl.on_seek(100.0, 300.0)
-        self.assertEqual(kinds(cmds), [sync.CMD_GROUP_SEEK, sync.CMD_GROUP_PLAY,
-                                       C.MSG_PLAY_AT])
+        self.assertEqual(kinds(cmds), [sync.CMD_GROUP_SEEK, sync.CMD_GROUP_PLAY, C.MSG_PLAY_AT])
         self.assertEqual(cmds[0].payload["media"], 300.0 + 0.265)
         self.assertTrue(cmds[0].payload["pause"])
         self.assertEqual(cmds[1].payload["media"], 300.0 + 0.265)
@@ -231,9 +243,10 @@ class TestEvents(unittest.TestCase):
         land = self.ctl.START_GUARD_S
         play_at = 0
         t = land + self.ctl.SAMPLE_AFTER_S
-        while t < land + 29.0:                     # stop before steady begins (§2: 30 s)
-            cmds = self.ctl.step(t, vsample(t, t - self.ctl.delta_v2),
-                                 gsample(t, t + 0.200))              # 200 ms of error
+        while t < land + 29.0:  # stop before steady begins (§2: 30 s)
+            cmds = self.ctl.step(
+                t, vsample(t, t - self.ctl.delta_v2), gsample(t, t + 0.200)
+            )  # 200 ms of error
             play_at += sum(1 for c in cmds if c.kind == C.MSG_PLAY_AT)
             self.assertTrue(all(c.kind == C.MSG_PLAY_AT for c in cmds))
             t = round(t + DT, 9)
@@ -244,8 +257,7 @@ class TestEvents(unittest.TestCase):
         self.ctl.start(0.0, 0.0, 0.0)
         t = self.ctl.START_GUARD_S + self.ctl.SAMPLE_AFTER_S
         while t < 20.0:
-            self.ctl.step(t, vsample(t, t - self.ctl.delta_v2),
-                          gsample(t, t + 0.002))                           # 2 ms: fine
+            self.ctl.step(t, vsample(t, t - self.ctl.delta_v2), gsample(t, t + 0.002))  # 2 ms: fine
             t = round(t + DT, 9)
         self.assertEqual(self.ctl.relandings, 0)
         self.assertEqual(self.ctl.relanding_refused, 1)
@@ -255,8 +267,12 @@ class TestEvents(unittest.TestCase):
         self.ctl.start(0.0, 0.0, 0.0)
         cmds = self.ctl.on_pause(100.0)
         self.assertEqual(kinds(cmds), [sync.CMD_GROUP_PAUSE, C.MSG_PAUSE])
-        self.assertEqual(self.ctl.step(101.0, vsample(101.0, 100.0, PLAYER_PAUSED),
-                                       gsample(101.0, 100.0, PLAYER_PAUSED)), [])
+        self.assertEqual(
+            self.ctl.step(
+                101.0, vsample(101.0, 100.0, PLAYER_PAUSED), gsample(101.0, 100.0, PLAYER_PAUSED)
+            ),
+            [],
+        )
         cmds = self.ctl.on_resume(140.0, 120.0)
         self.assertEqual(kinds(cmds), [sync.CMD_GROUP_PLAY, C.MSG_PLAY_AT])
         land = 140.0 + self.ctl.START_GUARD_S
@@ -270,14 +286,22 @@ class TestEvents(unittest.TestCase):
         cmds = self.ctl.on_end(200.0)
         self.assertEqual(kinds(cmds), [sync.CMD_GROUP_STOP, C.MSG_IDLE])
         self.assertEqual(self.ctl.phase, sync.PHASE_ENDED)
-        self.assertEqual(self.ctl.step(200.25, vsample(200.25, 200.0, PLAYER_IDLE),
-                                       gsample(200.25, 200.0, PLAYER_IDLE)), [])
+        self.assertEqual(
+            self.ctl.step(
+                200.25, vsample(200.25, 200.0, PLAYER_IDLE), gsample(200.25, 200.0, PLAYER_IDLE)
+            ),
+            [],
+        )
 
     def test_no_command_while_paused(self):
         self.ctl.start(0.0, 0.0, 0.0)
         self.ctl.on_pause(100.0)
-        self.assertEqual(drive(self.ctl, 101.0, 160.0, err_s=0.500,
-                               video_state=PLAYER_PAUSED, group_state=PLAYER_PAUSED), [])
+        self.assertEqual(
+            drive(
+                self.ctl, 101.0, 160.0, err_s=0.500, video_state=PLAYER_PAUSED, group_state=PLAYER_PAUSED
+            ),
+            [],
+        )
 
 
 class TestObservation(unittest.TestCase):
@@ -301,10 +325,9 @@ class TestObservation(unittest.TestCase):
 
     def test_steady_is_false_while_a_trim_is_fresh(self):
         drive(self.ctl, 1.0, 100.0, err_s=0.0)
-        drive(self.ctl, 100.25, 110.0, err_s=0.050)       # a trim goes out
+        drive(self.ctl, 100.25, 110.0, err_s=0.050)  # a trim goes out
         self.assertGreater(self.ctl._rate_at, 100.0)
-        self.assertFalse(self.ctl.steady(self.ctl._rate_at + 1.0),
-                         "a trim 1 s ago is not steady (§2)")
+        self.assertFalse(self.ctl.steady(self.ctl._rate_at + 1.0), "a trim 1 s ago is not steady (§2)")
         self.assertTrue(self.ctl.steady(self.ctl._rate_at + 3.0))
 
     def test_steady_is_false_when_a_side_is_not_playing(self):
@@ -315,7 +338,7 @@ class TestObservation(unittest.TestCase):
     def test_one_stale_non_playing_read_is_ignored(self):
         drive(self.ctl, 1.0, 60.0, err_s=0.0)
         t = 60.25
-        self.ctl.step(t, vsample(t, t), gsample(t, t, PLAYER_PAUSED))    # one stale read
+        self.ctl.step(t, vsample(t, t), gsample(t, t, PLAYER_PAUSED))  # one stale read
         drive(self.ctl, t + DT, t + 5.0, err_s=0.0)
         self.assertTrue(self.ctl.steady(t + 5.0))
         self.assertEqual(self.ctl._np["group"], 0)
@@ -335,7 +358,7 @@ class TestObservation(unittest.TestCase):
         self.ctl._event_at = -100.0
         self.ctl._steady_window.clear()
         self.ctl._rate_at = -1e9
-        for i in range(20):                              # 5 s of 4 Hz samples at +12 ms
+        for i in range(20):  # 5 s of 4 Hz samples at +12 ms
             now = 100.0 - 4.75 + i * DT
             self.ctl.step(now, vsample(now, now + 0.012), gsample(now, now + 0.024))
         med = self.ctl.window_median_ms()

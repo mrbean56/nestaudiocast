@@ -21,10 +21,16 @@ import types
 import unittest
 
 from test_sender_support import (
-    C, TempDir, YOUTUBE, FakeClock, EventLog, make_config, tick,
+    YOUTUBE,
+    C,
+    EventLog,
+    FakeClock,
+    TempDir,
+    make_config,
+    tick,
 )
 
-from fakes import FakeGroup, FakeProxy, FakeMedia, FakeReceiver
+from fakes import FakeGroup, FakeMedia, FakeProxy, FakeReceiver
 from sender.session import SessionManager
 from v020.sync import Controller
 
@@ -37,8 +43,7 @@ def offline_resolver(url, **_kw):
 
 
 class SeamCase(TempDir, unittest.TestCase):
-    def fixture(self, *, rate_gain: float = 1.0, delta_v2: float = 0.0,
-                start_jitter: float = 0.0):
+    def fixture(self, *, rate_gain: float = 1.0, delta_v2: float = 0.0, start_jitter: float = 0.0):
         config = make_config(self.root)
         clock = FakeClock()
         link = FakeReceiver(clock=clock, rate_gain=rate_gain, start_jitter=start_jitter)
@@ -46,12 +51,29 @@ class SeamCase(TempDir, unittest.TestCase):
         proxy = FakeProxy()
         controller = Controller(delta_v2=delta_v2, rate_max=0.002)
         log = EventLog(directory=config.evidence_dir)
-        sender = SessionManager(link=link, group=group, controller=controller, proxy=proxy,
-                               config=config, log=log, resolver=offline_resolver,
-                               clock=clock, wall=clock.now, spawn=lambda fn: fn(),
-                               state_dir=config.state_dir)
-        fx = types.SimpleNamespace(sender=sender, link=link, group=group, proxy=proxy,
-                                   controller=controller, clock=clock, config=config, log=log)
+        sender = SessionManager(
+            link=link,
+            group=group,
+            controller=controller,
+            proxy=proxy,
+            config=config,
+            log=log,
+            resolver=offline_resolver,
+            clock=clock,
+            wall=clock.now,
+            spawn=lambda fn: fn(),
+            state_dir=config.state_dir,
+        )
+        fx = types.SimpleNamespace(
+            sender=sender,
+            link=link,
+            group=group,
+            proxy=proxy,
+            controller=controller,
+            clock=clock,
+            config=config,
+            log=log,
+        )
         sender.share(YOUTUBE)
         return fx
 
@@ -69,7 +91,7 @@ class TestStartSeam(SeamCase):
         """The bug this test exists for: `start(now, video_ready, group_ready)` are positions."""
         fx = self.fixture()
         plan = [m for m in fx.link.inbox if m["type"] == C.MSG_PLAY_AT][0]
-        self.assertLess(plan["media"], 10.0)          # a media position, not an epoch
+        self.assertLess(plan["media"], 10.0)  # a media position, not an epoch
         self.assertAlmostEqual(plan["media"], 0.0, places=6)
 
     def test_the_receiver_clock_reached_the_controller(self):
@@ -85,17 +107,17 @@ class TestStartSeam(SeamCase):
 class TestSteadySeam(SeamCase):
     def test_ten_minutes_never_reloads_and_does_trim(self):
         fx = self.fixture()
-        before_inbox = len(fx.link.inbox)     # after the parked load and the single play_at
+        before_inbox = len(fx.link.inbox)  # after the parked load and the single play_at
         before_calls = list(fx.group.calls)
         tick(fx, TEN_MIN, TICK_S)
         after = [m["type"] for m in fx.link.inbox[before_inbox:]]
         self.assertNotIn(C.MSG_LOAD, after)
         self.assertNotIn(C.MSG_SEEK, after)
         self.assertNotIn(C.MSG_PLAY_AT, after)
-        new_group_calls = fx.group.calls[len(before_calls):]
+        new_group_calls = fx.group.calls[len(before_calls) :]
         self.assertNotIn("prepare", new_group_calls)
         self.assertNotIn("seek", new_group_calls)
-        self.assertIn(C.MSG_RATE, after)              # the loop does something, it just never reloads
+        self.assertIn(C.MSG_RATE, after)  # the loop does something, it just never reloads
 
     def test_the_error_converges_without_a_reload(self):
         """A frozen test clock makes the landing late; the law must absorb it with trims only.
@@ -127,7 +149,7 @@ class TestTransportSeam(SeamCase):
 
     def test_seek_moves_both_and_never_loads(self):
         fx = self.fixture()
-        tick(fx, 40, TICK_S)                      # 10 s of playing
+        tick(fx, 40, TICK_S)  # 10 s of playing
         before = len(fx.link.inbox)
         group_calls_before = list(fx.group.calls)
         fx.sender.control("seek", position=300.0)
@@ -136,14 +158,14 @@ class TestTransportSeam(SeamCase):
         # §1: a seek is a re-landing, so the law may schedule it (play_at) instead of seeking
         self.assertTrue(C.MSG_SEEK in kinds or C.MSG_PLAY_AT in kinds, kinds)
         self.assertNotIn(C.MSG_LOAD, kinds)
-        self.assertIn("seek", fx.group.calls[len(group_calls_before):])
+        self.assertIn("seek", fx.group.calls[len(group_calls_before) :])
         anchored = [m for m in after if m["type"] in (C.MSG_SEEK, C.MSG_PLAY_AT)][-1]
         self.assertAlmostEqual(anchored["media"], 300.0, delta=0.05)
 
     def test_pause_and_resume_round_trip(self):
         fx = self.fixture()
         tick(fx, 40, TICK_S)
-        before = len(fx.link.inbox)               # the parked load is before this point
+        before = len(fx.link.inbox)  # the parked load is before this point
         fx.sender.control("pause")
         self.assertEqual(fx.sender.status()["state"], C.STATE_PAUSED)
         self.assertIn("pause", fx.group.calls)
@@ -152,7 +174,7 @@ class TestTransportSeam(SeamCase):
         fx.sender.control("play")
         self.assertEqual(fx.sender.status()["state"], C.STATE_PLAYING)
         after = [m["type"] for m in fx.link.inbox[before:]]
-        self.assertIn(C.MSG_PLAY_AT, after)        # the resume re-anchors the video
+        self.assertIn(C.MSG_PLAY_AT, after)  # the resume re-anchors the video
         self.assertNotIn(C.MSG_LOAD, after)
 
     def test_stop_silences_both(self):
@@ -160,7 +182,7 @@ class TestTransportSeam(SeamCase):
         tick(fx, 8, TICK_S)
         fx.sender.control("stop")
         self.assertEqual(fx.sender.status()["state"], C.STATE_ENDED)
-        tick(fx, 16, TICK_S)      # ENDED_LINGER_S (2 s) plus slack
+        tick(fx, 16, TICK_S)  # ENDED_LINGER_S (2 s) plus slack
         self.assertIn("stop", fx.group.calls)
         # §3.1: `idle` is `stop` plus "ready for a new share"; either satisfies the acceptance
         self.assertTrue({C.MSG_STOP, C.MSG_IDLE} & {m["type"] for m in fx.link.inbox})

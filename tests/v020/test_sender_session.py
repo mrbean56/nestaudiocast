@@ -11,7 +11,12 @@ import os
 import unittest
 
 from test_sender_support import (
-    C, TempDir, YOUTUBE, events_named, make_config, make_sender, read_log, tick,
+    YOUTUBE,
+    C,
+    TempDir,
+    events_named,
+    make_sender,
+    tick,
 )
 
 from sender.offline import HostileController, TrimController
@@ -52,9 +57,9 @@ class TestStart(SessionCase):
     def test_steady_since_appears_after_thirty_seconds(self):
         fixture = self.started()
         self.assertIsNone(fixture.sender.status()["steady_since"])
-        tick(fixture, 100, TICK_S)                       # 25 s: still not steady
+        tick(fixture, 100, TICK_S)  # 25 s: still not steady
         self.assertIsNone(fixture.sender.status()["steady_since"])
-        tick(fixture, 40, TICK_S)                        # 35 s
+        tick(fixture, 40, TICK_S)  # 35 s
         steady = fixture.sender.status()["steady_since"]
         self.assertIsInstance(steady, float)
         started_wall = fixture.clock.wall
@@ -63,9 +68,22 @@ class TestStart(SessionCase):
     def test_status_has_every_field_of_the_contract(self):
         fixture = self.started()
         status = fixture.sender.status()
-        for key in ("state", "session_id", "video_id", "position_video", "position_group",
-                    "digital_error_ms", "p95_ms", "rate", "steady_since", "quiet",
-                    "group_owner", "delta_v2", "last_event", "last_error"):
+        for key in (
+            "state",
+            "session_id",
+            "video_id",
+            "position_video",
+            "position_group",
+            "digital_error_ms",
+            "p95_ms",
+            "rate",
+            "steady_since",
+            "quiet",
+            "group_owner",
+            "delta_v2",
+            "last_event",
+            "last_error",
+        ):
             self.assertIn(key, status)
         self.assertEqual(status["group_owner"], "cast-sender")
         self.assertEqual(status["delta_v2"], 0.0)
@@ -137,7 +155,7 @@ class TestNoReloadAfterStart(SessionCase):
         result = self._run(controller)
         fixture = result["fixture"]
         self.assertEqual(result["state"], C.STATE_PLAYING)
-        self.assertGreater(controller.asked_loads, 2000)      # it really did ask, every tick
+        self.assertGreater(controller.asked_loads, 2000)  # it really did ask, every tick
         self.assertEqual(result["load"], 0)
         self.assertEqual(result["seek"], 0)
         self.assertEqual(result["play_at"], 0)
@@ -152,13 +170,13 @@ class TestNoReloadAfterStart(SessionCase):
         result = self._run(TrimController(always_trim=True))
         self.assertEqual(result["load"], 0)
         self.assertEqual(result["seek"], 0)
-        self.assertGreater(result["rate"], 100)                # trims do pass: not a blanket ban
+        self.assertGreater(result["rate"], 100)  # trims do pass: not a blanket ban
         self.assertEqual(self.events(result["fixture"], "reload_refused"), [])
 
     def test_the_group_playhead_advances_with_the_video(self):
         fixture = make_sender(self.root)
         fixture.sender.share(YOUTUBE)
-        for _ in range(40):                                   # 10 s
+        for _ in range(40):  # 10 s
             fixture.clock.advance(TICK_S)
             fixture.sender.tick()
         status = fixture.sender.status()
@@ -203,7 +221,7 @@ class TestControl(SessionCase):
         self.assertEqual((fixture.group.volume, fixture.group.muted), (0.4, None))
         self.assertEqual(fixture.sender.control("volume", muted=True)["ok"], True)
         self.assertEqual(fixture.group.muted, True)
-        self.assertEqual(fixture.group.volume, 0.4)            # a mute never changes the level
+        self.assertEqual(fixture.group.volume, 0.4)  # a mute never changes the level
 
     def test_a_level_of_zero_is_refused(self):
         """A37: muting is how we silence; a zeroed level stays silent after an unmute."""
@@ -251,7 +269,7 @@ class TestControl(SessionCase):
         reply = fixture.sender.control("stop")
         self.assertEqual(reply["state"], C.STATE_ENDED)
         self.assertIn("stop", fixture.group.calls)
-        self.assertIn("stop", fixture.link.calls)              # the idle page
+        self.assertIn("stop", fixture.link.calls)  # the idle page
         self.assertEqual(fixture.proxy.sessions, {})
         self.assertFalse(os.path.exists(fixture.lock_path))
         self.assertFalse(os.path.exists(fixture.record_path))
@@ -266,8 +284,8 @@ class TestSessionEdges(SessionCase):
         first = fixture.sender.status()["session_id"]
         second = fixture.sender.share("https://www.youtube.com/watch?v=K0uxjdcZWyk")
         self.assertNotEqual(first, second["session_id"])
-        self.assertEqual(fixture.group.calls.count("stop"), 1)   # the old one was stopped
-        self.assertEqual(len(fixture.proxy.sessions), 1)         # its media session is gone
+        self.assertEqual(fixture.group.calls.count("stop"), 1)  # the old one was stopped
+        self.assertEqual(len(fixture.proxy.sessions), 1)  # its media session is gone
         self.assertEqual(fixture.sender.status()["state"], C.STATE_PLAYING)
         ended = [e for e in self.events(fixture, "session_ended")]
         self.assertEqual(ended[0]["reason"], "new_share")
@@ -292,7 +310,7 @@ class TestSessionEdges(SessionCase):
 
     def test_two_idle_reads_of_our_own_receiver_end_the_session(self):
         fixture = self.started()
-        fixture.link.state = C.PLAYER_IDLE                     # the app went away quietly
+        fixture.link.state = C.PLAYER_IDLE  # the app went away quietly
         tick(fixture, 1)
         self.assertEqual(fixture.sender.status()["state"], C.STATE_PLAYING)
         tick(fixture, 1)
@@ -316,8 +334,7 @@ class TestSessionEdges(SessionCase):
         fixture.sender.tick()
         self.assertEqual(fixture.sender.status()["state"], C.STATE_PAUSED)
         self.assertIn("pause", fixture.group.calls)
-        fixture.link.outbox.append({"type": C.MSG_INTENT, "seq": 10, "action": "seek",
-                                    "media": 42.0})
+        fixture.link.outbox.append({"type": C.MSG_INTENT, "seq": 10, "action": "seek", "media": 42.0})
         tick(fixture, 1)
         self.assertAlmostEqual(fixture.group.media, 42.0)
 
@@ -354,12 +371,12 @@ class TestSessionEdges(SessionCase):
         self.assertEqual(fixture.sender.status()["state"], C.STATE_PLAYING)
         self.assertEqual(fixture.link.calls.count("play_at"), 1)
         self.assertTrue(events_named(fixture.log.path, "controller_unavailable"))
-        tick(fixture, 20)                                     # stepping a stub must not raise
+        tick(fixture, 20)  # stepping a stub must not raise
         self.assertEqual(fixture.sender.status()["state"], C.STATE_PLAYING)
 
     def test_group_lock_is_released_on_failure(self):
         fixture = make_sender(self.root)
-        fixture.group.unsafe = True                           # connect raises UnsafeGroup
+        fixture.group.unsafe = True  # connect raises UnsafeGroup
         fixture.sender.share(YOUTUBE)
         self.assertIn("group_failed", fixture.sender.status()["last_error"])
         self.assertFalse(os.path.exists(fixture.lock_path))
@@ -370,11 +387,12 @@ class TestSessionEdges(SessionCase):
         fixture = self.started()
         session_id = fixture.sender.status()["session_id"]
         from sender.quiet import QuietWindow
+
         fixture.sender._quiet = QuietWindow("00:00", "00:01", "refuse")
         reply = fixture.sender.share("https://www.youtube.com/watch?v=K0uxjdcZWyk")
         self.assertEqual(reply["state"], C.STATE_QUIET_REFUSED)
         status = fixture.sender.status()
-        self.assertEqual(status["session_id"], session_id)     # still the running one
+        self.assertEqual(status["session_id"], session_id)  # still the running one
         self.assertEqual(status["state"], C.STATE_PLAYING)
         self.assertEqual(fixture.group.calls.count("stop"), 0)
 

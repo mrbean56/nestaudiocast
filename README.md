@@ -154,6 +154,11 @@ v0.1 — working proof of concept, running daily on one household. Known gaps:
 - a 10-minute session was verified digitally, not acoustically,
 - the acoustic calibration currently requires a separate recording and a human.
 
+## Development
+
+`uv sync && uv run pre-commit install`, then `./tests/v020/run.sh`. Safety tiers, hooks and
+the generated `requirements.txt` are explained in [`docs/dev.md`](docs/dev.md).
+
 ## License
 
 MIT — see `LICENSE`.

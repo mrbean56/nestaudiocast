@@ -21,8 +21,17 @@ _HOST = re.compile(r"^[A-Za-z0-9]([A-Za-z0-9._-]*[A-Za-z0-9])?$")
 
 #: §6, in file order — the example file and the parser share this list.
 CONFIG_KEYS = (
-    "CHROMECAST", "APP_ID", "GROUP", "HTTP_BIND", "HTTP_PORT", "DELTA_V2", "RATE_MAX",
-    "MAX_HEIGHT", "QUIET_START", "QUIET_END", "QUIET_POLICY",
+    "CHROMECAST",
+    "APP_ID",
+    "GROUP",
+    "HTTP_BIND",
+    "HTTP_PORT",
+    "DELTA_V2",
+    "RATE_MAX",
+    "MAX_HEIGHT",
+    "QUIET_START",
+    "QUIET_END",
+    "QUIET_POLICY",
 )
 
 #: Where the service looks when no --config is given (§6 says /etc/castsender.conf).
@@ -52,7 +61,7 @@ def parse_env_file(path: str) -> dict[str, str]:
             if not line or line.startswith("#"):
                 continue
             if line.startswith("export "):
-                line = line[len("export "):].lstrip()
+                line = line[len("export ") :].lstrip()
             if "=" not in line:
                 raise ConfigError(f"{path}:{lineno}: not KEY=VALUE: {line!r}")
             key, _, value = line.partition("=")
@@ -177,8 +186,7 @@ class Config:
         }
 
 
-def load_config(path: str | None = None, *, env: dict[str, str] | None = None,
-                **overrides) -> Config:
+def load_config(path: str | None = None, *, env: dict[str, str] | None = None, **overrides) -> Config:
     """``--config`` if given, else /etc/castsender.conf if it exists, else the environment."""
     if path:
         return Config.from_file(path, **overrides)

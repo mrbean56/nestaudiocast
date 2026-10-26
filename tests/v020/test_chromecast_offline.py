@@ -26,18 +26,30 @@ from v020 import contracts as C  # noqa: E402
 
 
 def _state(media: float, rx_ms: float, ps: str = C.PLAYER_PLAYING) -> dict:
-    return {"namespace": C.NS_RECEIVER,
-            "payload": {"type": C.MSG_STATE, "seq": 1, "rx_ms": rx_ms, "media": media,
-                        "rate": 1.0, "player_state": ps, "buffered_end": media + 30.0,
-                        "dropped": 0}}
+    return {
+        "namespace": C.NS_RECEIVER,
+        "payload": {
+            "type": C.MSG_STATE,
+            "seq": 1,
+            "rx_ms": rx_ms,
+            "media": media,
+            "rate": 1.0,
+            "player_state": ps,
+            "buffered_end": media + 30.0,
+            "dropped": 0,
+        },
+    }
 
 
 def _status(app_id: str | None, transport: str = "transport-1") -> dict:
-    apps = [] if app_id is None else [{"appId": app_id, "sessionId": "s1",
-                                       "transportId": transport}]
-    return {"namespace": X.NS_CAST_RECEIVER,
-            "payload": {"type": "RECEIVER_STATUS",
-                        "status": {"applications": apps, "volume": {"level": 0.5}}}}
+    apps = [] if app_id is None else [{"appId": app_id, "sessionId": "s1", "transportId": transport}]
+    return {
+        "namespace": X.NS_CAST_RECEIVER,
+        "payload": {
+            "type": "RECEIVER_STATUS",
+            "status": {"applications": apps, "volume": {"level": 0.5}},
+        },
+    }
 
 
 class TestClockEstimator(unittest.TestCase):
@@ -94,11 +106,11 @@ class TestSendValidation(unittest.TestCase):
 
     def test_required_fields(self):
         with self.assertRaises(ValueError):
-            self.link.send("play_at", media=1.0)          # no rx_ms
+            self.link.send("play_at", media=1.0)  # no rx_ms
         with self.assertRaises(ValueError):
-            self.link.send("seek")                        # no media
+            self.link.send("seek")  # no media
         with self.assertRaises(ValueError):
-            self.link.send("load", url="u", media=0.0)    # no content_type
+            self.link.send("load", url="u", media=0.0)  # no content_type
 
     def test_rate_range(self):
         with self.assertRaises(ValueError):
@@ -123,7 +135,7 @@ class TestBoundedInbox(unittest.TestCase):
         self.assertEqual(len(self.link.inbox), X.INBOX_MAX)
         self.assertEqual(self.link.dropped, 1000 - X.INBOX_MAX)
         media = [m["media"] for m in self.link.inbox]
-        self.assertEqual(media, sorted(media))                 # still in arrival order
+        self.assertEqual(media, sorted(media))  # still in arrival order
         self.assertEqual(media[0], float(1000 - X.INBOX_MAX))  # oldest dropped, newest kept
         self.assertEqual(media[-1], 999.0)
 
@@ -142,18 +154,28 @@ class TestClockGuards(unittest.TestCase):
     def test_backwards_timestamp_is_flagged_not_followed(self):
         self.link._on_message(_state(media=10.0, rx_ms=5_000.0))
         self.assertEqual(self.link.last_state.media, 10.0)
-        self.link._on_message(_state(media=99.0, rx_ms=500.0))   # page reloaded under us
+        self.link._on_message(_state(media=99.0, rx_ms=500.0))  # page reloaded under us
         self.assertEqual(self.link.clock_backwards, 1)
-        self.assertEqual(self.link.last_state.media, 10.0)       # not followed
+        self.assertEqual(self.link.last_state.media, 10.0)  # not followed
 
     def test_hello_rebases_the_clock(self):
-        self.link.clock = C.ClockEstimate(offset_ms=1234.0, residual_ms=0.2, rtt_ms=0.4,
-                                          samples=5, measured_at=0.0)
+        self.link.clock = C.ClockEstimate(
+            offset_ms=1234.0, residual_ms=0.2, rtt_ms=0.4, samples=5, measured_at=0.0
+        )
         self.link._last_rx_ms = 9_000.0
-        self.link._on_message({"namespace": C.NS_RECEIVER,
-                               "payload": {"type": C.MSG_HELLO, "seq": 0, "rx_ms": 5.0,
-                                           "ua": "fake", "version": "0.2.0",
-                                           "codecs": {}}})
+        self.link._on_message(
+            {
+                "namespace": C.NS_RECEIVER,
+                "payload": {
+                    "type": C.MSG_HELLO,
+                    "seq": 0,
+                    "rx_ms": 5.0,
+                    "ua": "fake",
+                    "version": "0.2.0",
+                    "codecs": {},
+                },
+            }
+        )
         self.assertEqual(self.link.hellos, 1)
         self.assertIsNone(self.link.clock)
         self.assertIsNone(self.link._last_rx_ms)
@@ -189,7 +211,7 @@ class TestPresence(unittest.TestCase):
     def test_lost_device_blocks_commands(self):
         self.link._on_message(_status("9A1B2C3D"))
 
-        class _InertLink:                  # a live socket would be needed; the check is first
+        class _InertLink:  # a live socket would be needed; the check is first
             closed = False
             inbox: list = []
 
@@ -211,8 +233,7 @@ class _Eureka(BaseHTTPRequestHandler):
         "name": "Salon",
         "version": "1.68.0",
         "build_version": "271279",
-        "device_info": {"model_name": "Chromecast", "manufacturer": "Google",
-                        "capabilities": {"a": 1}},
+        "device_info": {"model_name": "Chromecast", "manufacturer": "Google", "capabilities": {"a": 1}},
         "uptime": 123.4,
         "ip_address": "192.168.2.80",
         "bssid": "aa:bb:cc:dd:ee:ff",
@@ -263,7 +284,7 @@ class TestProbe(unittest.TestCase):
         sock = socket.socket()
         sock.bind(("127.0.0.1", 0))
         port = sock.getsockname()[1]
-        sock.close()                       # nothing listens there any more
+        sock.close()  # nothing listens there any more
         res = X.probe("127.0.0.1", port=port, timeout=0.5)
         self.assertIn("error", res)
         self.assertNotIn("name", res)

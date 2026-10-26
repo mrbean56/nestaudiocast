@@ -51,13 +51,28 @@ if LIB not in sys.path:
     sys.path.insert(0, LIB)
 
 from v020.contracts import (  # noqa: E402
-    MSG_IDLE, MSG_LOAD, MSG_PAUSE, MSG_PLAY_AT, MSG_RATE, MSG_SEEK, MSG_STOP,
-    PLAYER_IDLE, PLAYER_PAUSED, PLAYER_PLAYING, STEADY_WINDOW_S,
-    ClockEstimate, GroupSample, Sample,
+    MSG_IDLE,
+    MSG_LOAD,
+    MSG_PAUSE,
+    MSG_PLAY_AT,
+    MSG_RATE,
+    MSG_SEEK,
+    MSG_STOP,
+    PLAYER_IDLE,
+    PLAYER_PAUSED,
+    PLAYER_PLAYING,
+    STEADY_WINDOW_S,
+    ClockEstimate,
+    GroupSample,
+    Sample,
 )
 from v020.sync import (  # noqa: E402
-    CMD_GROUP_PAUSE, CMD_GROUP_PLAY, CMD_GROUP_SEEK, CMD_GROUP_STOP,
-    PHASE_STEADY, Controller,
+    CMD_GROUP_PAUSE,
+    CMD_GROUP_PLAY,
+    CMD_GROUP_SEEK,
+    CMD_GROUP_STOP,
+    PHASE_STEADY,
+    Controller,
 )
 
 #: the pass criterion of the task: steady-state p95 |e| ≤ 10 ms, on the 5 s window medians
@@ -75,44 +90,43 @@ class Options:
 
     # -- session
     duration_s: float = 600.0
-    tick_s: float = 0.25                 # §3: the receiver reports at 4 Hz; the loop runs with it
+    tick_s: float = 0.25  # §3: the receiver reports at 4 Hz; the loop runs with it
     seed: int = 20261025
     repeats: int = 1
-    delta_v2: float = 0.265              # notes/labo-sync.md §2 (v0.1's measured DELTA)
-    events: list = field(default_factory=list)   # [(t, "seek:<pos>" | "pause" | "resume" | "end")]
+    delta_v2: float = 0.265  # notes/labo-sync.md §2 (v0.1's measured DELTA)
+    events: list = field(default_factory=list)  # [(t, "seek:<pos>" | "pause" | "resume" | "end")]
 
     # -- the group: evidence/17 (A15)
-    drift_ms_10min: float = -12.4       # evidence/17, 600 s, 1148 points
-    group_noise_ms: float = 10.2        # evidence/17 residual σ
-    outlier_rate: float = 0.005         # 4 stale reads in 1148 samples, A15
-    outlier_ms: float = 150.0           # A15: +162 / -156 / +114 / -95
+    drift_ms_10min: float = -12.4  # evidence/17, 600 s, 1148 points
+    group_noise_ms: float = 10.2  # evidence/17 residual σ
+    outlier_rate: float = 0.005  # 4 stale reads in 1148 samples, A15
+    outlier_ms: float = 150.0  # A15: +162 / -156 / +114 / -95
 
     # -- landings: evidence/27 (8 draws each)
-    landing_mode: str = "park"          # "park" (PAUSE→SEEK→PLAY) or "load" (LOAD)
-    landing_sigma_ms: float = 30.0      # evidence/27 C
-    landing_mean_ms: float = -43.6      # evidence/27 C
-    load_sigma_ms: float = 202.0        # evidence/27 A
-    load_mean_ms: float = -314.7        # evidence/27 A
-    lead_error_ms: float = 0.0          # how wrong the *learned* lead is (0 = perfectly learned)
+    landing_mode: str = "park"  # "park" (PAUSE→SEEK→PLAY) or "load" (LOAD)
+    landing_sigma_ms: float = 30.0  # evidence/27 C
+    landing_mean_ms: float = -43.6  # evidence/27 C
+    load_sigma_ms: float = 202.0  # evidence/27 A
+    load_mean_ms: float = -314.7  # evidence/27 A
+    lead_error_ms: float = 0.0  # how wrong the *learned* lead is (0 = perfectly learned)
 
     # -- clocks: contracts §3
-    true_offset_ms: float = 1234.5      # arbitrary receiver clock offset
-    rtt_max_ms: float = 40.0            # measured RTTs up to 192 ms on WiFi; 40 ms is the norm
-    clock_pings: int = 8                # the estimator keeps the best of these
-    clock_residual_ms: float | None = None   # force a residual instead of drawing one
+    true_offset_ms: float = 1234.5  # arbitrary receiver clock offset
+    rtt_max_ms: float = 40.0  # measured RTTs up to 192 ms on WiFi; 40 ms is the norm
+    clock_pings: int = 8  # the estimator keeps the best of these
+    clock_residual_ms: float | None = None  # force a residual instead of drawing one
 
     # -- the receiver: task C's unknowns
-    rate_gain: float = 1.0              # 0 = the device echoes the rate and ignores it (ev/17)
-    rate_stall_ms: float = 0.0          # the playhead freezes this long after a rate change
-    start_dispersion_ms: float = 0.0    # play_at landing jitter
-    video_noise_ms: float = 0.0         # §3: the receiver timestamps at the same statement
+    rate_gain: float = 1.0  # 0 = the device echoes the rate and ignores it (ev/17)
+    rate_stall_ms: float = 0.0  # the playhead freezes this long after a rate change
+    start_dispersion_ms: float = 0.0  # play_at landing jitter
+    video_noise_ms: float = 0.0  # §3: the receiver timestamps at the same statement
 
     # -- reads
-    stale_rate: float = 0.0             # probability that a read reports a stale PAUSED state (A36)
+    stale_rate: float = 0.0  # probability that a read reports a stale PAUSED state (A36)
 
     def spec(self) -> dict:
-        return {k: v for k, v in self.__dict__.items()
-                if k != "events" and not k.startswith("_")}
+        return {k: v for k, v in self.__dict__.items() if k != "events" and not k.startswith("_")}
 
 
 # --- devices ---------------------------------------------------------------------------------
@@ -122,7 +136,7 @@ class SimGroup:
     def __init__(self, opt: Options, rng: random.Random) -> None:
         self.opt = opt
         self.rng = rng
-        self.media = 0.0                 # parked position, and the playhead origin
+        self.media = 0.0  # parked position, and the playhead origin
         self.start_at: float | None = None
         self.playing = False
         self.state = PLAYER_IDLE
@@ -178,9 +192,13 @@ class SimGroup:
         wall = t_read
         media = self.position(t_read) + self.rng.gauss(0.0, self.opt.group_noise_ms) / 1000.0
         state = self.state
-        if self.rng.random() < self.opt.outlier_rate:      # A15: a stale read, ±95…162 ms
-            media += (1.0 if self.rng.random() < 0.5 else -1.0) * \
-                self.rng.uniform(0.63, 1.08) * self.opt.outlier_ms / 1000.0
+        if self.rng.random() < self.opt.outlier_rate:  # A15: a stale read, ±95…162 ms
+            media += (
+                (1.0 if self.rng.random() < 0.5 else -1.0)
+                * self.rng.uniform(0.63, 1.08)
+                * self.opt.outlier_ms
+                / 1000.0
+            )
         if self.opt.stale_rate and self.rng.random() < self.opt.stale_rate:
             # A36: one read reported a state the group was not in; the sender must need two
             if self._prev_read is not None:
@@ -198,8 +216,8 @@ class SimReceiver:
         self.opt = opt
         self.rng = rng
         self.media = 0.0
-        self.rate = 1.0                  # what the device echoes
-        self.applied = 1.0               # what it actually plays at (rate_gain)
+        self.rate = 1.0  # what the device echoes
+        self.applied = 1.0  # what it actually plays at (rate_gain)
         self.state = PLAYER_IDLE
         self.playing = False
         self.anchor_t: float | None = None
@@ -242,7 +260,7 @@ class SimReceiver:
         if not self.playing or self.anchor_t is None:
             return self.media
         dt = t - self.anchor_t
-        if dt <= 0.0:                    # before its own target instant it reports behind
+        if dt <= 0.0:  # before its own target instant it reports behind
             return self.media + dt * self.applied
         stall = 0.0
         if self._stall_until > self.anchor_t:
@@ -255,9 +273,13 @@ class SimReceiver:
         media = self.position(t_read)
         if self.opt.video_noise_ms:
             media += self.rng.gauss(0.0, self.opt.video_noise_ms) / 1000.0
-        return Sample(rx_ms=t_read * 1000.0 + self.opt.true_offset_ms, media=media,
-                      rate=self.applied, player_state=self.state,
-                      buffered_end=media + 30.0)
+        return Sample(
+            rx_ms=t_read * 1000.0 + self.opt.true_offset_ms,
+            media=media,
+            rate=self.applied,
+            player_state=self.state,
+            buffered_end=media + 30.0,
+        )
 
 
 class SimClock:
@@ -275,11 +297,17 @@ class SimClock:
         self.offset_ms = opt.true_offset_ms + self.residual_ms
 
     def estimate(self, t: float) -> ClockEstimate:
-        return ClockEstimate(offset_ms=self.offset_ms, residual_ms=self.residual_ms,
-                             rtt_ms=self.rtt_ms, samples=self.opt.clock_pings, measured_at=t)
+        return ClockEstimate(
+            offset_ms=self.offset_ms,
+            residual_ms=self.residual_ms,
+            rtt_ms=self.rtt_ms,
+            samples=self.opt.clock_pings,
+            measured_at=t,
+        )
 
 
 # --- one run ---------------------------------------------------------------------------------
+
 
 def run_once(opt: Options, name: str, rep: int = 0, collect: bool = True) -> dict:
     """One deterministic run. Returns the trajectory, the command log and the devices."""
@@ -292,7 +320,7 @@ def run_once(opt: Options, name: str, rep: int = 0, collect: bool = True) -> dic
     ctl.on_clock(clock.estimate(0.0))
 
     learned_lead = (opt.landing_mean_ms + opt.lead_error_ms) / 1000.0
-    if opt.landing_mode == "load":       # the controller still believes the park landing
+    if opt.landing_mode == "load":  # the controller still believes the park landing
         learned_lead = (opt.landing_mean_ms + opt.lead_error_ms) / 1000.0
 
     events = sorted(opt.events)
@@ -304,8 +332,9 @@ def run_once(opt: Options, name: str, rep: int = 0, collect: bool = True) -> dic
 
     def fire(t: float, cmds: list, source: str = "loop") -> None:
         for c in cmds:
-            command_log.append((t, c.kind, dict(c.payload), source,
-                                ctl.phase if source == "loop" else None))
+            command_log.append(
+                (t, c.kind, dict(c.payload), source, ctl.phase if source == "loop" else None)
+            )
             if c.kind == CMD_GROUP_PLAY:
                 pending.append((float(c.payload["at"]), c.payload))
             elif c.kind == CMD_GROUP_SEEK:
@@ -329,8 +358,11 @@ def run_once(opt: Options, name: str, rep: int = 0, collect: bool = True) -> dic
 
     group.prepare(0.0)
     recv.load(0.0)
-    fire(0.0, ctl.start(0.0, video_ready=recv.media, group_ready=group.media,
-                        lead_s=learned_lead), source="event")
+    fire(
+        0.0,
+        ctl.start(0.0, video_ready=recv.media, group_ready=group.media, lead_s=learned_lead),
+        source="event",
+    )
 
     t = 0.0
     while t <= opt.duration_s + 1e-9:
@@ -359,25 +391,37 @@ def run_once(opt: Options, name: str, rep: int = 0, collect: bool = True) -> dic
         fire(t, ctl.step(t, vsample, gsample))
         if collect:
             snap = ctl.snapshot()
-            traj.append({
-                "t": round(t, 4),
-                "e_true_ms": round((group.position(t) - recv.position(t) - opt.delta_v2)
-                                   * 1000.0, 3),
-                "e_meas_ms": snap["digital_error_ms"],
-                "e_raw_ms": None if ctl.last_raw_error() is None
-                            else round(ctl.last_raw_error() * 1000.0, 3),
-                "phase": snap["phase"],
-                "steady": snap["steady"],
-                "rate": snap["rate"],
-                "rate_cmd": round(ctl._u_cmd + 1.0, 6),
-                "video": round(recv.position(t), 4),
-                "group": round(group.position(t), 4),
-            })
+            traj.append(
+                {
+                    "t": round(t, 4),
+                    "e_true_ms": round(
+                        (group.position(t) - recv.position(t) - opt.delta_v2) * 1000.0, 3
+                    ),
+                    "e_meas_ms": snap["digital_error_ms"],
+                    "e_raw_ms": None
+                    if ctl.last_raw_error() is None
+                    else round(ctl.last_raw_error() * 1000.0, 3),
+                    "phase": snap["phase"],
+                    "steady": snap["steady"],
+                    "rate": snap["rate"],
+                    "rate_cmd": round(ctl._u_cmd + 1.0, 6),
+                    "video": round(recv.position(t), 4),
+                    "group": round(group.position(t), 4),
+                }
+            )
         t = round(t + opt.tick_s, 9)
 
-    return {"traj": traj, "commands": command_log, "landings": landings,
-            "events": event_times, "ctl": ctl, "group": group, "recv": recv,
-            "clock": clock, "seed": seed}
+    return {
+        "traj": traj,
+        "commands": command_log,
+        "landings": landings,
+        "events": event_times,
+        "ctl": ctl,
+        "group": group,
+        "recv": recv,
+        "clock": clock,
+        "seed": seed,
+    }
 
 
 # --- analysis --------------------------------------------------------------------------------
@@ -388,8 +432,7 @@ def _pct(vals: list[float], q: float) -> float | None:
     return s[min(len(s) - 1, int(round(q * (len(s) - 1))))]
 
 
-def _window_medians(traj: list[dict], key: str = "e_true_ms",
-                    steady_only: bool = True) -> list[float]:
+def _window_medians(traj: list[dict], key: str = "e_true_ms", steady_only: bool = True) -> list[float]:
     """Median of the error per 5 s window — the contract's criterion (§2)."""
     buckets: dict[int, list[float]] = {}
     for row in traj:
@@ -401,13 +444,14 @@ def _window_medians(traj: list[dict], key: str = "e_true_ms",
     out = []
     for k in sorted(buckets):
         vals = buckets[k]
-        if len(vals) >= 4:               # a 4 Hz tick gives ~20; fewer is not a window
+        if len(vals) >= 4:  # a 4 Hz tick gives ~20; fewer is not a window
             out.append(statistics.median(vals))
     return out
 
 
-def _convergence_s(traj: list[dict], event_t: float, tol_ms: float = TARGET_P95_MS,
-                   hold_s: float = STEADY_WINDOW_S) -> float | None:
+def _convergence_s(
+    traj: list[dict], event_t: float, tol_ms: float = TARGET_P95_MS, hold_s: float = STEADY_WINDOW_S
+) -> float | None:
     """First instant after ``event_t`` from which |1 s median| stays ≤ tol for ``hold_s``."""
     if not traj:
         return None
@@ -420,7 +464,7 @@ def _convergence_s(traj: list[dict], event_t: float, tol_ms: float = TARGET_P95_
     meds = {k: statistics.median(buckets[k]) for k in keys}
     for k in keys:
         span = [k2 for k2 in keys if k <= k2 < k + hold_s + 1]
-        if len(span) < max(2, int(hold_s)):      # the window must be complete
+        if len(span) < max(2, int(hold_s)):  # the window must be complete
             continue
         if all(abs(meds[k2]) <= tol_ms for k2 in span):
             return round(k - event_t, 2)
@@ -437,7 +481,7 @@ def analyze(run: dict, opt: Options) -> dict:
 
     steady_at = next((r["t"] for r in traj if r["steady"]), None)
     after = {}
-    for t, kind, payload, source, phase in cmds:
+    for _t, kind, _payload, source, phase in cmds:
         # a user event may move what the user asked to move; what matters is that the *loop*,
         # while it says it is steady, never reloads anything (contracts §1, §2)
         if source != "loop" or phase != PHASE_STEADY:
@@ -473,10 +517,13 @@ def analyze(run: dict, opt: Options) -> dict:
         "duration_s": opt.duration_s,
         "steady_samples": len(raw),
         "steady_from_s": steady_at,
-        "window_medians_ms": {"n": len(wm), "p50": _pct([abs(x) for x in wm], 0.50),
-                              "p95": _pct([abs(x) for x in wm], 0.95),
-                              "max_abs": round(max((abs(x) for x in wm), default=0.0), 2),
-                              "mean_signed": round(statistics.fmean(wm), 2) if wm else None},
+        "window_medians_ms": {
+            "n": len(wm),
+            "p50": _pct([abs(x) for x in wm], 0.50),
+            "p95": _pct([abs(x) for x in wm], 0.95),
+            "max_abs": round(max((abs(x) for x in wm), default=0.0), 2),
+            "mean_signed": round(statistics.fmean(wm), 2) if wm else None,
+        },
         "window_medians_estimate_ms": {
             "n": len(wm_meas),
             "p50": _pct([abs(x) for x in wm_meas], 0.50),
@@ -493,14 +540,14 @@ def analyze(run: dict, opt: Options) -> dict:
         "estimate_p95_abs_ms": _pct(meas, 0.95),
         "convergence_s": conv,
         "convergence_max_s": conv_max,
-        "rate": {"n": len(rates),
-                 "max_abs_u": round(max(u for _, u in rates), 6) if rates else 0.0,
-                 "max_abs_u_steady": (round(max(u for _, u in rates_steady), 6)
-                                      if rates_steady else 0.0),
-                 "max_abs_u_settled": (round(max(rates_settled), 6)
-                                       if rates_settled else 0.0),
-                 "distinct": len({round(u, 6) for _, u in rates}),
-                 "rate_max": ctl.rate_max},
+        "rate": {
+            "n": len(rates),
+            "max_abs_u": round(max(u for _, u in rates), 6) if rates else 0.0,
+            "max_abs_u_steady": (round(max(u for _, u in rates_steady), 6) if rates_steady else 0.0),
+            "max_abs_u_settled": (round(max(rates_settled), 6) if rates_settled else 0.0),
+            "distinct": len({round(u, 6) for _, u in rates}),
+            "rate_max": ctl.rate_max,
+        },
         "commands": dict(ctl.counts),
         "after_steady": after,
         "relandings": ctl.relandings,
@@ -519,18 +566,25 @@ def verdict(stats: dict, opt: Options, expect_pass: bool = True) -> dict:
         # the first-landing numbers are reported next to it, they are the point of the case.
         reland = (stats.get("after_relanding_ms") or {}).get("p95")
         checks = {"after_relanding_p95_le_10ms": reland is not None and reland <= TARGET_P95_MS}
-        return {"expected": "informational", "ok": all(checks.values()), "checks": checks,
-                "verdict": "INFO (landing distribution)"}
+        return {
+            "expected": "informational",
+            "ok": all(checks.values()),
+            "checks": checks,
+            "verdict": "INFO (landing distribution)",
+        }
     checks: dict[str, bool] = {}
     checks["steady_p95_le_10ms"] = (stats["window_medians_ms"]["p95"] or 1e9) <= TARGET_P95_MS
-    reloads = {k: v for k, v in stats["after_steady"].items()
-               if k in (MSG_LOAD, MSG_SEEK, CMD_GROUP_SEEK)}
+    reloads = {
+        k: v for k, v in stats["after_steady"].items() if k in (MSG_LOAD, MSG_SEEK, CMD_GROUP_SEEK)
+    }
     checks["no_load_seek_after_steady"] = not reloads
     checks["no_play_at_after_steady"] = MSG_PLAY_AT not in stats["after_steady"]
-    checks["convergence_le_10s"] = (stats["convergence_max_s"] is not None
-                                    and stats["convergence_max_s"] <= CONVERGE_S)
+    checks["convergence_le_10s"] = (
+        stats["convergence_max_s"] is not None and stats["convergence_max_s"] <= CONVERGE_S
+    )
     checks["drift_trim_le_rate_max_quarter"] = (
-        stats["rate"]["max_abs_u_settled"] <= stats["rate"]["rate_max"] / 4.0 + 1e-12)
+        stats["rate"]["max_abs_u_settled"] <= stats["rate"]["rate_max"] / 4.0 + 1e-12
+    )
     wanted = getattr(opt, "_checks", None) or ALL_CHECKS
     checks = {k: v for k, v in checks.items() if k in wanted}
     ok = all(checks.values())
@@ -538,16 +592,19 @@ def verdict(stats: dict, opt: Options, expect_pass: bool = True) -> dict:
         label = "PASS" if ok else "FAIL"
     else:
         label = "FAIL (expected)" if not ok else "PASS (unexpected)"
-    return {"expected": "pass" if expect_pass else "fail", "ok": ok, "checks": checks,
-            "verdict": label}
+    return {"expected": "pass" if expect_pass else "fail", "ok": ok, "checks": checks, "verdict": label}
 
 
 # --- the cases -------------------------------------------------------------------------------
 #: which of the 'done when' criteria each case must satisfy. The drift criterion is the
 #: drift-only case's own criterion: everywhere else a trim may legitimately be closing a
 #: landing residual, which is the P term's job, not drift's.
-ALL_CHECKS = ("steady_p95_le_10ms", "no_load_seek_after_steady", "no_play_at_after_steady",
-              "convergence_le_10s")
+ALL_CHECKS = (
+    "steady_p95_le_10ms",
+    "no_load_seek_after_steady",
+    "no_play_at_after_steady",
+    "convergence_le_10s",
+)
 DRIFT_CHECK = "drift_trim_le_rate_max_quarter"
 
 CASES: dict[str, dict] = {
@@ -567,8 +624,9 @@ CASES: dict[str, dict] = {
     "landing_park": dict(duration_s=20.0, repeats=40),
     "landing_load": dict(duration_s=20.0, repeats=40, landing_mode="load"),
     # the pessimistic case: task C measures a rate gain of 0.5 and 40 ms start dispersion
-    "pessimistic": dict(duration_s=300.0, events=[(60.0, "seek:200")],
-                        rate_gain=0.5, start_dispersion_ms=40.0),
+    "pessimistic": dict(
+        duration_s=300.0, events=[(60.0, "seek:200")], rate_gain=0.5, start_dispersion_ms=40.0
+    ),
     # task C measures a rate gain of 0 (the v0.1 finding, on our own receiver): nothing the
     # law can do in steady state, and drift alone walks past 10 ms — the actuator is mandatory
     "rate_dead": dict(duration_s=600.0, rate_gain=0.0),
@@ -615,23 +673,31 @@ def run_case(name: str, opt: Options) -> dict:
     if opt.repeats == 1:
         out = stats_all[0]
     else:
-        landings = [s["first_landing_error_ms"] for s in stats_all
-                    if s["first_landing_error_ms"] is not None]
-        relands = [s["after_relanding_error_ms"] for s in stats_all
-                   if s["after_relanding_error_ms"] is not None]
+        landings = [
+            s["first_landing_error_ms"] for s in stats_all if s["first_landing_error_ms"] is not None
+        ]
+        relands = [
+            s["after_relanding_error_ms"] for s in stats_all if s["after_relanding_error_ms"] is not None
+        ]
         out = {
             "repeats": opt.repeats,
             "duration_s": opt.duration_s,
-            "landing_ms": {"n": len(landings),
-                           "p50": _pct([abs(x) for x in landings], 0.50),
-                           "p95": _pct([abs(x) for x in landings], 0.95),
-                           "max_abs": round(max((abs(x) for x in landings), default=0.0), 2),
-                           "over_150ms_pct": round(
-                               100.0 * sum(1 for x in landings if abs(x) > PERCEPTUAL_MS)
-                               / len(landings), 1) if landings else None},
-            "after_relanding_ms": {"n": len(relands),
-                                   "p50": _pct([abs(x) for x in relands], 0.50),
-                                   "p95": _pct([abs(x) for x in relands], 0.95)},
+            "landing_ms": {
+                "n": len(landings),
+                "p50": _pct([abs(x) for x in landings], 0.50),
+                "p95": _pct([abs(x) for x in landings], 0.95),
+                "max_abs": round(max((abs(x) for x in landings), default=0.0), 2),
+                "over_150ms_pct": round(
+                    100.0 * sum(1 for x in landings if abs(x) > PERCEPTUAL_MS) / len(landings), 1
+                )
+                if landings
+                else None,
+            },
+            "after_relanding_ms": {
+                "n": len(relands),
+                "p50": _pct([abs(x) for x in relands], 0.50),
+                "p95": _pct([abs(x) for x in relands], 0.95),
+            },
             "rate": stats_all[0]["rate"],
             "commands": stats_all[0]["commands"],
             "after_steady": stats_all[0]["after_steady"],
@@ -645,8 +711,12 @@ def run_case(name: str, opt: Options) -> dict:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--json", metavar="PATH", help="write the results here (evidence/44-sim.json)")
-    ap.add_argument("--case", action="append", default=None,
-                    help=f"run only these cases (repeatable): {', '.join(CASES)}")
+    ap.add_argument(
+        "--case",
+        action="append",
+        default=None,
+        help=f"run only these cases (repeatable): {', '.join(CASES)}",
+    )
     ap.add_argument("--duration", type=float, default=None, help="override the case duration")
     ap.add_argument("--seed", type=int, default=None)
     ap.add_argument("--tick", type=float, default=None, help="control tick, seconds")
@@ -674,16 +744,28 @@ def main(argv: list[str] | None = None) -> int:
     a = ap.parse_args(argv)
 
     overrides = {
-        "duration_s": a.duration, "seed": a.seed, "tick_s": a.tick, "delta_v2": a.delta,
-        "drift_ms_10min": a.drift_ms_10min, "group_noise_ms": a.group_noise_ms,
-        "outlier_rate": a.outlier_rate, "outlier_ms": a.outlier_ms,
-        "landing_mode": a.landing_mode, "landing_sigma_ms": a.landing_sigma_ms,
-        "landing_mean_ms": a.landing_mean_ms, "load_sigma_ms": a.load_sigma_ms,
-        "load_mean_ms": a.load_mean_ms, "lead_error_ms": a.lead_error_ms,
-        "rtt_max_ms": a.rtt_max_ms, "clock_pings": a.clock_pings,
-        "clock_residual_ms": a.clock_residual_ms, "rate_gain": a.rate_gain,
-        "rate_stall_ms": a.rate_stall_ms, "start_dispersion_ms": a.start_dispersion_ms,
-        "video_noise_ms": a.video_noise_ms, "stale_rate": a.stale_rate,
+        "duration_s": a.duration,
+        "seed": a.seed,
+        "tick_s": a.tick,
+        "delta_v2": a.delta,
+        "drift_ms_10min": a.drift_ms_10min,
+        "group_noise_ms": a.group_noise_ms,
+        "outlier_rate": a.outlier_rate,
+        "outlier_ms": a.outlier_ms,
+        "landing_mode": a.landing_mode,
+        "landing_sigma_ms": a.landing_sigma_ms,
+        "landing_mean_ms": a.landing_mean_ms,
+        "load_sigma_ms": a.load_sigma_ms,
+        "load_mean_ms": a.load_mean_ms,
+        "lead_error_ms": a.lead_error_ms,
+        "rtt_max_ms": a.rtt_max_ms,
+        "clock_pings": a.clock_pings,
+        "clock_residual_ms": a.clock_residual_ms,
+        "rate_gain": a.rate_gain,
+        "rate_stall_ms": a.rate_stall_ms,
+        "start_dispersion_ms": a.start_dispersion_ms,
+        "video_noise_ms": a.video_noise_ms,
+        "stale_rate": a.stale_rate,
         "repeats": a.repeats,
     }
     overrides = {k: v for k, v in overrides.items() if v is not None}
@@ -701,33 +783,35 @@ def main(argv: list[str] | None = None) -> int:
             if "window_medians_ms" in results[name]:
                 wm = results[name]["window_medians_ms"]
                 rp95 = _fmt(results[name]["raw_p95_abs_ms"])
-                print(f"{name:14s} {v['verdict']:20s} "
-                      f"p95(5s med)={_fmt(wm['p95'])}ms  e_true p95={rp95}ms"
-                      f"  conv={results[name]['convergence_max_s']}s"
-                      f"  |u|max={results[name]['rate']['max_abs_u']:.5f}"
-                      f"  rates={results[name]['rate']['n']}"
-                      f"  after={results[name]['after_steady']}")
+                print(
+                    f"{name:14s} {v['verdict']:20s} "
+                    f"p95(5s med)={_fmt(wm['p95'])}ms  e_true p95={rp95}ms"
+                    f"  conv={results[name]['convergence_max_s']}s"
+                    f"  |u|max={results[name]['rate']['max_abs_u']:.5f}"
+                    f"  rates={results[name]['rate']['n']}"
+                    f"  after={results[name]['after_steady']}"
+                )
             else:
                 lm = results[name]["landing_ms"]
-                print(f"{name:14s} {v['verdict']:20s} landing p50={_fmt(lm['p50'])}ms "
-                      f"p95={_fmt(lm['p95'])}ms max={_fmt(lm['max_abs'])}ms "
-                      f">{PERCEPTUAL_MS:.0f}ms={lm['over_150ms_pct']}%")
+                print(
+                    f"{name:14s} {v['verdict']:20s} landing p50={_fmt(lm['p50'])}ms "
+                    f"p95={_fmt(lm['p95'])}ms max={_fmt(lm['max_abs'])}ms "
+                    f">{PERCEPTUAL_MS:.0f}ms={lm['over_150ms_pct']}%"
+                )
             failed = [k for k, ok in v["checks"].items() if not ok]
             if failed:
                 print(f"{'':14s} failed criteria: {', '.join(failed)}")
 
     doc = {
         "task": "F — the control law, proved in simulation",
-        "command": " ".join(["tests/v020/sim_v020.py"]
-                            + (argv if argv is not None else sys.argv[1:])),
+        "command": " ".join(["tests/v020/sim_v020.py"] + (argv if argv is not None else sys.argv[1:])),
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
         "host": os.uname().nodename,
         "python": sys.version.split()[0],
         "sources": {
             "group drift -12.4±1.0 ms/10min": "evidence/17-rate-gain-and-drift.json",
             "group read σ 10.2 ms, stale outliers ±95…162 ms": "evidence/17, notes/00-labo A15",
-            "PAUSE→SEEK→PLAY landing σ 30 ms, LOAD σ 202 ms":
-                "evidence/27-actuator-repeatability.json",
+            "PAUSE→SEEK→PLAY landing σ 30 ms, LOAD σ 202 ms": "evidence/27-actuator-repeatability.json",
             "perceptual budget 150 ms": "notes/ACCEPTANCE.md §4",
             "rate gain / stall / start dispersion": "unmeasured here: task C, defaults 1.0 / 0 / 0",
         },

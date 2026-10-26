@@ -66,8 +66,9 @@ class Service:
 
     def boot_cleanup(self) -> dict:
         """Startup / ExecStopPost cleanup (contracts §8)."""
-        return boot_cleanup(self.record_path, group=self.group, link=self.link,
-                            proxy=self.proxy, log=self.log)
+        return boot_cleanup(
+            self.record_path, group=self.group, link=self.link, proxy=self.proxy, log=self.log
+        )
 
     def start(self) -> "Service":
         """Start the observation loop (the thing that makes `ended` become `idle`)."""
@@ -106,34 +107,73 @@ def build_seams(config: Config, *, offline: bool, log):
     return link, group, controller, proxy, resolver
 
 
-def build_service(config: Config, *, offline: bool, log, state_dir: str | None = None,
-                  extra_allowed: tuple[str, ...] | None = None,
-                  clock=time.monotonic, wall=time.time, spawn=None,
-                  quiet=None, tick_s: float = DEFAULT_TICK_S,
-                  start_ticker: bool = True) -> Service:
+def build_service(
+    config: Config,
+    *,
+    offline: bool,
+    log,
+    state_dir: str | None = None,
+    extra_allowed: tuple[str, ...] | None = None,
+    clock=time.monotonic,
+    wall=time.time,
+    spawn=None,
+    quiet=None,
+    tick_s: float = DEFAULT_TICK_S,
+    start_ticker: bool = True,
+) -> Service:
     """Wire everything. No packet, no listener yet — ``api.make_server()`` does that."""
     state_dir = state_dir or config.state_dir
     os.makedirs(state_dir, exist_ok=True)
     link, group, controller, proxy, resolver = build_seams(config, offline=offline, log=log)
     lock = GroupLock(os.path.join(state_dir, os.path.basename(OWNER_FILE)), log=log)
     sender = SessionManager(
-        link=link, group=group, controller=controller, proxy=proxy, config=config, log=log,
-        resolver=resolver, quiet=quiet, lock=lock, state_dir=state_dir, clock=clock, wall=wall,
-        spawn=spawn, tick_s=tick_s)
+        link=link,
+        group=group,
+        controller=controller,
+        proxy=proxy,
+        config=config,
+        log=log,
+        resolver=resolver,
+        quiet=quiet,
+        lock=lock,
+        state_dir=state_dir,
+        clock=clock,
+        wall=wall,
+        spawn=spawn,
+        tick_s=tick_s,
+    )
     allowed = LOOPBACK if offline else ()
     if extra_allowed:
         allowed = tuple(allowed) + tuple(extra_allowed)
-    api = SenderAPI(sender, config=config, log=log, proxy=proxy,
-                    receiver_dir=config.receiver_dir, assets_dir=config.assets_dir,
-                    extra_allowed=allowed, ui_title="cast-sender")
-    service = Service(config=config, log=log, offline=offline, sender=sender, api=api,
-                      link=link, group=group, proxy=proxy, controller=controller,
-                      state_dir=state_dir, evidence_dir=config.evidence_dir)
+    api = SenderAPI(
+        sender,
+        config=config,
+        log=log,
+        proxy=proxy,
+        receiver_dir=config.receiver_dir,
+        assets_dir=config.assets_dir,
+        extra_allowed=allowed,
+        ui_title="cast-sender",
+    )
+    service = Service(
+        config=config,
+        log=log,
+        offline=offline,
+        sender=sender,
+        api=api,
+        link=link,
+        group=group,
+        proxy=proxy,
+        controller=controller,
+        state_dir=state_dir,
+        evidence_dir=config.evidence_dir,
+    )
     return service.start() if start_ticker else service
 
 
-def run_ticker(sender: SessionManager, stop: threading.Event, *,
-               tick_s: float = DEFAULT_TICK_S) -> threading.Thread:
+def run_ticker(
+    sender: SessionManager, stop: threading.Event, *, tick_s: float = DEFAULT_TICK_S
+) -> threading.Thread:
     """The observation loop: ≤1 s per poll, so a foreign takeover is seen within one poll."""
 
     def loop() -> None:
@@ -156,25 +196,38 @@ def run_ticker(sender: SessionManager, stop: threading.Event, *,
 # ---------------------------------------------------------------------------------------------
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(prog="sender.service", description=__doc__.split("\n")[0])
-    parser.add_argument("--config", default=None,
-                        help="configuration file (default: /etc/castsender.conf if present)")
+    parser.add_argument(
+        "--config", default=None, help="configuration file (default: /etc/castsender.conf if present)"
+    )
     mode = parser.add_mutually_exclusive_group()
-    mode.add_argument("--offline", action="store_true",
-                      help="fakes only: no packet leaves the process (default in tests)")
-    mode.add_argument("--live", action="store_true",
-                      help="use the real lib/v020 seams (stubs until tasks B/D/E/F land)")
+    mode.add_argument(
+        "--offline",
+        action="store_true",
+        help="fakes only: no packet leaves the process (default in tests)",
+    )
+    mode.add_argument(
+        "--live",
+        action="store_true",
+        help="use the real lib/v020 seams (stubs until tasks B/D/E/F land)",
+    )
     parser.add_argument("--bind", default=None, help="override HTTP_BIND (tests only)")
     parser.add_argument("--port", type=int, default=None, help="override HTTP_PORT (tests only)")
     parser.add_argument("--state-dir", default=os.environ.get("SENDER_STATE_DIR"))
     parser.add_argument("--evidence-dir", default=os.environ.get("SENDER_EVIDENCE_DIR"))
-    parser.add_argument("--cleanup", action="store_true",
-                        help="run the §8 boot cleanup from state/session.json and exit")
-    parser.add_argument("--self-test", action="store_true",
-                        help="run the offline self-test (HTTP matrix + 10 min session) and exit")
-    parser.add_argument("--evidence", default=None,
-                        help="with --self-test: write the JSON result to this path")
-    parser.add_argument("--once", action="store_true",
-                        help="bind, answer one status request, and exit (smoke check)")
+    parser.add_argument(
+        "--cleanup", action="store_true", help="run the §8 boot cleanup from state/session.json and exit"
+    )
+    parser.add_argument(
+        "--self-test",
+        action="store_true",
+        help="run the offline self-test (HTTP matrix + 10 min session) and exit",
+    )
+    parser.add_argument(
+        "--evidence", default=None, help="with --self-test: write the JSON result to this path"
+    )
+    parser.add_argument(
+        "--once", action="store_true", help="bind, answer one status request, and exit (smoke check)"
+    )
     return parser.parse_args(argv)
 
 
@@ -215,12 +268,17 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(result, indent=2, ensure_ascii=False))
         return 0 if result.get("ok") else 1
 
-    log = EventLog(directory=config.evidence_dir,
-                   echo=os.environ.get("SENDER_LOG_ECHO", "") == "1")
+    log = EventLog(directory=config.evidence_dir, echo=os.environ.get("SENDER_LOG_ECHO", "") == "1")
     service = build_service(config, offline=offline, log=log)
-    log("service_starting", version=__version__, offline=offline, pid=os.getpid(),
-        config=config.as_mapping(), state_dir=service.state_dir,
-        evidence=os.path.basename(str(getattr(log, "path", ""))))
+    log(
+        "service_starting",
+        version=__version__,
+        offline=offline,
+        pid=os.getpid(),
+        config=config.as_mapping(),
+        state_dir=service.state_dir,
+        evidence=os.path.basename(str(getattr(log, "path", ""))),
+    )
 
     if args.cleanup:
         # ExecStopPost runs exactly this: one cleanup, reported, then leave.
@@ -237,15 +295,34 @@ def main(argv: list[str] | None = None) -> int:
     try:
         server = service.api.make_server()
     except OSError as exc:
-        log("service_bind_failed", bind=config.http_bind, port=config.http_port,
-            error=f"{type(exc).__name__}: {exc}")
-        print(json.dumps({"error": "bind", "detail": str(exc), "bind": config.http_bind,
-                          "port": config.http_port}, indent=2), file=sys.stderr)
+        log(
+            "service_bind_failed",
+            bind=config.http_bind,
+            port=config.http_port,
+            error=f"{type(exc).__name__}: {exc}",
+        )
+        print(
+            json.dumps(
+                {
+                    "error": "bind",
+                    "detail": str(exc),
+                    "bind": config.http_bind,
+                    "port": config.http_port,
+                },
+                indent=2,
+            ),
+            file=sys.stderr,
+        )
         service.close()
         log.close()
         return 3
-    log("service_ready", bind=server.server_address[0], port=server.server_address[1],
-        lan_only=True, offline=offline)
+    log(
+        "service_ready",
+        bind=server.server_address[0],
+        port=server.server_address[1],
+        lan_only=True,
+        offline=offline,
+    )
 
     def shutdown(*_args) -> None:
         service.stop_event.set()

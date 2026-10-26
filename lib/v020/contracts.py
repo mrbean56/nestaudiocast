@@ -33,10 +33,22 @@ MSG_ENDED = "ended"
 MSG_ERROR = "error"
 
 CONTROLLER_MESSAGES = (
-    MSG_CLOCK, MSG_LOAD, MSG_PLAY_AT, MSG_PAUSE, MSG_SEEK, MSG_RATE, MSG_STOP, MSG_IDLE,
+    MSG_CLOCK,
+    MSG_LOAD,
+    MSG_PLAY_AT,
+    MSG_PAUSE,
+    MSG_SEEK,
+    MSG_RATE,
+    MSG_STOP,
+    MSG_IDLE,
 )
 RECEIVER_MESSAGES = (
-    MSG_HELLO, MSG_CLOCK_REPLY, MSG_STATE, MSG_INTENT, MSG_ENDED, MSG_ERROR,
+    MSG_HELLO,
+    MSG_CLOCK_REPLY,
+    MSG_STATE,
+    MSG_INTENT,
+    MSG_ENDED,
+    MSG_ERROR,
 )
 
 # --- player / session states ----------------------------------------------------------------
@@ -50,8 +62,13 @@ PLAYER_PAUSED = "paused"
 PLAYER_ENDED = "ended"
 PLAYER_ERROR = "error"
 PLAYER_STATES = (
-    PLAYER_IDLE, PLAYER_LOADING, PLAYER_BUFFERING, PLAYER_PLAYING,
-    PLAYER_PAUSED, PLAYER_ENDED, PLAYER_ERROR,
+    PLAYER_IDLE,
+    PLAYER_LOADING,
+    PLAYER_BUFFERING,
+    PLAYER_PLAYING,
+    PLAYER_PAUSED,
+    PLAYER_ENDED,
+    PLAYER_ERROR,
 )
 
 #: owner app side, ``GET /api/status`` -> ``state``
@@ -63,8 +80,13 @@ STATE_PAUSED = "paused"
 STATE_ENDED = "ended"
 STATE_QUIET_REFUSED = "quiet_refused"
 SESSION_STATES = (
-    STATE_IDLE, STATE_RESOLVING, STATE_STARTING, STATE_PLAYING,
-    STATE_PAUSED, STATE_ENDED, STATE_QUIET_REFUSED,
+    STATE_IDLE,
+    STATE_RESOLVING,
+    STATE_STARTING,
+    STATE_PLAYING,
+    STATE_PAUSED,
+    STATE_ENDED,
+    STATE_QUIET_REFUSED,
 )
 
 # --- transport intents (contracts §3.2) ------------------------------------------------------
@@ -77,7 +99,7 @@ INTENTS = (INTENT_PLAY, INTENT_PAUSE, INTENT_SEEK)
 # --- HTTP surface (contracts §5) ------------------------------------------------------------
 
 HTTP_PORT_DEFAULT = 7640
-PATH_RECEIVER = "/receiver.html"          # frozen: registered in the Cast console
+PATH_RECEIVER = "/receiver.html"  # frozen: registered in the Cast console
 PATH_SHARE = "/api/share"
 PATH_CONTROL = "/api/control"
 PATH_STATUS = "/api/status"
@@ -114,12 +136,12 @@ QUIET_POLICIES = ("refuse", "video_only")
 
 # --- timeline rules (contracts §2) -----------------------------------------------------------
 
-STEADY_AFTER_S = 30.0          # no transport event for this long = steady
-STEADY_WINDOW_S = 5.0          # digital-error window
-DIGITAL_TOL_MS = 20.0          # acceptance: |median e| per window
-RATE_DEAD_BAND_S = 0.005       # do not trim for less than this
-RATE_MAX_DEFAULT = 0.002       # |rate - 1| ceiling
-STATE_HZ = 4.0                 # receiver -> controller state cadence
+STEADY_AFTER_S = 30.0  # no transport event for this long = steady
+STEADY_WINDOW_S = 5.0  # digital-error window
+DIGITAL_TOL_MS = 20.0  # acceptance: |median e| per window
+RATE_DEAD_BAND_S = 0.005  # do not trim for less than this
+RATE_MAX_DEFAULT = 0.002  # |rate - 1| ceiling
+STATE_HZ = 4.0  # receiver -> controller state cadence
 
 # --- group ownership (contracts §7) ---------------------------------------------------------
 
@@ -186,7 +208,7 @@ class Track:
     itag: int
     codecs: str
     content_type: str
-    url: str = ""              # raw token: never logged, never archived
+    url: str = ""  # raw token: never logged, never archived
     width: int | None = None
     height: int | None = None
     fps: float | None = None

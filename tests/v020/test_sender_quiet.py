@@ -9,7 +9,7 @@ from __future__ import annotations
 import datetime
 import unittest
 
-from test_sender_support import C, TempDir, make_config, make_sender, YOUTUBE
+from test_sender_support import YOUTUBE, C, TempDir, make_config, make_sender
 
 from sender.config import ConfigError
 from sender.quiet import DECISION_OK, QuietWindow, format_hhmm, parse_hhmm
@@ -46,9 +46,9 @@ class TestWindow(unittest.TestCase):
 
     def test_inside_the_window_is_allowed(self):
         window = QuietWindow("08:00", "22:00", "refuse")
-        self.assertTrue(window.allowed(at(8, 0)))       # start included
+        self.assertTrue(window.allowed(at(8, 0)))  # start included
         self.assertTrue(window.allowed(at(15, 30)))
-        self.assertFalse(window.allowed(at(22, 0)))     # end excluded
+        self.assertFalse(window.allowed(at(22, 0)))  # end excluded
         self.assertFalse(window.allowed(at(7, 59)))
         self.assertEqual(window.decision(at(23)), "refuse")
 
@@ -104,16 +104,18 @@ class TestWindow(unittest.TestCase):
 
 class TestConfigFeedsQuiet(unittest.TestCase):
     def test_config_builds_the_window(self):
-        from test_sender_support import make_config
         import tempfile
+
+        from test_sender_support import make_config
+
         root = tempfile.mkdtemp(prefix="cast-sender-quiet-")
-        config = make_config(root, quiet_start="08:00", quiet_end="22:00",
-                             quiet_policy="video_only")
+        config = make_config(root, quiet_start="08:00", quiet_end="22:00", quiet_policy="video_only")
         self.assertEqual(config.quiet.policy, "video_only")
         self.assertEqual(config.quiet.start, 8 * 60)
 
     def test_bad_quiet_config_is_refused(self):
         import tempfile
+
         root = tempfile.mkdtemp(prefix="cast-sender-quiet-")
         with self.assertRaises(ConfigError):
             make_config(root, quiet_start="8h")
@@ -127,12 +129,11 @@ class TestSharePolicy(TempDir, unittest.TestCase):
     """A quiet share must not touch the group — the point of §7."""
 
     def _fixture(self, start: str, end: str, policy: str):
-        config = make_config(self.root, quiet_start=start, quiet_end=end,
-                             quiet_policy=policy)
+        config = make_config(self.root, quiet_start=start, quiet_end=end, quiet_policy=policy)
         return make_sender(self.root, config=config)
 
     def test_refuse_touches_nothing(self):
-        fixture = self._fixture("00:00", "00:01", "refuse")     # closed 23h59 of the day
+        fixture = self._fixture("00:00", "00:01", "refuse")  # closed 23h59 of the day
         reply = fixture.sender.share(YOUTUBE)
         self.assertEqual(reply["state"], C.STATE_QUIET_REFUSED)
         self.assertTrue(reply["session_id"].startswith("s"))
@@ -147,8 +148,8 @@ class TestSharePolicy(TempDir, unittest.TestCase):
         reply = fixture.sender.share(YOUTUBE)
         self.assertEqual(reply["state"], "resolving")
         self.assertEqual(fixture.sender.status()["state"], C.STATE_PLAYING)
-        self.assertTrue(fixture.link.launched)          # the video does play
-        self.assertEqual(fixture.group.calls, [])       # the group is never touched
+        self.assertTrue(fixture.link.launched)  # the video does play
+        self.assertEqual(fixture.group.calls, [])  # the group is never touched
         self.assertFalse(fixture.proxy.sessions == {})
         fixture.sender.close()
 
@@ -163,7 +164,7 @@ class TestSharePolicy(TempDir, unittest.TestCase):
         fixture = self._fixture("00:00", "00:01", "video_only")
         fixture.sender.share(YOUTUBE, measure=True)
         self.assertEqual(fixture.sender.status()["state"], C.STATE_PLAYING)
-        self.assertEqual(fixture.group.calls, [])            # measure does not load the group
+        self.assertEqual(fixture.group.calls, [])  # measure does not load the group
         self.assertEqual(fixture.sender._session.mode, "video_only")
 
     def test_a_running_session_is_not_stopped_by_the_window(self):
@@ -173,7 +174,8 @@ class TestSharePolicy(TempDir, unittest.TestCase):
         # the window opens (a quiet policy is now what a *new* share would meet); the running
         # session keeps playing and is not stopped (§7: the rule is about starting)
         fixture.sender._quiet = __import__("sender.quiet", fromlist=["QuietWindow"]).QuietWindow(
-            "00:00", "00:01", "refuse")
+            "00:00", "00:01", "refuse"
+        )
         for _ in range(4):
             fixture.clock.advance(0.25)
             fixture.sender.tick()

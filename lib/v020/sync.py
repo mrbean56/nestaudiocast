@@ -56,23 +56,46 @@ import statistics
 from collections import deque
 
 from .contracts import (
-    MSG_IDLE, MSG_LOAD, MSG_PAUSE, MSG_PLAY_AT, MSG_RATE, MSG_SEEK, MSG_STOP,
-    PLAYER_PLAYING, RATE_DEAD_BAND_S, RATE_MAX_DEFAULT, STEADY_AFTER_S, STEADY_WINDOW_S,
-    ClockEstimate, Command, GroupSample, Sample, digital_error,
+    MSG_IDLE,
+    MSG_LOAD,
+    MSG_PAUSE,
+    MSG_PLAY_AT,
+    MSG_RATE,
+    MSG_SEEK,
+    MSG_STOP,
+    PLAYER_PLAYING,
+    RATE_DEAD_BAND_S,
+    RATE_MAX_DEFAULT,
+    STEADY_AFTER_S,
+    STEADY_WINDOW_S,
+    ClockEstimate,
+    Command,
+    GroupSample,
+    Sample,
+    digital_error,
 )
 
 __all__ = [
-    "CMD_GROUP_PLAY", "CMD_GROUP_PAUSE", "CMD_GROUP_SEEK", "CMD_GROUP_STOP",
-    "GROUP_COMMANDS", "PHASE_IDLE", "PHASE_LANDING", "PHASE_SETTLING", "PHASE_STEADY",
-    "PHASE_PAUSED", "PHASE_ENDED", "Controller",
+    "CMD_GROUP_PLAY",
+    "CMD_GROUP_PAUSE",
+    "CMD_GROUP_SEEK",
+    "CMD_GROUP_STOP",
+    "GROUP_COMMANDS",
+    "PHASE_IDLE",
+    "PHASE_LANDING",
+    "PHASE_SETTLING",
+    "PHASE_STEADY",
+    "PHASE_PAUSED",
+    "PHASE_ENDED",
+    "Controller",
 ]
 
 # --- phases of one session -------------------------------------------------------------------
 
 PHASE_IDLE = "idle"
-PHASE_LANDING = "landing"        # a start/seek/resume landing is in flight; one re-landing left
-PHASE_SETTLING = "settling"      # landed, waiting out the 30 s before rate trims are allowed
-PHASE_STEADY = "steady"          # rate trims only
+PHASE_LANDING = "landing"  # a start/seek/resume landing is in flight; one re-landing left
+PHASE_SETTLING = "settling"  # landed, waiting out the 30 s before rate trims are allowed
+PHASE_STEADY = "steady"  # rate trims only
 PHASE_PAUSED = "paused"
 PHASE_ENDED = "ended"
 
@@ -140,8 +163,13 @@ class Controller:
     #: steady() needs both sides PLAYING for this long (§2)
     PLAYING_FOR_S = 2.0
 
-    def __init__(self, delta_v2: float = 0.0, rate_max: float = RATE_MAX_DEFAULT,
-                 dead_band_s: float = RATE_DEAD_BAND_S, log=None) -> None:
+    def __init__(
+        self,
+        delta_v2: float = 0.0,
+        rate_max: float = RATE_MAX_DEFAULT,
+        dead_band_s: float = RATE_DEAD_BAND_S,
+        log=None,
+    ) -> None:
         self.delta_v2 = float(delta_v2)
         self.rate_max = float(rate_max)
         self.dead_band_s = float(dead_band_s)
@@ -153,12 +181,12 @@ class Controller:
         #: commanded that much earlier). Set by ``start`` and reused by seek/resume; the
         #: executor persists it across sessions, this module never guesses it.
         self.lead_s = 0.0
-        self.clock_offset_ms = 0.0        # receiver clock minus controller clock (§3)
+        self.clock_offset_ms = 0.0  # receiver clock minus controller clock (§3)
         self.clock_residual_ms: float | None = None
 
         # event bookkeeping
-        self._event_at = float("-inf")    # last transport event (start/seek/resume/pause/end)
-        self._landing_at = 0.0            # the instant both sides must be aligned
+        self._event_at = float("-inf")  # last transport event (start/seek/resume/pause/end)
+        self._landing_at = 0.0  # the instant both sides must be aligned
         self._relanded = False
         #: how often the single re-landing was spent/refused, for the lab note
         self.relandings = 0
@@ -168,9 +196,9 @@ class Controller:
         self._last_video: Sample | None = None
         self._last_group: GroupSample | None = None
         self._err: deque[tuple[float, float]] = deque(maxlen=256)
-        self._last_raw: float | None = None      # last single-tick error, before filtering
+        self._last_raw: float | None = None  # last single-tick error, before filtering
         self._steady_window: list[tuple[float, float]] = []
-        self.rejected = 0                 # stale reads thrown out by the outlier filter
+        self.rejected = 0  # stale reads thrown out by the outlier filter
         self._np = {"video": 0, "group": 0}
         self._playing_since: dict[str, float | None] = {"video": None, "group": None}
         self._last_nonplaying: dict[str, float | None] = {"video": None, "group": None}
@@ -178,10 +206,10 @@ class Controller:
         # rate actuator
         self._last_tick: float | None = None
         self._integral = 0.0
-        self._u_cmd = 0.0                 # the last commanded rate - 1
-        self._rate_sent = 1.0             # the last rate actually put on the wire
+        self._u_cmd = 0.0  # the last commanded rate - 1
+        self._rate_sent = 1.0  # the last rate actually put on the wire
         self._rate_at = float("-inf")
-        self._needs_reset = False         # a trim is on the receiver; a landing must undo it
+        self._needs_reset = False  # a trim is on the receiver; a landing must undo it
 
         # telemetry (§5 GET /api/status reads some of this through snapshot())
         self.counts: dict[str, int] = {}
@@ -189,8 +217,9 @@ class Controller:
         self._steady_since: float | None = None
 
     # -- session lifecycle -------------------------------------------------------------------
-    def start(self, now: float, video_ready: float, group_ready: float,
-              lead_s: float = 0.0) -> list[Command]:
+    def start(
+        self, now: float, video_ready: float, group_ready: float, lead_s: float = 0.0
+    ) -> list[Command]:
         """Plan the one start event: park the group, compute the receiver's ``play_at``.
 
         ``video_ready`` and ``group_ready`` are **media positions**, in seconds, at which the
@@ -244,7 +273,8 @@ class Controller:
                 if c.kind != MSG_RATE:
                     raise AssertionError(
                         f"steady state emitted {c.kind!r}: after the start event the video may "
-                        f"only be trimmed, never reloaded (contracts §1)")
+                        f"only be trimmed, never reloaded (contracts §1)"
+                    )
         self._record(cmds)
         self._last_tick = now
         return cmds
@@ -372,8 +402,9 @@ class Controller:
         self.clock_residual_ms = float(estimate.residual_ms)
 
     # -- the landing -------------------------------------------------------------------------
-    def _land(self, land: float, media_group: float, media_video: float | None = None,
-              seek_group: bool = False) -> list[Command]:
+    def _land(
+        self, land: float, media_group: float, media_video: float | None = None, seek_group: bool = False
+    ) -> list[Command]:
         """The one start event: park (if needed), release at ``land - lead``, anchor the video.
 
         ``media_video`` defaults to the invariant's value, ``media_group - DELTA_V2`` (§2); a
@@ -388,10 +419,8 @@ class Controller:
             self._u_cmd = 0.0
             self._rate_sent = 1.0
         if seek_group:
-            cmds.append(Command(CMD_GROUP_SEEK,
-                                {"media": media_group, "pause": True, "at": self.now}))
-        cmds.append(Command(CMD_GROUP_PLAY,
-                            {"at": land - self.lead_s, "media": media_group}))
+            cmds.append(Command(CMD_GROUP_SEEK, {"media": media_group, "pause": True, "at": self.now}))
+        cmds.append(Command(CMD_GROUP_PLAY, {"at": land - self.lead_s, "media": media_group}))
         if media_video is None:
             media_video = media_group - self.delta_v2
         cmds.append(Command(MSG_PLAY_AT, {"rx_ms": self._rx_ms(land), "media": media_video}))
@@ -432,8 +461,7 @@ class Controller:
             self._landing_at = land
             self._event_at = now
             self._reset_estimator()
-            return [Command(MSG_PLAY_AT,
-                            {"rx_ms": self._rx_ms(land), "media": media_video})]
+            return [Command(MSG_PLAY_AT, {"rx_ms": self._rx_ms(land), "media": media_video})]
         if not self._relanded:
             self.relanding_refused += 1
         self.phase = PHASE_SETTLING
@@ -459,8 +487,7 @@ class Controller:
             # anti-windup: the integral alone may never ask for more than I_MAX
             lim = i_max / self.K_I
             self._integral = max(-lim, min(lim, self._integral))
-            u = max(-self.rate_max, min(self.rate_max,
-                                        self.K_P * est + self.K_I * self._integral))
+            u = max(-self.rate_max, min(self.rate_max, self.K_P * est + self.K_I * self._integral))
         else:
             # inside the dead band the loop commands neutral; a wound integral must not sit
             # there commanding a rate forever, so it bleeds away slowly (2 min)
@@ -511,7 +538,7 @@ class Controller:
         if len(self._err) >= 3:
             recent = statistics.median(e for _, e in list(self._err)[-3:])
             if abs(e_raw - recent) > self.OUTLIER_S:
-                self.rejected += 1          # a stale read, not a movement (A15)
+                self.rejected += 1  # a stale read, not a movement (A15)
                 return
         self._err.append((now, e_raw))
 

@@ -48,8 +48,8 @@ from v020 import contracts as C  # noqa: E402
 
 NS_CONN = "urn:x-cast:com.google.cast.tp.connection"
 NS_HB = "urn:x-cast:com.google.cast.tp.heartbeat"
-NS_RECEIVER = "urn:x-cast:com.google.cast.receiver"   # the google receiver namespace
-NS_OURS = C.NS_RECEIVER                               # urn:x-cast:com.beansden.nestaudiocast.v1
+NS_RECEIVER = "urn:x-cast:com.google.cast.receiver"  # the google receiver namespace
+NS_OURS = C.NS_RECEIVER  # urn:x-cast:com.beansden.nestaudiocast.v1
 
 PB = None
 
@@ -98,10 +98,14 @@ def _cert_pair() -> tuple[str, str]:
         .not_valid_before(now - _dt.timedelta(minutes=5))
         .not_valid_after(now + _dt.timedelta(days=2))
         .add_extension(
-            x509.SubjectAlternativeName([x509.DNSName("localhost"),
-                                         x509.IPAddress(__import__("ipaddress").ip_address(
-                                             "127.0.0.1"))]),
-            critical=False)
+            x509.SubjectAlternativeName(
+                [
+                    x509.DNSName("localhost"),
+                    x509.IPAddress(__import__("ipaddress").ip_address("127.0.0.1")),
+                ]
+            ),
+            critical=False,
+        )
         .sign(key, hashes.SHA256())
     )
     folder = tempfile.mkdtemp(prefix="nac-fake-cast-", dir=_tmpdir())
@@ -110,9 +114,13 @@ def _cert_pair() -> tuple[str, str]:
     with open(crt, "wb") as fh:
         fh.write(cert.public_bytes(serialization.Encoding.PEM))
     with open(pem, "wb") as fh:
-        fh.write(key.private_bytes(serialization.Encoding.PEM,
-                                   serialization.PrivateFormat.TraditionalOpenSSL,
-                                   serialization.NoEncryption()))
+        fh.write(
+            key.private_bytes(
+                serialization.Encoding.PEM,
+                serialization.PrivateFormat.TraditionalOpenSSL,
+                serialization.NoEncryption(),
+            )
+        )
     os.chmod(pem, 0o600)
     _CERT_CACHE = (crt, pem)
     return _CERT_CACHE
@@ -130,11 +138,20 @@ class _Client:
 class FakeReceiverNet:
     """One localhost Chromecast: TLS, CASTv2 framing, receiver + our namespace, 4 Hz states."""
 
-    def __init__(self, app_id: str = C.CONFIG_DEFAULTS["APP_ID"], host: str = "127.0.0.1",
-                 port: int = 0, clock_offset_ms: float = 86_400_000.0,
-                 rtt_ms: tuple[float, float] = (0.0, 40.0), split: float = 0.5,
-                 path_asym_ms: float = 0.0, asym_jitter_ms: float = 0.5,
-                 state_hz: float = 4.0, seed: int = 1, log=None) -> None:
+    def __init__(
+        self,
+        app_id: str = C.CONFIG_DEFAULTS["APP_ID"],
+        host: str = "127.0.0.1",
+        port: int = 0,
+        clock_offset_ms: float = 86_400_000.0,
+        rtt_ms: tuple[float, float] = (0.0, 40.0),
+        split: float = 0.5,
+        path_asym_ms: float = 0.0,
+        asym_jitter_ms: float = 0.5,
+        state_hz: float = 4.0,
+        seed: int = 1,
+        log=None,
+    ) -> None:
         self.app_id = app_id
         self.host, self.port = host, port
         self.clock_offset_ms = float(clock_offset_ms)
@@ -213,7 +230,7 @@ class FakeReceiverNet:
             try:
                 raw, addr = self._srv.accept()
             except TimeoutError:
-                continue                   # srv has a 0.2 s timeout: keep accepting
+                continue  # srv has a 0.2 s timeout: keep accepting
             except (OSError, AttributeError):
                 return
             if self._stopping.is_set():
@@ -285,10 +302,10 @@ class FakeReceiverNet:
                     break
                 buf += data
                 while len(buf) >= 4:
-                    (n,) = int.from_bytes(buf[:4], "big"),
+                    (n,) = (int.from_bytes(buf[:4], "big"),)
                     if len(buf) < 4 + n:
                         break
-                    body, buf = buf[4:4 + n], buf[4 + n:]
+                    body, buf = buf[4 : 4 + n], buf[4 + n :]
                     msg = _pb().CastMessage()
                     msg.ParseFromString(body)
                     self.frames += 1
@@ -310,8 +327,9 @@ class FakeReceiverNet:
             except OSError:
                 pass
 
-    def _send(self, client: _Client, namespace: str, payload: dict, source: str = "receiver-0",
-              dest: str = "*") -> None:
+    def _send(
+        self, client: _Client, namespace: str, payload: dict, source: str = "receiver-0", dest: str = "*"
+    ) -> None:
         if client.closed:
             return
         msg = _pb().CastMessage(
@@ -359,14 +377,20 @@ class FakeReceiverNet:
             self._send(client, NS_RECEIVER, self._status_payload(), dest=src)
         elif self.app and dst == self.app["transportId"]:
             self.hellos_sent += 1
-            self._send(client, NS_OURS, {
-                "type": C.MSG_HELLO,
-                "seq": self.last_seq,
-                "rx_ms": self._rx_ms(),
-                "ua": "fake_receiver_net/0.2",
-                "codecs": {"h264": True, "hevc": False, "vp9": False, "av1": False},
-                "version": "0.2.0-fake-net",
-            }, source=self.app["transportId"], dest=src)
+            self._send(
+                client,
+                NS_OURS,
+                {
+                    "type": C.MSG_HELLO,
+                    "seq": self.last_seq,
+                    "rx_ms": self._rx_ms(),
+                    "ua": "fake_receiver_net/0.2",
+                    "codecs": {"h264": True, "hevc": False, "vp9": False, "av1": False},
+                    "version": "0.2.0-fake-net",
+                },
+                source=self.app["transportId"],
+                dest=src,
+            )
 
     def _on_receiver(self, client: _Client, payload: dict, src: str) -> None:
         rid = payload.get("requestId")
@@ -403,7 +427,7 @@ class FakeReceiverNet:
 
     def _on_ours(self, client: _Client, payload: dict, src: str) -> None:
         if not self.app or self.app.get("appId") != self.app_id:
-            return                          # the app is not ours any more: no namespace
+            return  # the app is not ours any more: no namespace
         typ = payload.get("type")
         seq = payload.get("seq")
         if isinstance(seq, int):
@@ -422,9 +446,13 @@ class FakeReceiverNet:
             rx = self._rx_ms()
             if d_out:
                 time.sleep(d_out)
-            self._send(client, NS_OURS,
-                       {"type": C.MSG_CLOCK_REPLY, "seq": seq, "rx_ms": rx},
-                       source=transport, dest=src)
+            self._send(
+                client,
+                NS_OURS,
+                {"type": C.MSG_CLOCK_REPLY, "seq": seq, "rx_ms": rx},
+                source=transport,
+                dest=src,
+            )
             return
         if typ == C.MSG_LOAD:
             self.media = float(payload.get("media", 0.0))
@@ -458,7 +486,7 @@ class FakeReceiverNet:
             self.media = self._media_at(self._rx_ms())
             self._anchor_ms = self._rx_ms()
             self.rate = float(payload["value"])
-            self.applied_rate = 1.0               # evidence/17: the real device echoes and ignores
+            self.applied_rate = 1.0  # evidence/17: the real device echoes and ignores
             emit_state()
             return
         if typ in (C.MSG_STOP, C.MSG_IDLE):
@@ -480,7 +508,7 @@ class FakeReceiverNet:
         return self.media + (rx_ms - self._anchor_ms) / 1000.0 * self.applied_rate
 
     def _state_payload(self, seq) -> dict:
-        rx = self._rx_ms()                    # one clock read for the timestamp and the position
+        rx = self._rx_ms()  # one clock read for the timestamp and the position
         return {
             "type": C.MSG_STATE,
             "seq": seq,
@@ -507,29 +535,33 @@ class FakeReceiverNet:
         while not self._stopping.wait(period):
             if self.media_loaded:
                 self.states_sent += 1
-                self.broadcast(NS_OURS, self._state_payload(self.last_seq),
-                               source=self.app["transportId"] if self.app else "receiver-0")
+                self.broadcast(
+                    NS_OURS,
+                    self._state_payload(self.last_seq),
+                    source=self.app["transportId"] if self.app else "receiver-0",
+                )
 
     # -- receiver status ----------------------------------------------------------------------
     def _status_payload(self) -> dict:
         apps = []
         if self.app:
-            apps.append({
-                "appId": self.app["appId"],
-                "appType": "WEB",
-                "displayName": self.app.get("displayName", "VideoNetCaster"),
-                "iconUrl": "",
-                "isIdleScreen": False,
-                "launchedFromCloud": False,
-                "namespaces": [{"name": NS_OURS}, {"name": NS_CONN}],
-                "sessionId": self.app["sessionId"],
-                "statusText": "fake localhost receiver",
-                "transportId": self.app["transportId"],
-            })
+            apps.append(
+                {
+                    "appId": self.app["appId"],
+                    "appType": "WEB",
+                    "displayName": self.app.get("displayName", "VideoNetCaster"),
+                    "iconUrl": "",
+                    "isIdleScreen": False,
+                    "launchedFromCloud": False,
+                    "namespaces": [{"name": NS_OURS}, {"name": NS_CONN}],
+                    "sessionId": self.app["sessionId"],
+                    "statusText": "fake localhost receiver",
+                    "transportId": self.app["transportId"],
+                }
+            )
         elif self.foreign_app:
             apps.append(self.foreign_app)
-        return {"type": "RECEIVER_STATUS", "status": {"applications": apps,
-                                                     "volume": dict(self.volume)}}
+        return {"type": "RECEIVER_STATUS", "status": {"applications": apps, "volume": dict(self.volume)}}
 
     def _drop_session(self) -> None:
         self.app = None
@@ -544,10 +576,15 @@ class FakeReceiverNet:
         self.app = None
         self._drop_session()
         self.foreign_app = {
-            "appId": app_id, "appType": "WEB", "displayName": display_name, "iconUrl": "",
-            "isIdleScreen": False, "launchedFromCloud": False,
+            "appId": app_id,
+            "appType": "WEB",
+            "displayName": display_name,
+            "iconUrl": "",
+            "isIdleScreen": False,
+            "launchedFromCloud": False,
             "namespaces": [{"name": "urn:x-cast:com.google.cast.media"}],
-            "sessionId": "foreign-session", "statusText": "cast by another sender",
+            "sessionId": "foreign-session",
+            "statusText": "cast by another sender",
             "transportId": "foreign-transport",
         }
         self.broadcast(NS_RECEIVER, self._status_payload())
@@ -564,9 +601,11 @@ class FakeReceiverNet:
         """The receiver page reconnects: new transport id, same app, media kept."""
         if not self.app:
             raise RuntimeError("no app running")
-        self.app = {**self.app,
-                    "sessionId": str(uuid.uuid4()),
-                    "transportId": f"transport-{uuid.uuid4().hex[:8]}"}
+        self.app = {
+            **self.app,
+            "sessionId": str(uuid.uuid4()),
+            "transportId": f"transport-{uuid.uuid4().hex[:8]}",
+        }
         self.broadcast(NS_RECEIVER, self._status_payload())
         self.log("transport_restarted", transport=self.app["transportId"])
         return self.app["transportId"]
@@ -597,9 +636,16 @@ class FakeReceiverNet:
         base = self._rx_ms()
         sent = 0
         for i in range(n):
-            payload = {"type": C.MSG_STATE, "seq": self.last_seq, "rx_ms": base + i,
-                       "media": 1000.0 + i / 1000.0, "rate": 1.0,
-                       "player_state": C.PLAYER_PAUSED, "buffered_end": 2000.0, "dropped": 0}
+            payload = {
+                "type": C.MSG_STATE,
+                "seq": self.last_seq,
+                "rx_ms": base + i,
+                "media": 1000.0 + i / 1000.0,
+                "rate": 1.0,
+                "player_state": C.PLAYER_PAUSED,
+                "buffered_end": 2000.0,
+                "dropped": 0,
+            }
             for client in clients:
                 self._send(client, NS_OURS, payload, source=transport, dest="*")
             sent += 1
@@ -628,14 +674,19 @@ class FakeReceiverNet:
 
 # --- bench: the numbers archived in evidence/42-* -------------------------------------------
 
+
 def _summary(values: list[float]) -> dict:
     if not values:
         return {"n": 0}
     ordered = sorted(values)
     n = len(ordered)
-    median = (ordered[n // 2] if n % 2 else (ordered[n // 2 - 1] + ordered[n // 2]) / 2.0)
-    return {"n": n, "median": round(median, 4), "min": round(ordered[0], 4),
-            "max": round(ordered[-1], 4)}
+    median = ordered[n // 2] if n % 2 else (ordered[n // 2 - 1] + ordered[n // 2]) / 2.0
+    return {
+        "n": n,
+        "median": round(median, 4),
+        "min": round(ordered[0], 4),
+        "max": round(ordered[-1], 4),
+    }
 
 
 def _new_link(fake: FakeReceiverNet, **kw):
@@ -648,8 +699,7 @@ def bench(seed: int = 7, trials: int = 12, pings: int = 8, log_path: str | None 
     """Measure what notes/labo-link.md claims. Localhost only, no device, no sound."""
     from v020.chromecast import INBOX_MAX, LinkDown, LostDevice, estimate_clock
 
-    out: dict = {"seed": seed, "clock": {}, "takeover": {}, "reconnect": {}, "inbox": {},
-                 "protocol": {}}
+    out: dict = {"seed": seed, "clock": {}, "takeover": {}, "reconnect": {}, "inbox": {}, "protocol": {}}
     log = open(log_path, "w") if log_path else None
 
     def say(ev: str, **fields) -> None:
@@ -660,8 +710,9 @@ def bench(seed: int = 7, trials: int = 12, pings: int = 8, log_path: str | None 
     say("bench_start", seed=seed, trials=trials, pings=pings)
 
     # 1. clock: a known offset, a 0-40 ms RTT distribution, ±1 ms of path asymmetry.
-    fake = FakeReceiverNet(rtt_ms=(0.0, 40.0), asym_jitter_ms=0.5, state_hz=0.0,
-                           seed=seed, log=say).start()
+    fake = FakeReceiverNet(
+        rtt_ms=(0.0, 40.0), asym_jitter_ms=0.5, state_hz=0.0, seed=seed, log=say
+    ).start()
     link = _new_link(fake)
     status = link.launch()
     errors, residuals, rtts, bounds = [], [], [], []
@@ -673,9 +724,14 @@ def bench(seed: int = 7, trials: int = 12, pings: int = 8, log_path: str | None 
         residuals.append(est.residual_ms)
         rtts.append(est.rtt_ms)
         bounds.append(float((link.last_ping_stats or {}).get("bound_ms", 0.0)))
-        per_trial.append({"trial": i + 1, "error_ms": round(err, 4),
-                          "residual_ms": round(est.residual_ms, 4),
-                          "rtt_ms": round(est.rtt_ms, 4)})
+        per_trial.append(
+            {
+                "trial": i + 1,
+                "error_ms": round(err, 4),
+                "residual_ms": round(est.residual_ms, 4),
+                "rtt_ms": round(est.rtt_ms, 4),
+            }
+        )
     out["clock"] = {
         "truth_offset_ms": fake.clock_offset_ms,
         "rtt_distribution_ms": [0.0, 40.0],
@@ -707,9 +763,12 @@ def bench(seed: int = 7, trials: int = 12, pings: int = 8, log_path: str | None 
     before = link.ping(pings).offset_ms
     fake.jump_clock(5000.0)
     after_flagged = link.ping(pings)
-    flagged = {"offset_before_ms": round(before, 4),
-               "offset_reported_ms": round(after_flagged.offset_ms, 4),
-               "jump_ms": link.clock_jump_ms, "flagged": link.clock_flagged}
+    flagged = {
+        "offset_before_ms": round(before, 4),
+        "offset_reported_ms": round(after_flagged.offset_ms, 4),
+        "jump_ms": link.clock_jump_ms,
+        "flagged": link.clock_flagged,
+    }
     link.reset_clock()
     adopted = link.ping(pings)
     flagged["offset_after_reset_ms"] = round(adopted.offset_ms, 4)
@@ -718,15 +777,26 @@ def bench(seed: int = 7, trials: int = 12, pings: int = 8, log_path: str | None 
     say("jump_done", **flagged)
 
     # 4. latest() carries a typed Sample from the last state.
-    link.send("load", url="http://127.0.0.1/media/x/audio.m4a", content_type="audio/mp4",
-              media=10.0, autoplay=True)
+    link.send(
+        "load",
+        url="http://127.0.0.1/media/x/audio.m4a",
+        content_type="audio/mp4",
+        media=10.0,
+        autoplay=True,
+    )
     time.sleep(0.4)
     sample = link.latest()
-    out["protocol"]["sample"] = None if sample is None else {
-        "rx_ms": round(sample.rx_ms, 3), "media": round(sample.media, 4),
-        "rate": sample.rate, "player_state": sample.player_state,
-        "buffered_end": sample.buffered_end,
-    }
+    out["protocol"]["sample"] = (
+        None
+        if sample is None
+        else {
+            "rx_ms": round(sample.rx_ms, 3),
+            "media": round(sample.media, 4),
+            "rate": sample.rate,
+            "player_state": sample.player_state,
+            "buffered_end": sample.buffered_end,
+        }
+    )
     out["protocol"]["hellos"] = link.hellos
     out["protocol"]["hello"] = {k: link.hello.get(k) for k in ("ua", "version", "seq")}
     out["protocol"]["seq"] = link.seq
@@ -742,17 +812,27 @@ def bench(seed: int = 7, trials: int = 12, pings: int = 8, log_path: str | None 
     fake = FakeReceiverNet(rtt_ms=(0.0, 5.0), state_hz=0.0, seed=seed + 1, log=say).start()
     link = _new_link(fake)
     link.launch()
-    link.send("load", url="http://127.0.0.1/media/x/audio.m4a", content_type="audio/mp4",
-              media=3.0, autoplay=True)
+    link.send(
+        "load",
+        url="http://127.0.0.1/media/x/audio.m4a",
+        content_type="audio/mp4",
+        media=3.0,
+        autoplay=True,
+    )
     time.sleep(0.05)
     fake.takeover()
     t0 = time.monotonic()
     ours = link.is_ours()
     poll_ms = (time.monotonic() - t0) * 1000.0
-    out["takeover"] = {"via_poll": {"returned": ours, "polls": 1,
-                                    "poll_ms": round(poll_ms, 3),
-                                    "reason": link.lost_reason},
-                       "lost_device_raised": None}
+    out["takeover"] = {
+        "via_poll": {
+            "returned": ours,
+            "polls": 1,
+            "poll_ms": round(poll_ms, 3),
+            "reason": link.lost_reason,
+        },
+        "lost_device_raised": None,
+    }
     try:
         link.send("pause")
         out["takeover"]["lost_device_raised"] = False
@@ -769,9 +849,12 @@ def bench(seed: int = 7, trials: int = 12, pings: int = 8, log_path: str | None 
     t0 = time.monotonic()
     link.drain()
     read_ms = (time.monotonic() - t0) * 1000.0
-    out["takeover"]["via_read"] = {"detected": link.lost_reason is not None,
-                                   "reads": 1, "read_ms": round(read_ms, 3),
-                                   "reason": link.lost_reason}
+    out["takeover"]["via_read"] = {
+        "detected": link.lost_reason is not None,
+        "reads": 1,
+        "read_ms": round(read_ms, 3),
+        "reason": link.lost_reason,
+    }
     link.close()
     fake.stop()
 
@@ -781,8 +864,10 @@ def bench(seed: int = 7, trials: int = 12, pings: int = 8, log_path: str | None 
     link.launch()
     fake.stop_by_other_sender()
     link.drain()
-    out["takeover"]["stop_by_other_sender"] = {"detected": link.lost_reason is not None,
-                                               "reason": link.lost_reason}
+    out["takeover"]["stop_by_other_sender"] = {
+        "detected": link.lost_reason is not None,
+        "reason": link.lost_reason,
+    }
     link.close()
     fake.stop()
 
@@ -790,8 +875,13 @@ def bench(seed: int = 7, trials: int = 12, pings: int = 8, log_path: str | None 
     fake = FakeReceiverNet(rtt_ms=(0.0, 5.0), state_hz=0.0, seed=seed + 4, log=say).start()
     link = _new_link(fake)
     link.launch()
-    link.send("load", url="http://127.0.0.1/media/x/audio.m4a", content_type="audio/mp4",
-              media=5.0, autoplay=True)
+    link.send(
+        "load",
+        url="http://127.0.0.1/media/x/audio.m4a",
+        content_type="audio/mp4",
+        media=5.0,
+        autoplay=True,
+    )
     seq_before = link.seq
     hellos_before = link.hellos
     link._service(timeout=0.05)
@@ -808,7 +898,7 @@ def bench(seed: int = 7, trials: int = 12, pings: int = 8, log_path: str | None 
     link.reconnect()
     reconnect_ms = (time.monotonic() - t0) * 1000.0
     ours_after = link.is_ours()
-    seq_after = link.send("pause")           # seq continues where it stopped
+    seq_after = link.send("pause")  # seq continues where it stopped
     out["reconnect"] = {
         "send_while_down": down,
         "reconnect_ms": round(reconnect_ms, 3),
@@ -830,9 +920,11 @@ def bench(seed: int = 7, trials: int = 12, pings: int = 8, log_path: str | None 
     deadline = time.monotonic() + 3.0
     while time.monotonic() < deadline and link.hellos == hellos_before_restart:
         link._service(timeout=0.05)
-    out["reconnect"]["restart_transport"] = {"transport": link.transport,
-                                             "hellos": link.hellos,
-                                             "new_hello": link.hellos > hellos_before_restart}
+    out["reconnect"]["restart_transport"] = {
+        "transport": link.transport,
+        "hellos": link.hellos,
+        "new_hello": link.hellos > hellos_before_restart,
+    }
     link.close()
     fake.stop()
 
@@ -840,12 +932,12 @@ def bench(seed: int = 7, trials: int = 12, pings: int = 8, log_path: str | None 
     fake = FakeReceiverNet(rtt_ms=(0.0, 5.0), state_hz=0.0, seed=seed + 5, log=say).start()
     link = _new_link(fake)
     link.launch()
-    link.drain()                            # the hello is not part of the burst
+    link.drain()  # the hello is not part of the burst
     injected = 1000
     link.link.tls.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 4_000_000)
     writer = threading.Thread(target=fake.burst_states, args=(injected,), daemon=True)
     writer.start()
-    time.sleep(0.5)                         # a client that is not draining lets it pile up
+    time.sleep(0.5)  # a client that is not draining lets it pile up
     received = 0
     drains = 0
     biggest = 0
@@ -865,10 +957,16 @@ def bench(seed: int = 7, trials: int = 12, pings: int = 8, log_path: str | None 
                 ordered = False
             last_media = media
     writer.join(timeout=5.0)
-    out["inbox"] = {"injected": injected, "received": received, "dropped": link.dropped,
-                    "drains": drains, "largest_drain": biggest, "bound": INBOX_MAX,
-                    "ordered": ordered,
-                    "accounted": received + link.dropped >= injected}
+    out["inbox"] = {
+        "injected": injected,
+        "received": received,
+        "dropped": link.dropped,
+        "drains": drains,
+        "largest_drain": biggest,
+        "bound": INBOX_MAX,
+        "ordered": ordered,
+        "accounted": received + link.dropped >= injected,
+    }
     say("inbox_done", **out["inbox"])
 
     # 9. the estimator without a socket: min-RTT selection on synthetic samples.
@@ -884,7 +982,8 @@ def bench(seed: int = 7, trials: int = 12, pings: int = 8, log_path: str | None 
         est, stats = estimate_clock(samples)
         checks.append((abs(est.offset_ms - truth), est.residual_ms))
     out["clock"]["synthetic_offline"] = {
-        "trials": len(checks), "pings": pings,
+        "trials": len(checks),
+        "pings": pings,
         "abs_error_ms": _summary([c[0] for c in checks]),
         "residual_ms": _summary([c[1] for c in checks]),
     }

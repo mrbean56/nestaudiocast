@@ -51,11 +51,19 @@ def _iso(ts: float) -> str:
 class EventLog:
     """Append-only JSONL writer, one line per event, flushed on every line."""
 
-    def __init__(self, path: str | None = None, *, directory: str | None = None,
-                 echo: bool = False, clock=time.time, mono=time.monotonic) -> None:
+    def __init__(
+        self,
+        path: str | None = None,
+        *,
+        directory: str | None = None,
+        echo: bool = False,
+        clock=time.time,
+        mono=time.monotonic,
+    ) -> None:
         if path is None:
-            base = directory or os.path.join(os.path.dirname(os.path.dirname(
-                os.path.abspath(__file__))), "evidence")
+            base = directory or os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "evidence"
+            )
             path = os.path.join(base, f"sender-{time.strftime('%Y-%m-%d', time.localtime())}.jsonl")
         self.path = path
         self.echo = echo

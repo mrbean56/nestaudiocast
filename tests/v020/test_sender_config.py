@@ -7,7 +7,6 @@ instead of being ignored.
 from __future__ import annotations
 
 import os
-import tempfile
 import unittest
 
 from test_sender_support import TempDir, make_config
@@ -18,6 +17,7 @@ from v020.contracts import CONFIG_DEFAULTS, QUIET_POLICIES
 
 def example_path() -> str:
     from test_sender_support import ROOT
+
     return os.path.join(ROOT, "castsender.conf.example")
 
 
@@ -58,8 +58,10 @@ class TestParsing(TempDir, unittest.TestCase):
         return path
 
     def test_comments_quotes_and_inline_comments(self):
-        path = self.write('# a comment\nGROUP="Cuisine"  # the group\nHTTP_PORT=7641\n\n'
-                          "QUIET_START=22:00\nQUIET_END=06:30\n")
+        path = self.write(
+            '# a comment\nGROUP="Cuisine"  # the group\nHTTP_PORT=7641\n\n'
+            "QUIET_START=22:00\nQUIET_END=06:30\n"
+        )
         values = parse_env_file(path)
         self.assertEqual(values["GROUP"], "Cuisine")
         self.assertEqual(values["HTTP_PORT"], "7641")

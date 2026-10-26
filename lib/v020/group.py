@@ -36,26 +36,30 @@ from collections import deque
 from typing import Any, Callable, Iterable, Sequence
 
 from .contracts import (
-    PLAYER_BUFFERING, PLAYER_IDLE, PLAYER_PAUSED, PLAYER_PLAYING, GroupSample,
+    PLAYER_BUFFERING,
+    PLAYER_IDLE,
+    PLAYER_PAUSED,
+    PLAYER_PLAYING,
+    GroupSample,
 )
 
 _LIB = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-if _LIB not in sys.path:                      # lib/ holds groupguard.py and castv2.py
+if _LIB not in sys.path:  # lib/ holds groupguard.py and castv2.py
     sys.path.insert(0, _LIB)
 
 #: the Default Media Receiver on the group, exactly as v0.1 uses it (relay/cast_relay.py:50)
 DMR = "CC1AD845"
 
 DISCOVER_TIMEOUT_S = 6.0
-KEEPALIVE_EVERY_S = 5.0     # A23: the receiver closes a link that stops reading after ~24 s
+KEEPALIVE_EVERY_S = 5.0  # A23: the receiver closes a link that stops reading after ~24 s
 POLL_TIMEOUT_S = 3.0
 LAUNCH_TIMEOUT_S = 25.0
-PARK_WAIT_S = 5.0           # v0.1 waits this long for the park to be confirmed
+PARK_WAIT_S = 5.0  # v0.1 waits this long for the park to be confirmed
 PARK_TOL_S = 0.05
-SETTLE_S = 2.0              # A21: right after a LOAD the group reports the requested position
-RESTART_READS = 2           # A36: one stale read must not cost a 1.6 s gap
-VOLUME_EPS = 1e-3           # a level this low is 0 for all practical purposes — refuse to send it
-VOLUME_FRONT = 0.005        # mirror on change only: resending fights a change made on the group
+SETTLE_S = 2.0  # A21: right after a LOAD the group reports the requested position
+RESTART_READS = 2  # A36: one stale read must not cost a 1.6 s gap
+VOLUME_EPS = 1e-3  # a level this low is 0 for all practical purposes — refuse to send it
+VOLUME_FRONT = 0.005  # mirror on change only: resending fights a change made on the group
 
 #: how many reads the robust median looks at (A15: 5-sample median)
 WINDOW = 5
@@ -72,10 +76,10 @@ WINDOW_AGE_S = 5.0
 DRIFT_WINDOW_S = 600.0
 
 # --- estimator verdicts ---------------------------------------------------------------------
-VERDICT_OK = "ok"                   # accepted, agrees with the window
-VERDICT_RESUMED = "resumed"         # accepted, first read after a non-playing one
-VERDICT_JUMP = "jump"               # accepted as a real move: two reads in a row disagree
-VERDICT_OUTLIER = "outlier"         # rejected: contradicted by the window and by its neighbours
+VERDICT_OK = "ok"  # accepted, agrees with the window
+VERDICT_RESUMED = "resumed"  # accepted, first read after a non-playing one
+VERDICT_JUMP = "jump"  # accepted as a real move: two reads in a row disagree
+VERDICT_OUTLIER = "outlier"  # rejected: contradicted by the window and by its neighbours
 VERDICT_NOT_PLAYING = "not_playing"  # a frozen position, not a sample of a moving playhead
 
 
@@ -130,14 +134,19 @@ class PlayheadEstimator:
     the hardware gate compares with the group's real noise.
     """
 
-    def __init__(self, window: int = WINDOW, outlier_ms: float = OUTLIER_MS,
-                 min_span_s: float = MIN_FIT_SPAN_S, max_age_s: float = WINDOW_AGE_S) -> None:
+    def __init__(
+        self,
+        window: int = WINDOW,
+        outlier_ms: float = OUTLIER_MS,
+        min_span_s: float = MIN_FIT_SPAN_S,
+        max_age_s: float = WINDOW_AGE_S,
+    ) -> None:
         self.window = int(window)
         self.outlier_ms = float(outlier_ms)
         self.min_span_s = float(min_span_s)
         self.max_age_s = float(max_age_s)
         self.points: deque[tuple[float, float]] = deque(maxlen=self.window)
-        self.last_media: float | None = None     # the last position the group reported
+        self.last_media: float | None = None  # the last position the group reported
         self.accepted = 0
         self.rejections = 0
         self.jumps = 0
@@ -172,7 +181,7 @@ class PlayheadEstimator:
         if sample.player_state != PLAYER_PLAYING:
             self._playing = False
             self._outlier_run = 0
-            self.last_media = sample.media        # frozen, but still the group's position
+            self.last_media = sample.media  # frozen, but still the group's position
             self.last_verdict = VERDICT_NOT_PLAYING
             return VERDICT_NOT_PLAYING
         if not self._playing:
@@ -232,7 +241,7 @@ class PlayheadEstimator:
             return 1.0, self.median_offset()
         slope = sum((x - mx) * (y - my) for x, y in pts) / sxx
         if abs(slope - 1.0) > MAX_FIT_SLOPE_DEV:
-            slope = 1.0              # a 5-sample window cannot measure a rate; do not invent one
+            slope = 1.0  # a 5-sample window cannot measure a rate; do not invent one
         return slope, my - slope * mx
 
     def slope(self) -> float:
@@ -332,7 +341,7 @@ class RestartGate:
             self.streak = 0
             return False
         if self._settled_at is not None and now - self._settled_at < self.settle_s:
-            return False                   # a LOAD takes ~0.6 s to report PLAYING (A21)
+            return False  # a LOAD takes ~0.6 s to report PLAYING (A21)
         if player_state == PLAYER_PLAYING:
             self.streak = 0
             return False
@@ -341,8 +350,9 @@ class RestartGate:
 
 
 # ------------------------------------------------------------------------ level / drift
-def window_medians(samples: Iterable[GroupSample], window_s: float = 5.0,
-                   min_points: int = 3) -> list[tuple[float, float]]:
+def window_medians(
+    samples: Iterable[GroupSample], window_s: float = 5.0, min_points: int = 3
+) -> list[tuple[float, float]]:
     """(centre wall, median media) per ``window_s`` bucket of playing samples (contracts §2)."""
     pts = sorted((s.wall, s.media) for s in samples if s.player_state == PLAYER_PLAYING)
     if not pts:
@@ -355,8 +365,7 @@ def window_medians(samples: Iterable[GroupSample], window_s: float = 5.0,
     for _, bucket in sorted(buckets.items()):
         if len(bucket) < min_points:
             continue
-        out.append((statistics.fmean(w for w, _ in bucket),
-                    statistics.median(m for _, m in bucket)))
+        out.append((statistics.fmean(w for w, _ in bucket), statistics.median(m for _, m in bucket)))
     return out
 
 
@@ -365,32 +374,55 @@ def least_squares(points: Sequence[tuple[float, float]]) -> dict[str, float | in
     pts = list(points)
     n = len(pts)
     if n < 2:
-        return {"n": n, "slope": None, "intercept": None, "sigma_ms": None,
-                "slope_se": None, "span_s": 0.0}
+        return {
+            "n": n,
+            "slope": None,
+            "intercept": None,
+            "sigma_ms": None,
+            "slope_se": None,
+            "span_s": 0.0,
+        }
     xs = [w for w, _ in pts]
     ys = [m for _, m in pts]
     mx, my = statistics.fmean(xs), statistics.fmean(ys)
     sxx = sum((x - mx) ** 2 for x in xs)
     if sxx <= 0.0:
-        return {"n": n, "slope": None, "intercept": None, "sigma_ms": None,
-                "slope_se": None, "span_s": 0.0}
+        return {
+            "n": n,
+            "slope": None,
+            "intercept": None,
+            "sigma_ms": None,
+            "slope_se": None,
+            "span_s": 0.0,
+        }
     slope = sum((x - mx) * (y - my) for x, y in pts) / sxx
     intercept = my - slope * mx
     res = [y - (slope * x + intercept) for x, y in pts]
     sigma = statistics.stdev(res) if n > 2 else 0.0
-    slope_se = sigma / (sxx ** 0.5) if n > 2 and sxx > 0 else None
-    return {"n": n, "slope": slope, "intercept": intercept, "sigma_ms": sigma * 1000.0,
-            "slope_se": slope_se, "span_s": xs[-1] - xs[0]}
+    slope_se = sigma / (sxx**0.5) if n > 2 and sxx > 0 else None
+    return {
+        "n": n,
+        "slope": slope,
+        "intercept": intercept,
+        "sigma_ms": sigma * 1000.0,
+        "slope_se": slope_se,
+        "span_s": xs[-1] - xs[0],
+    }
 
 
 def drift(points: Sequence[tuple[float, float]]) -> dict[str, Any]:
     """Drift of 5 s medians in ms / 10 min, with its standard error (contracts §2)."""
     fit = least_squares(points)
     slope = fit["slope"]
-    factor = DRIFT_WINDOW_S * 1000.0          # a rate ratio into ms per 10 minutes
+    factor = DRIFT_WINDOW_S * 1000.0  # a rate ratio into ms per 10 minutes
     if slope is None:
-        return {"n": fit["n"], "drift_ms_per_10min": None, "se_ms_per_10min": None,
-                "significant": None, "sigma_ms": None}
+        return {
+            "n": fit["n"],
+            "drift_ms_per_10min": None,
+            "se_ms_per_10min": None,
+            "significant": None,
+            "sigma_ms": None,
+        }
     value = (float(slope) - 1.0) * factor
     se = None if fit["slope_se"] is None else float(fit["slope_se"]) * factor
     return {
@@ -407,13 +439,14 @@ def drift(points: Sequence[tuple[float, float]]) -> dict[str, Any]:
 class CastGroup:
     """Audio sink: the Default Media Receiver on a speakers-only group."""
 
-    def __init__(self, name: str = "Cuisine", host: str | None = None,
-                 port: int | None = None, log=print) -> None:
+    def __init__(
+        self, name: str = "Cuisine", host: str | None = None, port: int | None = None, log=print
+    ) -> None:
         self.name, self.log = name, log
         self.host, self.port = host, port
         self.link = None
         self.transport: str | None = None
-        self.session: int | None = None        # the mediaSessionId *we* created
+        self.session: int | None = None  # the mediaSessionId *we* created
         self.content: str | None = None
         self.state: str = PLAYER_IDLE
         self.volume: float | None = None
@@ -442,7 +475,7 @@ class CastGroup:
         if self.link is not None:
             self._drop_link()
         host, port = self._resolve()
-        members = self._guard(host, port)          # A6: before any link of ours is opened
+        members = self._guard(host, port)  # A6: before any link of ours is opened
         self.host, self.port = host, port
         self.link = self._open_link(host, port)
         try:
@@ -453,19 +486,21 @@ class CastGroup:
             raise
         app_id, app_name, transport = _receiver_app(st)
         self.transport = transport
-        self.session = None                        # we created nothing yet
+        self.session = None  # we created nothing yet
         self.estimator.reset()
         self.gate.reset()
         self._restart = False
         self._link_errors = 0
         self._read_volume(st)
         self._warn_if_silent(members)
-        self.log(f"group_connected: {self.name!r} {host}:{port} "
-                 f"members={[m.get('name') for m in members]} app={app_name!r}")
+        self.log(
+            f"group_connected: {self.name!r} {host}:{port} "
+            f"members={[m.get('name') for m in members]} app={app_name!r}"
+        )
         if transport:
             try:
                 self.link.connect_transport(transport)
-            except Exception as exc:               # noqa: BLE001 - a camera/backdrop may refuse
+            except Exception as exc:  # noqa: BLE001 - a camera/backdrop may refuse
                 self.log(f"group_transport_connect_failed: {type(exc).__name__}: {exc}")
             self._note_session_at_connect()
 
@@ -473,11 +508,11 @@ class CastGroup:
         """Re-resolve + re-guard after a link error (A22); keeps a session we still own."""
         given = self.session
         self.log(f"group_reconnect: {self.name!r}")
-        self.connect()                             # resolution and guard run again (A6)
+        self.connect()  # resolution and guard run again (A6)
         if given is not None:
             ok, device_session = self._device_session()
             if ok and device_session == given:
-                self.session = given                # the group is still running what we started
+                self.session = given  # the group is still running what we started
                 self.log(f"group_session_adopted: {given}")
             else:
                 self.log(f"group_session_lost: ours={given} device={device_session}")
@@ -494,25 +529,37 @@ class CastGroup:
         at = max(0.0, float(at_time))
         transport = self._ensure_app()
         try:
-            if self.content == url and self.session is not None and \
-                    self.state in (PLAYER_PLAYING, PLAYER_PAUSED, PLAYER_BUFFERING):
+            if (
+                self.content == url
+                and self.session is not None
+                and self.state in (PLAYER_PLAYING, PLAYER_PAUSED, PLAYER_BUFFERING)
+            ):
                 if self.state != PLAYER_PAUSED:
                     self.link.media_command(transport, "PAUSE", self.session, timeout=8)
                 # SEEK while paused: the parked position is set without ever starting the audio
-                self.link.media_command(transport, "SEEK", self.session,
-                                        {"currentTime": at, "resumeState": "PLAYBACK_PAUSE"},
-                                        timeout=8)
+                self.link.media_command(
+                    transport,
+                    "SEEK",
+                    self.session,
+                    {"currentTime": at, "resumeState": "PLAYBACK_PAUSE"},
+                    timeout=8,
+                )
             else:
                 payload = {
-                    "appId": DMR, "sessionId": transport,
-                    "media": {"contentId": url, "contentType": content_type,
-                              "streamType": "BUFFERED", "metadata": {"metadataType": 0,
-                                                                     "title": ""}},
-                    "autoplay": False, "currentTime": at,
+                    "appId": DMR,
+                    "sessionId": transport,
+                    "media": {
+                        "contentId": url,
+                        "contentType": content_type,
+                        "streamType": "BUFFERED",
+                        "metadata": {"metadataType": 0, "title": ""},
+                    },
+                    "autoplay": False,
+                    "currentTime": at,
                 }
                 reply = self.link.load(transport, payload, timeout=LAUNCH_TIMEOUT_S)
                 status = (reply.get("status") or [{}])[0]
-                self.session = status.get("mediaSessionId")     # ours: we created it
+                self.session = status.get("mediaSessionId")  # ours: we created it
                 self.content = url
                 self.state = status.get("playerState") or PLAYER_BUFFERING
         except Exception:
@@ -546,7 +593,7 @@ class CastGroup:
             self._link_errors += 1
             raise
         self.state = PLAYER_PLAYING
-        self.estimator.reset()                     # the window starts at the release
+        self.estimator.reset()  # the window starts at the release
         self._restart = False
         self.gate.expect_playing(self.now())
 
@@ -568,8 +615,9 @@ class CastGroup:
         self._require_ours()
         transport = self.transport
         try:
-            self.link.media_command(transport, "SEEK", self.session,
-                                    {"currentTime": max(0.0, float(at_time))}, timeout=8)
+            self.link.media_command(
+                transport, "SEEK", self.session, {"currentTime": max(0.0, float(at_time))}, timeout=8
+            )
         except Exception:
             self._link_errors += 1
             raise
@@ -599,9 +647,12 @@ class CastGroup:
             self.log("group_volume_zero_refused: muted instead, level left untouched")
             return
         level_out = round(want, 3)
-        if self.volume is not None and abs(level_out - self.volume) < VOLUME_FRONT and \
-                (want_muted is None or want_muted == self.muted):
-            return                                 # mirror on change only: front, like v0.1
+        if (
+            self.volume is not None
+            and abs(level_out - self.volume) < VOLUME_FRONT
+            and (want_muted is None or want_muted == self.muted)
+        ):
+            return  # mirror on change only: front, like v0.1
         self._set_receiver_volume(level=level_out, muted=want_muted)
         self.volume = level_out
         if want_muted is not None:
@@ -619,8 +670,7 @@ class CastGroup:
         ok, device_session = self._device_session()
         if ok and device_session != self.session:
             # §8: never touch a session we did not create. It is not ours any more.
-            self.log(f"group_stop_refused: device session {device_session} is not ours "
-                     f"({self.session})")
+            self.log(f"group_stop_refused: device session {device_session} is not ours ({self.session})")
             self.session = None
             self.estimator.reset()
             self.gate.expect_parked()
@@ -628,7 +678,7 @@ class CastGroup:
         try:
             self.link.stop_app(self.transport, timeout=10)
             self.log(f"group_stopped: session={self.session}")
-        except Exception as exc:                   # noqa: BLE001 - best effort, link may be gone
+        except Exception as exc:  # noqa: BLE001 - best effort, link may be gone
             self.log(f"group_stop_failed: {type(exc).__name__}: {exc}")
         finally:
             self.session = None
@@ -653,29 +703,30 @@ class CastGroup:
             status = self._media_status()
             t1 = self.now()
             self._link_errors = 0
-        except Exception as exc:                    # noqa: BLE001 - caller reconnects (A22)
+        except Exception as exc:  # noqa: BLE001 - caller reconnects (A22)
             self._link_errors += 1
             self.log(f"group_read_error: {type(exc).__name__}: {exc}")
             return None
-        wall = (t0 + t1) / 2.0                      # the playhead belongs to the reply, not the poll
+        wall = (t0 + t1) / 2.0  # the playhead belongs to the reply, not the poll
         device_session = status.get("mediaSessionId")
         state = status.get("playerState") or PLAYER_IDLE
         media = status.get("currentTime")
         self.state = state
-        if self.session is not None and device_session is not None and \
-                device_session != self.session:
+        if self.session is not None and device_session is not None and device_session != self.session:
             self.log(f"group_foreign_session: {device_session} replaced ours {self.session}")
-            self.session = None                     # we own nothing on this group any more
+            self.session = None  # we own nothing on this group any more
         if media is None:
             return None
-        sample = GroupSample(wall=wall, media=float(media), player_state=state,
-                             session_id=device_session)
+        sample = GroupSample(
+            wall=wall, media=float(media), player_state=state, session_id=device_session
+        )
         self._last_sample = sample
         self._restart = self.gate.observe(wall, state)
         verdict = self.estimator.add(sample)
         if verdict == VERDICT_OUTLIER:
-            self.log(f"group_sample_rejected: media={sample.media:.3f} "
-                     f"level={self.estimator.median_offset()}")
+            self.log(
+                f"group_sample_rejected: media={sample.media:.3f} level={self.estimator.median_offset()}"
+            )
             return None
         return sample
 
@@ -714,7 +765,7 @@ class CastGroup:
         found: dict[str, tuple[str, int]] = {}
         try:
             found = self._discover()
-        except Exception as exc:                    # noqa: BLE001 - mDNS may be unavailable
+        except Exception as exc:  # noqa: BLE001 - mDNS may be unavailable
             self.log(f"group_discovery_failed: {type(exc).__name__}: {exc}")
         if self.name in found:
             return found[self.name]
@@ -723,7 +774,8 @@ class CastGroup:
             return self.host, int(self.port)
         raise GroupNotFound(
             f"group {self.name!r} is not on the LAN (mDNS saw {sorted(found) or 'nothing'}); "
-            f"the port of a Cast group is dynamic, so it must be resolved by name (A19)")
+            f"the port of a Cast group is dynamic, so it must be resolved by name (A19)"
+        )
 
     def _ensure_app(self) -> str:
         """The Default Media Receiver must be running on the group; launch it if it is not."""
@@ -752,7 +804,7 @@ class CastGroup:
             return False, None
         try:
             return True, self._media_status().get("mediaSessionId")
-        except Exception:                           # noqa: BLE001 - a dead link answers nothing
+        except Exception:  # noqa: BLE001 - a dead link answers nothing
             return False, None
 
     def _note_session_at_connect(self) -> None:
@@ -785,14 +837,16 @@ class CastGroup:
         levels = [m.get("level") for m in members if m.get("level") is not None]
         all_muted = bool(members) and all(bool(m.get("muted")) for m in members)
         if all_muted or (levels and max(levels) < VOLUME_EPS):
-            self.log(f"WARNING group members are silent: levels={levels} "
-                     f"muted={all_muted} — the group will play but nothing will be heard "
-                     f"(A37: members' levels multiply the master)")
+            self.log(
+                f"WARNING group members are silent: levels={levels} "
+                f"muted={all_muted} — the group will play but nothing will be heard "
+                f"(A37: members' levels multiply the master)"
+            )
 
     def _set_receiver_volume(self, level: float | None, muted: bool | None) -> None:
         try:
             self.link.set_receiver_volume(level=level, muted=muted)
-        except Exception as exc:                    # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
             self._link_errors += 1
             raise RuntimeError(f"group volume not set: {type(exc).__name__}: {exc}") from exc
 
@@ -802,7 +856,7 @@ class CastGroup:
         if link is not None:
             try:
                 link.close()
-            except Exception:                       # noqa: BLE001
+            except Exception:  # noqa: BLE001
                 pass
 
 

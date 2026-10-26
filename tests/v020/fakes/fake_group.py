@@ -5,7 +5,10 @@ from __future__ import annotations
 import time
 
 from v020.contracts import (
-    PLAYER_IDLE, PLAYER_PAUSED, PLAYER_PLAYING, GroupSample,
+    PLAYER_IDLE,
+    PLAYER_PAUSED,
+    PLAYER_PLAYING,
+    GroupSample,
 )
 
 
@@ -25,7 +28,7 @@ class FakeGroup:
         self.session_id: int | None = None
         self.volume: float | None = None
         self.muted: bool | None = None
-        self.calls: list[str] = []          # every state-changing call, in order
+        self.calls: list[str] = []  # every state-changing call, in order
         self.prepared_at: float | None = None
         self.played_at: float | None = None
         self._playing_since: float | None = None
@@ -86,8 +89,9 @@ class FakeGroup:
         return self.media
 
     def sample(self) -> GroupSample | None:
-        return GroupSample(wall=self.clock(), media=self._advance(),
-                           player_state=self.state, session_id=self.session_id)
+        return GroupSample(
+            wall=self.clock(), media=self._advance(), player_state=self.state, session_id=self.session_id
+        )
 
     def playhead(self, wall: float) -> float | None:
         if self._playing_since is None:

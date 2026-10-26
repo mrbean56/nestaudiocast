@@ -25,6 +25,7 @@ Safety, in this order:
 Media assets are generated on CT 121 with its own ffmpeg (`--make-assets`, needs no local ffmpeg)
 and served by tools/receiver_serve.sh on 192.168.2.21:7640.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -62,8 +63,14 @@ ASSETS = [
     ("codec-av1.mp4", "video/mp4", "AV1 main 640x360 30fps"),
     ("rate-90s.mp4", "video/mp4", "H.264 640x360 30fps, 90 s, for the rate slope"),
 ]
-ASSET_SECONDS = {"codec-h264.mp4": 6, "codec-hevc.mp4": 6, "codec-vp9.mp4": 6,
-                 "codec-vp9.webm": 6, "codec-av1.mp4": 6, "rate-90s.mp4": 90}
+ASSET_SECONDS = {
+    "codec-h264.mp4": 6,
+    "codec-hevc.mp4": 6,
+    "codec-vp9.mp4": 6,
+    "codec-vp9.webm": 6,
+    "codec-av1.mp4": 6,
+    "rate-90s.mp4": 90,
+}
 
 
 def now_ms() -> float:
@@ -116,9 +123,13 @@ def fit(pts):
     resid = [p[1] - (a * p[0] + b) for p in pts]
     s2 = sum(r * r for r in resid) / max(1, n - 2)
     se = (s2 / sxx) ** 0.5
-    return {"n": n, "ratio": a, "ratio_sigma": se,
-            "residual_max_ms": max(abs(r) for r in resid) * 1000.0,
-            "span_s": pts[-1][0] - pts[0][0]}
+    return {
+        "n": n,
+        "ratio": a,
+        "ratio_sigma": se,
+        "residual_max_ms": max(abs(r) for r in resid) * 1000.0,
+        "span_s": pts[-1][0] - pts[0][0],
+    }
 
 
 def robust(pairs, key):
@@ -128,8 +139,7 @@ def robust(pairs, key):
     med = statistics.median(vals)
     mad = statistics.median([abs(v - med) for v in vals]) if len(vals) > 1 else 0.0
     p95 = vals[min(len(vals) - 1, int(round(0.95 * (len(vals) - 1))))]
-    return {"median": med, "p95": p95, "min": vals[0], "max": vals[-1],
-            "sigma_mad": 1.4826 * mad}
+    return {"median": med, "p95": p95, "min": vals[0], "max": vals[-1], "sigma_mad": 1.4826 * mad}
 
 
 # ---------------------------------------------------------------------------------------------
@@ -164,8 +174,7 @@ class Recv:
         st = self.link.launch(self.app_id, timeout=timeout)
         app_id, name, tr = receiver_app(self.link.receiver_status())
         self.transport = tr or ""
-        return {"launch_reply_app": app_id, "app_name": name, "transport_id": self.transport,
-                "raw": st}
+        return {"launch_reply_app": app_id, "app_name": name, "transport_id": self.transport, "raw": st}
 
     def attach(self) -> None:
         if not self.transport:
@@ -217,7 +226,6 @@ class Recv:
 
     def wait(self, msg_type: str, timeout: float = 10.0, since: float | None = None) -> dict | None:
         deadline = time.time() + timeout
-        seen = since if since is not None else time.time()
         while time.time() < deadline:
             for m in self.pump(0.05):
                 if m.get("type") == msg_type:
@@ -272,17 +280,19 @@ def eureka(host: str = HOST, timeout: float = 4.0) -> dict:
         with urllib.request.urlopen(out["url"], timeout=timeout) as r:
             d = json.load(r)
         info = d.get("detail", {}) if isinstance(d.get("detail"), dict) else {}
-        out.update({
-            "ok": True,
-            "name": d.get("name"),
-            "model": info.get("model_name") or d.get("model_name"),
-            "device_info": info.get("device_info"),
-            "cast_build_revision": d.get("cast_build_revision"),
-            "build_version": d.get("build_version"),
-            "uptime_s": round(d.get("uptime", 0.0), 1),
-            "ip": d.get("ip_address"),
-            "connected": d.get("connected"),
-        })
+        out.update(
+            {
+                "ok": True,
+                "name": d.get("name"),
+                "model": info.get("model_name") or d.get("model_name"),
+                "device_info": info.get("device_info"),
+                "cast_build_revision": d.get("cast_build_revision"),
+                "build_version": d.get("build_version"),
+                "uptime_s": round(d.get("uptime", 0.0), 1),
+                "ip": d.get("ip_address"),
+                "connected": d.get("connected"),
+            }
+        )
     except Exception as exc:  # noqa: BLE001
         out.update({"ok": False, "error": "%s: %s" % (type(exc).__name__, exc)})
     return out
@@ -302,36 +312,53 @@ def make_assets(verbose: bool = True) -> dict:
     """Generate the test assets on CT 121 with its own ffmpeg (no local ffmpeg needed)."""
     dest = "/opt/nac-dev/media"
     cmds = {
-        "codec-h264.mp4": ("ffmpeg -y -f lavfi -i testsrc2=size=640x360:rate=30 -t 6 "
-                           "-c:v libx264 -profile:v baseline -level 3.0 -pix_fmt yuv420p "
-                           "-movflags +faststart"),
-        "codec-hevc.mp4": ("ffmpeg -y -f lavfi -i testsrc2=size=640x360:rate=30 -t 6 "
-                           "-c:v libx265 -tag:v hvc1 -pix_fmt yuv420p -x265-params log-level=0 "
-                           "-movflags +faststart"),
-        "codec-vp9.mp4": ("ffmpeg -y -f lavfi -i testsrc2=size=640x360:rate=30 -t 6 "
-                          "-c:v libvpx-vp9 -b:v 400k -pix_fmt yuv420p -movflags +faststart"),
-        "codec-vp9.webm": ("ffmpeg -y -f lavfi -i testsrc2=size=640x360:rate=30 -t 6 "
-                           "-c:v libvpx-vp9 -b:v 400k -pix_fmt yuv420p"),
-        "codec-av1.mp4": ("ffmpeg -y -f lavfi -i testsrc2=size=640x360:rate=30 -t 6 "
-                          "-c:v libsvtav1 -preset 10 -crf 40 -pix_fmt yuv420p "
-                          "-movflags +faststart"),
-        "rate-90s.mp4": ("ffmpeg -y -f lavfi -i testsrc2=size=640x360:rate=30 -t 90 "
-                         "-c:v libx264 -preset ultrafast -b:v 250k -g 30 -pix_fmt yuv420p "
-                         "-movflags +faststart"),
+        "codec-h264.mp4": (
+            "ffmpeg -y -f lavfi -i testsrc2=size=640x360:rate=30 -t 6 "
+            "-c:v libx264 -profile:v baseline -level 3.0 -pix_fmt yuv420p "
+            "-movflags +faststart"
+        ),
+        "codec-hevc.mp4": (
+            "ffmpeg -y -f lavfi -i testsrc2=size=640x360:rate=30 -t 6 "
+            "-c:v libx265 -tag:v hvc1 -pix_fmt yuv420p -x265-params log-level=0 "
+            "-movflags +faststart"
+        ),
+        "codec-vp9.mp4": (
+            "ffmpeg -y -f lavfi -i testsrc2=size=640x360:rate=30 -t 6 "
+            "-c:v libvpx-vp9 -b:v 400k -pix_fmt yuv420p -movflags +faststart"
+        ),
+        "codec-vp9.webm": (
+            "ffmpeg -y -f lavfi -i testsrc2=size=640x360:rate=30 -t 6 "
+            "-c:v libvpx-vp9 -b:v 400k -pix_fmt yuv420p"
+        ),
+        "codec-av1.mp4": (
+            "ffmpeg -y -f lavfi -i testsrc2=size=640x360:rate=30 -t 6 "
+            "-c:v libsvtav1 -preset 10 -crf 40 -pix_fmt yuv420p "
+            "-movflags +faststart"
+        ),
+        "rate-90s.mp4": (
+            "ffmpeg -y -f lavfi -i testsrc2=size=640x360:rate=30 -t 90 "
+            "-c:v libx264 -preset ultrafast -b:v 250k -g 30 -pix_fmt yuv420p "
+            "-movflags +faststart"
+        ),
     }
     out = {"host": SERVE_HOST, "dir": dest, "assets": {}}
     script = ["set -e", "mkdir -p %s" % dest]
     for name, cmd in cmds.items():
         path = "%s/%s" % (dest, name)
-        script.append("if [ ! -s %s ]; then %s %s >/dev/null 2>&1 && echo 'made %s'; "
-                      "else echo 'have %s'; fi" % (path, cmd, path, name, name))
+        script.append(
+            "if [ ! -s %s ]; then %s %s >/dev/null 2>&1 && echo 'made %s'; "
+            "else echo 'have %s'; fi" % (path, cmd, path, name, name)
+        )
     script.append("ls -l %s" % dest)
     if verbose:
         print("== generating assets on %s:%s" % (SERVE_HOST, dest))
     try:
-        res = subprocess.run(["ssh", "-o", "BatchMode=yes", "root@%s" % SERVE_HOST,
-                              "\n".join(script)],
-                             capture_output=True, text=True, timeout=300)
+        res = subprocess.run(
+            ["ssh", "-o", "BatchMode=yes", "root@%s" % SERVE_HOST, "\n".join(script)],
+            capture_output=True,
+            text=True,
+            timeout=300,
+        )
         out["stdout"] = res.stdout.strip().splitlines()
         out["stderr"] = res.stderr.strip()[-2000:]
         out["rc"] = res.returncode
@@ -372,13 +399,15 @@ def mdns(host: str = HOST, timeout: float = 4.0) -> dict:
                 info = zc.get_service_info(type_, name, timeout=2000)
                 if not info:
                     return
-                props = {(k.decode() if isinstance(k, bytes) else k):
-                         (v.decode() if isinstance(v, bytes) else v)
-                         for k, v in (info.properties or {}).items()}
+                props = {
+                    (k.decode() if isinstance(k, bytes) else k): (
+                        v.decode() if isinstance(v, bytes) else v
+                    )
+                    for k, v in (info.properties or {}).items()
+                }
                 addrs = [a for a in info.parsed_scoped_addresses() if ":" not in a]
                 if addrs and addrs[0] == host:
-                    found.update({k: props.get(k) for k in
-                                  ("md", "fn", "ca", "id", "ve", "rs", "st")})
+                    found.update({k: props.get(k) for k in ("md", "fn", "ca", "id", "ve", "rs", "st")})
                     found["port"] = info.port
 
             def update_service(self, zc, type_, name):
@@ -393,9 +422,16 @@ def mdns(host: str = HOST, timeout: float = 4.0) -> dict:
             time.sleep(timeout)
         finally:
             zc.close()
-        out.update({"ok": bool(found), "model": found.get("md"),
-                    "friendly_name": found.get("fn"), "capabilities": found.get("ca"),
-                    "device_id": found.get("id"), "port": found.get("port")})
+        out.update(
+            {
+                "ok": bool(found),
+                "model": found.get("md"),
+                "friendly_name": found.get("fn"),
+                "capabilities": found.get("ca"),
+                "device_id": found.get("id"),
+                "port": found.get("port"),
+            }
+        )
     except Exception as exc:  # noqa: BLE001
         out.update({"ok": False, "error": "%s: %s" % (type(exc).__name__, exc)})
     return out
@@ -419,12 +455,19 @@ def preflight(host: str, out_dir: str | None) -> dict:
         st = link.receiver_status()
         app_id, app_name, transport = receiver_app(st)
         info["receiver_status"] = {
-            "app_id": app_id, "app_name": app_name, "transport_id": transport,
+            "app_id": app_id,
+            "app_name": app_name,
+            "transport_id": transport,
             "volume": st.get("volume"),
             "idle_screen": bool((st.get("applications") or [{}])[0].get("isIdleScreen")),
-            "applications": [{"appId": a.get("appId"), "displayName": a.get("displayName"),
-                              "isIdleScreen": a.get("isIdleScreen")}
-                             for a in (st.get("applications") or [])],
+            "applications": [
+                {
+                    "appId": a.get("appId"),
+                    "displayName": a.get("displayName"),
+                    "isIdleScreen": a.get("isIdleScreen"),
+                }
+                for a in (st.get("applications") or [])
+            ],
         }
         apps = info["receiver_status"]["applications"]
         busy = bool(apps) and app_id not in BACKDROP and not info["receiver_status"]["idle_screen"]
@@ -432,9 +475,12 @@ def preflight(host: str, out_dir: str | None) -> dict:
         info["safe_to_launch"] = not busy
         # is our unpublished app even listed on this device? (read-only, launches nothing)
         try:
-            av = link.request("receiver-0", "urn:x-cast:com.google.cast.receiver",
-                              {"type": "GET_APP_AVAILABILITY",
-                               "appId": [APP_ID, "CC1AD845", "E8C28D3C"]}, timeout=8)
+            av = link.request(
+                "receiver-0",
+                "urn:x-cast:com.google.cast.receiver",
+                {"type": "GET_APP_AVAILABILITY", "appId": [APP_ID, "CC1AD845", "E8C28D3C"]},
+                timeout=8,
+            )
             info["app_availability"] = (av.get("payload") or {}).get("availability")
         except Exception as exc:  # noqa: BLE001
             info["app_availability_error"] = "%s: %s" % (type(exc).__name__, exc)
@@ -451,11 +497,14 @@ def preflight(host: str, out_dir: str | None) -> dict:
 # ---------------------------------------------------------------------------------------------
 def measure_codecs(dev: Recv, out_dir: str) -> dict:
     """(a) What actually plays, not what canPlayType claims."""
-    res = {"task": "C (a) — codec matrix", "command": COMMAND,
-           "at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
-           "note": "video-only assets; 'plays' = reached playing AND the playhead advanced",
-           "claims_from_hello": (dev.hello or {}).get("codecs"),
-           "results": []}
+    res = {
+        "task": "C (a) — codec matrix",
+        "command": COMMAND,
+        "at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+        "note": "video-only assets; 'plays' = reached playing AND the playhead advanced",
+        "claims_from_hello": (dev.hello or {}).get("codecs"),
+        "results": [],
+    }
     for name, ctype, what in ASSETS:
         if not name.startswith("codec-"):
             continue
@@ -476,20 +525,25 @@ def measure_codecs(dev: Recv, out_dir: str) -> dict:
         if played:
             advance = max(s["media"] for s in played) - min(s["media"] for s in played)
         new_err = dev.errors[err0:]
-        row.update({
-            "first_state": first,
-            "states_seen": sorted({s.get("player_state") for s in states}),
-            "samples": len(states),
-            "playing_samples": len(played),
-            "playhead_advance_s": round(advance, 3),
-            "errors": [{"code": e.get("code"), "message": redact(e.get("message", ""))[:160]}
-                       for e in new_err],
-        })
-        row["verdict"] = ("plays" if played and advance >= 1.0
-                          else "no" if not played else "stalls")
+        row.update(
+            {
+                "first_state": first,
+                "states_seen": sorted({s.get("player_state") for s in states}),
+                "samples": len(states),
+                "playing_samples": len(played),
+                "playhead_advance_s": round(advance, 3),
+                "errors": [
+                    {"code": e.get("code"), "message": redact(e.get("message", ""))[:160]}
+                    for e in new_err
+                ],
+            }
+        )
+        row["verdict"] = "plays" if played and advance >= 1.0 else "no" if not played else "stalls"
         res["results"].append(row)
-        print("   %-16s %-8s advance=%5.2fs states=%s" %
-              (name, row["verdict"], advance, ",".join(row["states_seen"])))
+        print(
+            "   %-16s %-8s advance=%5.2fs states=%s"
+            % (name, row["verdict"], advance, ",".join(row["states_seen"]))
+        )
         dev.send("stop")
         dev.collect(0.6)
     _write(os.path.join(out_dir, "41a-codec-matrix.json"), res)
@@ -502,14 +556,20 @@ def _band(states: list[dict], t0: float, t1: float) -> list[dict]:
 
 def measure_rate(dev: Recv, out_dir: str, seconds: float = 60.0) -> tuple[dict, dict]:
     """(b) the decisive number, and (c) what the change costs."""
-    rate_res = {"task": "C (b) — rate trim", "command": COMMAND,
-                "at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
-                "method": "least squares of media vs the receiver's own rx_ms, 60 s per rate",
-                "runs": []}
-    stall_res = {"task": "C (c) — cost of a rate change", "command": COMMAND,
-                 "at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
-                 "method": "state samples in a 3 s band around each rate command",
-                 "events": []}
+    rate_res = {
+        "task": "C (b) — rate trim",
+        "command": COMMAND,
+        "at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+        "method": "least squares of media vs the receiver's own rx_ms, 60 s per rate",
+        "runs": [],
+    }
+    stall_res = {
+        "task": "C (c) — cost of a rate change",
+        "command": COMMAND,
+        "at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+        "method": "state samples in a 3 s band around each rate command",
+        "events": [],
+    }
     asset = asset_ready("rate-90s.mp4")
     if not asset.get("ok"):
         rate_res["error"] = "rate asset unreachable"
@@ -528,37 +588,56 @@ def measure_rate(dev: Recv, out_dir: str, seconds: float = 60.0) -> tuple[dict, 
         # rewind so every window has a full 60 s of media ahead of it
         dev.send("seek", media=0.0)
         dev.collect(1.5)
-        t_cmd = dev.est_rx()          # receiver clock at the moment the command leaves
+        t_cmd = dev.est_rx()  # receiver clock at the moment the command leaves
         seq = dev.send("rate", value=asked)
         pre = dev.collect(2.0)
         pre_last = pre[-1] if pre else None
         samples = dev.collect(seconds)
         all_s = pre + samples
-        pts = [(s["rx_ms"] / 1000.0, s["media"]) for s in samples
-               if s.get("player_state") == "playing" and isinstance(s.get("media"), (int, float))]
+        pts = [
+            (s["rx_ms"] / 1000.0, s["media"])
+            for s in samples
+            if s.get("player_state") == "playing" and isinstance(s.get("media"), (int, float))
+        ]
         f = fit(pts)
-        run = {"asked_rate": asked, "seq": seq, "state_samples": len(samples),
-               "playing_samples": len(pts)}
+        run = {
+            "asked_rate": asked,
+            "seq": seq,
+            "state_samples": len(samples),
+            "playing_samples": len(pts),
+        }
         if f:
             gain = f["ratio"] - 1.0
-            run.update({
-                "measured_ratio": round(f["ratio"], 6),
-                "ratio_sigma": round(f["ratio_sigma"], 6),
-                "measured_gain": round(gain, 6),
-                "gain_sigma": round(f["ratio_sigma"], 6),
-                "asked_gain": round(asked - 1.0, 6),
-                "gain_error": round(gain - (asked - 1.0), 6),
-                "gain_error_sigmas": round((gain - (asked - 1.0)) / f["ratio_sigma"], 2)
-                if f["ratio_sigma"] else None,
-                "distinguishable_from_zero_at_3sigma": bool(abs(gain) > 3 * f["ratio_sigma"]),
-                "drift_ms_per_10min": round(gain * 600 * 1000, 1),
-                "residual_max_ms": round(f["residual_max_ms"], 2),
-                "span_s": round(f["span_s"], 2),
-                "echoed_rate": pre_last and pre_last.get("rate"),
-            })
-            print("   asked %.3f -> ratio %.6f +- %.6f (gain %+.5f, %s at 3 sigma)" %
-                  (asked, f["ratio"], f["ratio_sigma"], gain,
-                   "distinguishable" if run["distinguishable_from_zero_at_3sigma"] else "NOT distinguishable"))
+            run.update(
+                {
+                    "measured_ratio": round(f["ratio"], 6),
+                    "ratio_sigma": round(f["ratio_sigma"], 6),
+                    "measured_gain": round(gain, 6),
+                    "gain_sigma": round(f["ratio_sigma"], 6),
+                    "asked_gain": round(asked - 1.0, 6),
+                    "gain_error": round(gain - (asked - 1.0), 6),
+                    "gain_error_sigmas": round((gain - (asked - 1.0)) / f["ratio_sigma"], 2)
+                    if f["ratio_sigma"]
+                    else None,
+                    "distinguishable_from_zero_at_3sigma": bool(abs(gain) > 3 * f["ratio_sigma"]),
+                    "drift_ms_per_10min": round(gain * 600 * 1000, 1),
+                    "residual_max_ms": round(f["residual_max_ms"], 2),
+                    "span_s": round(f["span_s"], 2),
+                    "echoed_rate": pre_last and pre_last.get("rate"),
+                }
+            )
+            print(
+                "   asked %.3f -> ratio %.6f +- %.6f (gain %+.5f, %s at 3 sigma)"
+                % (
+                    asked,
+                    f["ratio"],
+                    f["ratio_sigma"],
+                    gain,
+                    "distinguishable"
+                    if run["distinguishable_from_zero_at_3sigma"]
+                    else "NOT distinguishable",
+                )
+            )
         else:
             run["error"] = "not enough playing samples"
         rate_res["runs"].append(run)
@@ -573,7 +652,8 @@ def measure_rate(dev: Recv, out_dir: str, seconds: float = 60.0) -> tuple[dict, 
         buf = [s.get("buffered_end") for s in band if s.get("buffered_end") is not None]
         drop = [s.get("dropped") for s in band if s.get("dropped") is not None]
         event = {
-            "asked_rate": asked, "command_seq": seq,
+            "asked_rate": asked,
+            "command_seq": seq,
             "states_in_band": len(band),
             "player_states": sorted(set(states_band)),
             "left_playing": any(x != "playing" for x in states_band if x),
@@ -587,9 +667,16 @@ def measure_rate(dev: Recv, out_dir: str, seconds: float = 60.0) -> tuple[dict, 
             "dropped_added": (drop[-1] - drop[0]) if len(drop) >= 2 else None,
         }
         stall_res["events"].append(event)
-        print("   stall: left_playing=%s gap=%sms dropped+%s buffered %.2f->%.2f" %
-              (event["left_playing"], event["max_state_gap_ms"], event["dropped_added"],
-               event["buffered_end_start_s"] or 0, event["buffered_end_end_s"] or 0))
+        print(
+            "   stall: left_playing=%s gap=%sms dropped+%s buffered %.2f->%.2f"
+            % (
+                event["left_playing"],
+                event["max_state_gap_ms"],
+                event["dropped_added"],
+                event["buffered_end_start_s"] or 0,
+                event["buffered_end_end_s"] or 0,
+            )
+        )
 
     dev.send("rate", value=1.0)
     dev.collect(0.5)
@@ -602,8 +689,14 @@ def measure_rate(dev: Recv, out_dir: str, seconds: float = 60.0) -> tuple[dict, 
 
 def measure_clock(dev: Recv, out_dir: str, n: int = 200, hz: float = 5.0) -> dict:
     """(d) 200 pings at 5 Hz: RTT, offset, and the estimator's residual."""
-    res = {"task": "C (d) — clock", "command": COMMAND,
-           "at": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "pings": n, "rate_hz": hz, "samples": []}
+    res = {
+        "task": "C (d) — clock",
+        "command": COMMAND,
+        "at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+        "pings": n,
+        "rate_hz": hz,
+        "samples": [],
+    }
     period = 1.0 / hz
     for _ in range(n):
         t0 = now_ms()
@@ -622,25 +715,28 @@ def measure_clock(dev: Recv, out_dir: str, n: int = 200, hz: float = 5.0) -> dic
         if rx is None:
             res["samples"].append({"t0": t0, "rtt_ms": None})
         else:
-            res["samples"].append({
-                "t0": round(t0, 2),
-                "rtt_ms": round(t1 - t0, 2),
-                "offset_ms": round(rx - (t0 + t1) / 2.0, 2),
-                "rx_ms": round(rx, 2),
-            })
+            res["samples"].append(
+                {
+                    "t0": round(t0, 2),
+                    "rtt_ms": round(t1 - t0, 2),
+                    "offset_ms": round(rx - (t0 + t1) / 2.0, 2),
+                    "rx_ms": round(rx, 2),
+                }
+            )
         time.sleep(max(0.0, period - (now_ms() - t0) / 1000.0))
     good = [s for s in res["samples"] if s.get("rtt_ms") is not None]
     res["answered"] = len(good)
     res["rtt_ms"] = robust(good, "rtt_ms")
     if good:
-        best = sorted(good, key=lambda s: s["rtt_ms"])[:max(1, len(good) // 5)]
+        best = sorted(good, key=lambda s: s["rtt_ms"])[: max(1, len(good) // 5)]
         res["offset_ms"] = robust(good, "offset_ms")
         res["offset_best_rtt_ms"] = robust(best, "offset_ms")
         res["estimator"] = {
             "method": "offset_i = rx_ms - (t0+t1)/2; min-RTT fifth of the samples",
             "offset_ms": round(statistics.median([s["offset_ms"] for s in best]), 2),
             "residual_ms": round(statistics.pstdev([s["offset_ms"] for s in best]), 2)
-            if len(best) > 1 else None,
+            if len(best) > 1
+            else None,
             "rtt_of_best_ms": round(statistics.median([s["rtt_ms"] for s in best]), 2),
         }
         res["rx_ms_first_last"] = [good[0]["rx_ms"], good[-1]["rx_ms"]]
@@ -649,15 +745,23 @@ def measure_clock(dev: Recv, out_dir: str, n: int = 200, hz: float = 5.0) -> dic
     return res
 
 
-def measure_start(dev: Recv, out_dir: str, trials: int = 10, pos: float = 3.0,
-                  lead_ms: float = 1200.0) -> dict:
+def measure_start(
+    dev: Recv, out_dir: str, trials: int = 10, pos: float = 3.0, lead_ms: float = 1200.0
+) -> dict:
     """(e) 10 x play_at: the error of the first 'playing' sample against the target."""
-    res = {"task": "C (e) — start dispersion", "command": COMMAND,
-           "at": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "trials": trials,
-           "target_media_s": pos, "lead_ms": lead_ms,
-           "method": ("err = media(first playing sample) - [pos + (rx_ms - target)/1000 * rate]; "
-                      "negative = the picture lands behind the target"),
-           "results": []}
+    res = {
+        "task": "C (e) — start dispersion",
+        "command": COMMAND,
+        "at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+        "trials": trials,
+        "target_media_s": pos,
+        "lead_ms": lead_ms,
+        "method": (
+            "err = media(first playing sample) - [pos + (rx_ms - target)/1000 * rate]; "
+            "negative = the picture lands behind the target"
+        ),
+        "results": [],
+    }
     asset = asset_ready("rate-90s.mp4")
     if not asset.get("ok"):
         res["error"] = "asset unreachable"
@@ -679,26 +783,38 @@ def measure_start(dev: Recv, out_dir: str, trials: int = 10, pos: float = 3.0,
         target = last["rx_ms"] + (now_ms() - last.get("_t_mono", now_ms())) + lead_ms
         seq = dev.send("play_at", rx_ms=target, media=pos)
         samples = dev.collect(3.0 + lead_ms / 1000.0)
-        playing = [s for s in samples
-                   if s.get("player_state") == "playing" and s.get("rx_ms", 0) >= target - 1500]
-        row = {"trial": i + 1, "seq": seq, "target_rx_ms": round(target, 1), "target_media_s": pos,
-               "parked_media_s": round(last.get("media", -1), 3),
-               "parked_state": last.get("player_state")}
+        playing = [
+            s
+            for s in samples
+            if s.get("player_state") == "playing" and s.get("rx_ms", 0) >= target - 1500
+        ]
+        row = {
+            "trial": i + 1,
+            "seq": seq,
+            "target_rx_ms": round(target, 1),
+            "target_media_s": pos,
+            "parked_media_s": round(last.get("media", -1), 3),
+            "parked_state": last.get("player_state"),
+        }
         if not playing:
             row["error"] = "never reached playing"
         else:
             first = playing[0]
             expected = pos + max(0.0, (first["rx_ms"] - target) / 1000.0) * (first.get("rate") or 1.0)
-            row.update({
-                "first_playing_rx_ms": round(first["rx_ms"], 1),
-                "first_playing_media_s": round(first["media"], 4),
-                "since_target_ms": round(first["rx_ms"] - target, 1),
-                "expected_media_s": round(expected, 4),
-                "error_ms": round((first["media"] - expected) * 1000.0, 1),
-                "rate": first.get("rate"),
-            })
-            print("   trial %2d  err %+7.1f ms  (first playing sample %+.0f ms after target)" %
-                  (i + 1, row["error_ms"], row["since_target_ms"]))
+            row.update(
+                {
+                    "first_playing_rx_ms": round(first["rx_ms"], 1),
+                    "first_playing_media_s": round(first["media"], 4),
+                    "since_target_ms": round(first["rx_ms"] - target, 1),
+                    "expected_media_s": round(expected, 4),
+                    "error_ms": round((first["media"] - expected) * 1000.0, 1),
+                    "rate": first.get("rate"),
+                }
+            )
+            print(
+                "   trial %2d  err %+7.1f ms  (first playing sample %+.0f ms after target)"
+                % (i + 1, row["error_ms"], row["since_target_ms"])
+            )
         res["results"].append(row)
     errs = [r["error_ms"] for r in res["results"] if "error_ms" in r]
     if errs:
@@ -709,8 +825,9 @@ def measure_start(dev: Recv, out_dir: str, trials: int = 10, pos: float = 3.0,
             "sigma_ms": round(statistics.pstdev(errs), 1) if len(errs) > 1 else None,
             "min_ms": round(min(errs), 1),
             "max_ms": round(max(errs), 1),
-            "p95_abs_ms": round(sorted(abs(e) for e in errs)[
-                min(len(errs) - 1, int(round(0.95 * (len(errs) - 1))))], 1),
+            "p95_abs_ms": round(
+                sorted(abs(e) for e in errs)[min(len(errs) - 1, int(round(0.95 * (len(errs) - 1))))], 1
+            ),
         }
     dev.send("stop")
     dev.collect(0.5)
@@ -749,20 +866,34 @@ class Dmr:
         return {"launch_reply": reply, "transport_id": self.transport}
 
     def load(self, url: str, content_type: str, start: float = 0.0, autoplay: bool = True) -> dict:
-        r = self.link.load(self.transport, {
-            "appId": "CC1AD845", "sessionId": self.transport,
-            "media": {"contentId": url, "contentType": content_type, "streamType": "BUFFERED"},
-            "autoplay": autoplay, "currentTime": start}, timeout=25)
+        r = self.link.load(
+            self.transport,
+            {
+                "appId": "CC1AD845",
+                "sessionId": self.transport,
+                "media": {"contentId": url, "contentType": content_type, "streamType": "BUFFERED"},
+                "autoplay": autoplay,
+                "currentTime": start,
+            },
+            timeout=25,
+        )
         st = first_status(r)
         self.session_id = st.get("mediaSessionId")
-        return {"reply_type": r.get("type"), "player_state": st.get("playerState"),
-                "media_session_id": self.session_id}
+        return {
+            "reply_type": r.get("type"),
+            "player_state": st.get("playerState"),
+            "media_session_id": self.session_id,
+        }
 
     def cmd(self, name: str, **fields) -> dict:
         r = self.link.media_command(self.transport, name, self.session_id, fields or None, timeout=8)
         st = first_status(r)
-        return {"reply": r.get("type"), "player_state": st.get("playerState"),
-                "current_time": st.get("currentTime"), "playback_rate": st.get("playbackRate")}
+        return {
+            "reply": r.get("type"),
+            "player_state": st.get("playerState"),
+            "current_time": st.get("currentTime"),
+            "playback_rate": st.get("playbackRate"),
+        }
 
     def sample(self) -> dict | None:
         t0 = time.time()
@@ -772,10 +903,16 @@ class Dmr:
             return None
         t1 = time.time()
         st = first_status(r)
-        return {"t": (t0 + t1) / 2.0, "t0": t0, "t1": t1,
-                "media": st.get("currentTime"), "player_state": st.get("playerState"),
-                "rate": st.get("playbackRate"), "session": st.get("mediaSessionId"),
-                "idle_reason": st.get("idleReason")}
+        return {
+            "t": (t0 + t1) / 2.0,
+            "t0": t0,
+            "t1": t1,
+            "media": st.get("currentTime"),
+            "player_state": st.get("playerState"),
+            "rate": st.get("playbackRate"),
+            "session": st.get("mediaSessionId"),
+            "idle_reason": st.get("idleReason"),
+        }
 
     def status_list(self) -> list[dict]:
         """The raw status array: empty means the player dropped the session."""
@@ -815,13 +952,18 @@ class Dmr:
 
 
 def measure_codecs_dmr(dmr: Dmr, out_dir: str) -> dict:
-    res = {"task": "C (a) — codec matrix, platform DMR", "command": COMMAND,
-           "at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
-           "backend": "Default Media Receiver CC1AD845 on the same Chromecast (NOT our page)",
-           "caveat": ("our custom receiver page could not be launched (APP_UNAVAILABLE); this "
-                      "measures what the device's own video player renders, which is the same "
-                      "platform media pipeline but not our HTML5 page"),
-           "results": []}
+    res = {
+        "task": "C (a) — codec matrix, platform DMR",
+        "command": COMMAND,
+        "at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+        "backend": "Default Media Receiver CC1AD845 on the same Chromecast (NOT our page)",
+        "caveat": (
+            "our custom receiver page could not be launched (APP_UNAVAILABLE); this "
+            "measures what the device's own video player renders, which is the same "
+            "platform media pipeline but not our HTML5 page"
+        ),
+        "results": [],
+    }
     for name, ctype, what in ASSETS:
         if not name.startswith("codec-"):
             continue
@@ -837,35 +979,48 @@ def measure_codecs_dmr(dmr: Dmr, out_dir: str) -> dict:
         samples = dmr.poll(9.0)
         st = [s for s in samples if s.get("media") is not None]
         playing = [s for s in st if s.get("player_state") == "PLAYING"]
-        advance = (max(s["media"] for s in playing) - min(s["media"] for s in playing)) if playing else 0.0
+        advance = (
+            (max(s["media"] for s in playing) - min(s["media"] for s in playing)) if playing else 0.0
+        )
         # an unsupported stream is not "no": the player accepts the LOAD, reports LOADING, then
         # drops the session. That difference is the whole point of a codec matrix.
         present = [s for s in samples if s.get("session") is not None]
         dropped_at = None
-        for i, s in enumerate(samples):
+        for s in samples:
             if s.get("session") is None:
                 dropped_at = round(s["t"] - t_load, 2)
                 break
         commands = dmr.status_list()
-        row.update({
-            "states_seen": sorted({s.get("player_state") for s in st}),
-            "samples": len(st), "playing_samples": len(playing),
-            "playhead_advance_s": round(advance, 3),
-            "first_state": st[0]["player_state"] if st else None,
-            "last_state": st[-1]["player_state"] if st else None,
-            "session_polls": len(present),
-            "session_dropped_after_s": dropped_at,
-            "supported_media_commands_after_load": (commands[0].get("supportedMediaCommands")
-                                                    if commands else None),
-            "idle_reason": (st[-1].get("idle_reason") if st else None),
-        })
-        row["verdict"] = ("plays" if playing and advance >= 1.0
-                          else "stalls" if playing
-                          else "rejected" if dropped_at is not None
-                          else "no")
+        row.update(
+            {
+                "states_seen": sorted({s.get("player_state") for s in st}),
+                "samples": len(st),
+                "playing_samples": len(playing),
+                "playhead_advance_s": round(advance, 3),
+                "first_state": st[0]["player_state"] if st else None,
+                "last_state": st[-1]["player_state"] if st else None,
+                "session_polls": len(present),
+                "session_dropped_after_s": dropped_at,
+                "supported_media_commands_after_load": (
+                    commands[0].get("supportedMediaCommands") if commands else None
+                ),
+                "idle_reason": (st[-1].get("idle_reason") if st else None),
+            }
+        )
+        row["verdict"] = (
+            "plays"
+            if playing and advance >= 1.0
+            else "stalls"
+            if playing
+            else "rejected"
+            if dropped_at is not None
+            else "no"
+        )
         res["results"].append(row)
-        print("   %-16s %-8s advance=%5.2fs states=%s" %
-              (name, row["verdict"], advance, ",".join(row["states_seen"])))
+        print(
+            "   %-16s %-8s advance=%5.2fs states=%s"
+            % (name, row["verdict"], advance, ",".join(row["states_seen"]))
+        )
         dmr.stop()
         time.sleep(1.2)
     _write(os.path.join(out_dir, "41a-codec-matrix-dmr.json"), res)
@@ -873,18 +1028,26 @@ def measure_codecs_dmr(dmr: Dmr, out_dir: str) -> dict:
 
 
 def measure_rate_dmr(dmr: Dmr, out_dir: str, seconds: float = 60.0) -> tuple[dict, dict]:
-    rate_res = {"task": "C (b) — rate trim, platform DMR", "command": COMMAND,
-                "at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
-                "backend": "Default Media Receiver CC1AD845 on the same Chromecast (NOT our page)",
-                "caveat": ("the receiver page could not be launched; the platform's own video "
-                           "player stands in for its media pipeline, as evidence/17 did on a Nest "
-                           "Audio for the group"),
-                "method": "least squares of currentTime vs (t0+t1)/2 across GET_STATUS polls, 60 s",
-                "runs": []}
-    stall_res = {"task": "C (c) — cost of a rate change, platform DMR", "command": COMMAND,
-                 "at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
-                 "backend": "Default Media Receiver CC1AD845 (NOT our page)",
-                 "events": []}
+    rate_res = {
+        "task": "C (b) — rate trim, platform DMR",
+        "command": COMMAND,
+        "at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+        "backend": "Default Media Receiver CC1AD845 on the same Chromecast (NOT our page)",
+        "caveat": (
+            "the receiver page could not be launched; the platform's own video "
+            "player stands in for its media pipeline, as evidence/17 did on a Nest "
+            "Audio for the group"
+        ),
+        "method": "least squares of currentTime vs (t0+t1)/2 across GET_STATUS polls, 60 s",
+        "runs": [],
+    }
+    stall_res = {
+        "task": "C (c) — cost of a rate change, platform DMR",
+        "command": COMMAND,
+        "at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
+        "backend": "Default Media Receiver CC1AD845 (NOT our page)",
+        "events": [],
+    }
     asset = asset_ready("rate-90s.mp4")
     if not asset.get("ok"):
         rate_res["error"] = "rate asset unreachable"
@@ -906,27 +1069,43 @@ def measure_rate_dmr(dmr: Dmr, out_dir: str, seconds: float = 60.0) -> tuple[dic
         samples = dmr.poll(seconds, hz=10.0)
         pts = [(s["t"], s["media"]) for s in samples if s.get("player_state") == "PLAYING"]
         gained = fit(pts)
-        run = {"asked_rate": asked, "reply": change, "samples": len(samples),
-               "playing_samples": len(pts), "echoed_rate": change.get("playback_rate")}
+        run = {
+            "asked_rate": asked,
+            "reply": change,
+            "samples": len(samples),
+            "playing_samples": len(pts),
+            "echoed_rate": change.get("playback_rate"),
+        }
         if gained:
             gain = gained["ratio"] - 1.0
-            run.update({
-                "measured_ratio": round(gained["ratio"], 6),
-                "ratio_sigma": round(gained["ratio_sigma"], 6),
-                "measured_gain": round(gain, 6),
-                "asked_gain": round(asked - 1.0, 6),
-                "gain_error": round(gain - (asked - 1.0), 6),
-                "gain_error_sigmas": round((gain - (asked - 1.0)) / gained["ratio_sigma"], 2)
-                if gained["ratio_sigma"] else None,
-                "distinguishable_from_zero_at_3sigma": bool(abs(gain) > 3 * gained["ratio_sigma"]),
-                "drift_ms_per_10min": round(gain * 600 * 1000, 1),
-                "residual_max_ms": round(gained["residual_max_ms"], 2),
-                "span_s": round(gained["span_s"], 2),
-            })
-            print("   asked %.3f -> ratio %.6f +- %.6f (gain %+.5f, %s at 3 sigma)" %
-                  (asked, gained["ratio"], gained["ratio_sigma"], gain,
-                   "distinguishable" if run["distinguishable_from_zero_at_3sigma"]
-                   else "NOT distinguishable"))
+            run.update(
+                {
+                    "measured_ratio": round(gained["ratio"], 6),
+                    "ratio_sigma": round(gained["ratio_sigma"], 6),
+                    "measured_gain": round(gain, 6),
+                    "asked_gain": round(asked - 1.0, 6),
+                    "gain_error": round(gain - (asked - 1.0), 6),
+                    "gain_error_sigmas": round((gain - (asked - 1.0)) / gained["ratio_sigma"], 2)
+                    if gained["ratio_sigma"]
+                    else None,
+                    "distinguishable_from_zero_at_3sigma": bool(abs(gain) > 3 * gained["ratio_sigma"]),
+                    "drift_ms_per_10min": round(gain * 600 * 1000, 1),
+                    "residual_max_ms": round(gained["residual_max_ms"], 2),
+                    "span_s": round(gained["span_s"], 2),
+                }
+            )
+            print(
+                "   asked %.3f -> ratio %.6f +- %.6f (gain %+.5f, %s at 3 sigma)"
+                % (
+                    asked,
+                    gained["ratio"],
+                    gained["ratio_sigma"],
+                    gain,
+                    "distinguishable"
+                    if run["distinguishable_from_zero_at_3sigma"]
+                    else "NOT distinguishable",
+                )
+            )
         else:
             run["error"] = "not enough PLAYING samples"
         rate_res["runs"].append(run)
@@ -945,8 +1124,10 @@ def measure_rate_dmr(dmr: Dmr, out_dir: str, seconds: float = 60.0) -> tuple[dic
             "median_poll_gap_ms": round(statistics.median(gaps) * 1000, 1) if gaps else None,
         }
         stall_res["events"].append(event)
-        print("   stall: left_playing=%s backstep=%ss gap=%sms" %
-              (event["left_playing"], event["playhead_backstep_s"], event["max_poll_gap_ms"]))
+        print(
+            "   stall: left_playing=%s backstep=%ss gap=%sms"
+            % (event["left_playing"], event["playhead_backstep_s"], event["max_poll_gap_ms"])
+        )
     dmr.cmd("SET_PLAYBACK_RATE", playbackRate=1.0)
     dmr.stop()
     _write(os.path.join(out_dir, "41b-rate-trim-dmr.json"), rate_res)
@@ -968,8 +1149,12 @@ def main(argv=None) -> int:
     ap.add_argument("--probe-only", action="store_true", help="preflight only; launches nothing")
     ap.add_argument("--make-assets", action="store_true", help="generate the test assets on CT 121")
     ap.add_argument("--only", default="abcde", help="which measurements to run (default abcde)")
-    ap.add_argument("--backend", default="auto", choices=("auto", "receiver", "dmr"),
-                    help="receiver = our page; dmr = the platform's own player (stand-in)")
+    ap.add_argument(
+        "--backend",
+        default="auto",
+        choices=("auto", "receiver", "dmr"),
+        help="receiver = our page; dmr = the platform's own player (stand-in)",
+    )
     ap.add_argument("--host", default=HOST)
     ap.add_argument("--app-id", default=APP_ID)
     ap.add_argument("--seconds", type=float, default=60.0, help="seconds per rate window")
@@ -979,16 +1164,25 @@ def main(argv=None) -> int:
     os.makedirs(args.evidence_dir, exist_ok=True)
     print("== preflight (read-only, launches nothing)")
     pf = preflight(args.host, args.evidence_dir)
-    print("   %s: %s  app=%s  model=%s  uptime=%ss  volume=%s" % (
-        pf["host"], pf["verdict"], (pf.get("receiver_status") or {}).get("app_name"),
-        (pf.get("mdns") or {}).get("model"), pf["eureka"].get("uptime_s"),
-        (pf.get("receiver_status") or {}).get("volume")))
+    print(
+        "   %s: %s  app=%s  model=%s  uptime=%ss  volume=%s"
+        % (
+            pf["host"],
+            pf["verdict"],
+            (pf.get("receiver_status") or {}).get("app_name"),
+            (pf.get("mdns") or {}).get("model"),
+            pf["eureka"].get("uptime_s"),
+            (pf.get("receiver_status") or {}).get("volume"),
+        )
+    )
     print("   app availability: %s" % (pf.get("app_availability") or {}))
     if args.probe_only:
         return 0
     if not pf["safe_to_launch"]:
-        print("REFUSING to launch: the device is %s, not idle on Backdrop. "
-              "Nothing was launched, nothing was played." % pf["verdict"])
+        print(
+            "REFUSING to launch: the device is %s, not idle on Backdrop. "
+            "Nothing was launched, nothing was played." % pf["verdict"]
+        )
         return 3
 
     backend = args.backend
@@ -997,22 +1191,28 @@ def main(argv=None) -> int:
         backend = "receiver" if avail == "APP_AVAILABLE" else "dmr"
         print("   backend: %s (%s -> %s)" % (backend, args.app_id, avail))
     if backend == "receiver" and (pf.get("app_availability") or {}).get(args.app_id) != "APP_AVAILABLE":
-        print("REFUSING: the device does not list %s (%s). Our unpublished receiver only runs on "
-              "a device whose serial is registered in the Cast console; run with --backend dmr to "
-              "measure the platform's own player instead." %
-              (args.app_id, (pf.get("app_availability") or {}).get(args.app_id)))
+        print(
+            "REFUSING: the device does not list %s (%s). Our unpublished receiver only runs on "
+            "a device whose serial is registered in the Cast console; run with --backend dmr to "
+            "measure the platform's own player instead."
+            % (args.app_id, (pf.get("app_availability") or {}).get(args.app_id))
+        )
         return 6
 
     assets = make_assets()
     if not any(asset_ready(n).get("ok") for n, _, _ in ASSETS):
-        print("REFUSING: no test asset is reachable on %s (is receiver_serve.sh running?)"
-              % HTTP_BASE)
+        print("REFUSING: no test asset is reachable on %s (is receiver_serve.sh running?)" % HTTP_BASE)
         return 4
 
     orig_volume = (pf.get("receiver_status") or {}).get("volume") or {}
-    final = {"command": COMMAND, "backend": backend, "assets": assets,
-             "volume_before": orig_volume, "measurements": args.only,
-             "app_availability": pf.get("app_availability")}
+    final = {
+        "command": COMMAND,
+        "backend": backend,
+        "assets": assets,
+        "volume_before": orig_volume,
+        "measurements": args.only,
+        "app_availability": pf.get("app_availability"),
+    }
     rc = 0
     if backend == "dmr":
         dmr = Dmr(args.host)
@@ -1026,13 +1226,16 @@ def main(argv=None) -> int:
                 print("== (a) codec matrix (platform player)")
                 measure_codecs_dmr(dmr, args.evidence_dir)
             if "b" in args.only or "c" in args.only:
-                print("== (b) rate trim / (c) stall cost (platform player, %.0f s per rate)"
-                      % args.seconds)
+                print(
+                    "== (b) rate trim / (c) stall cost (platform player, %.0f s per rate)" % args.seconds
+                )
                 measure_rate_dmr(dmr, args.evidence_dir, seconds=args.seconds)
             if "d" in args.only or "e" in args.only:
                 print("   (d) and (e) need OUR page's namespace: not measurable on this backend")
-                final["not_measured"] = ["d: clock pings (needs our namespace)",
-                                         "e: start dispersion (needs our play_at)"]
+                final["not_measured"] = [
+                    "d: clock pings (needs our namespace)",
+                    "e: start dispersion (needs our play_at)",
+                ]
         except BaseException as exc:  # noqa: BLE001
             print("ABORTED: %s: %s" % (type(exc).__name__, exc))
             final["aborted"] = "%s: %s" % (type(exc).__name__, exc)
@@ -1051,15 +1254,19 @@ def main(argv=None) -> int:
             try:
                 if orig_volume.get("muted") is not None:
                     dmr.link.set_receiver_volume(muted=bool(orig_volume.get("muted")))
-                    final["volume_restored"] = {"muted": bool(orig_volume.get("muted")),
-                                                "level": orig_volume.get("level")}
+                    final["volume_restored"] = {
+                        "muted": bool(orig_volume.get("muted")),
+                        "level": orig_volume.get("level"),
+                    }
             except Exception as exc:  # noqa: BLE001
                 final["restore_error"] = "%s: %s" % (type(exc).__name__, exc)
             dmr.close()
             after = preflight(args.host, None)
-            final["after"] = {"verdict": after["verdict"],
-                              "app_name": (after.get("receiver_status") or {}).get("app_name"),
-                              "volume": (after.get("receiver_status") or {}).get("volume")}
+            final["after"] = {
+                "verdict": after["verdict"],
+                "app_name": (after.get("receiver_status") or {}).get("app_name"),
+                "volume": (after.get("receiver_status") or {}).get("volume"),
+            }
             final["left_on_backdrop"] = after["verdict"] == "idle"
             _write(os.path.join(args.evidence_dir, "41z-final-state.json"), final)
         print("== done (rc=%d)" % rc)
@@ -1074,8 +1281,9 @@ def main(argv=None) -> int:
         launched = dev.launch()
         final["launch"] = launched
         if launched["launch_reply_app"] != args.app_id:
-            raise CastError("device launched %r instead of %r" %
-                            (launched["launch_reply_app"], args.app_id))
+            raise CastError(
+                "device launched %r instead of %r" % (launched["launch_reply_app"], args.app_id)
+            )
         dev.attach()
         hello = dev.wait_hello(25.0)
         final["hello"] = hello
@@ -1093,16 +1301,23 @@ def main(argv=None) -> int:
         if "d" in args.only:
             print("== (d) clock: 200 pings at 5 Hz")
             c = measure_clock(dev, args.evidence_dir)
-            print("   RTT median %.1f ms p95 %.1f ms; offset %.1f ms, residual %.1f ms" % (
-                (c.get("rtt_ms") or {}).get("median", -1), (c.get("rtt_ms") or {}).get("p95", -1),
-                (c.get("estimator") or {}).get("offset_ms", float("nan")),
-                (c.get("estimator") or {}).get("residual_ms") or float("nan")))
+            print(
+                "   RTT median %.1f ms p95 %.1f ms; offset %.1f ms, residual %.1f ms"
+                % (
+                    (c.get("rtt_ms") or {}).get("median", -1),
+                    (c.get("rtt_ms") or {}).get("p95", -1),
+                    (c.get("estimator") or {}).get("offset_ms", float("nan")),
+                    (c.get("estimator") or {}).get("residual_ms") or float("nan"),
+                )
+            )
         if "e" in args.only:
             print("== (e) start dispersion: 10 play_at")
             e = measure_start(dev, args.evidence_dir)
             s = e.get("summary") or {}
-            print("   landing: mean %s ms, sigma %s ms, range %s..%s" %
-                  (s.get("mean_ms"), s.get("sigma_ms"), s.get("min_ms"), s.get("max_ms")))
+            print(
+                "   landing: mean %s ms, sigma %s ms, range %s..%s"
+                % (s.get("mean_ms"), s.get("sigma_ms"), s.get("min_ms"), s.get("max_ms"))
+            )
     except SystemExit:
         pass
     except BaseException as exc:  # noqa: BLE001
@@ -1126,15 +1341,19 @@ def main(argv=None) -> int:
         try:
             if dev.link and not dev.link.closed and orig_volume.get("muted") is not None:
                 dev.link.set_receiver_volume(muted=bool(orig_volume.get("muted")))
-                final["volume_restored"] = {"muted": bool(orig_volume.get("muted")),
-                                            "level": orig_volume.get("level")}
+                final["volume_restored"] = {
+                    "muted": bool(orig_volume.get("muted")),
+                    "level": orig_volume.get("level"),
+                }
         except Exception as exc:  # noqa: BLE001
             final["restore_error"] = "%s: %s" % (type(exc).__name__, exc)
         dev.close()
         after = preflight(args.host, None)
-        final["after"] = {"verdict": after["verdict"],
-                          "app_name": (after.get("receiver_status") or {}).get("app_name"),
-                          "volume": (after.get("receiver_status") or {}).get("volume")}
+        final["after"] = {
+            "verdict": after["verdict"],
+            "app_name": (after.get("receiver_status") or {}).get("app_name"),
+            "volume": (after.get("receiver_status") or {}).get("volume"),
+        }
         final["left_on_backdrop"] = after["verdict"] == "idle"
         _write(os.path.join(args.evidence_dir, "41z-final-state.json"), final)
     print("== done (rc=%d)" % rc)

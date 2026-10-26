@@ -11,11 +11,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
         with:
+          fetch-depth: 0          # gitleaks scans history, not just the tip
+      - uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.13.5"
           python-version: "3.13"
-          cache: pip
-      - name: dependencies
-        run: python -m pip install -r requirements.txt
-      - name: contracts + units
-        run: python -m unittest discover -s tests/v020 -v
+      - name: environment (exactly uv.lock)
+        run: uv sync --locked
+      - name: hooks (lint, format, lock, requirements export, secrets, safety guards)
+        run: uv run pre-commit run --all-files --show-diff-on-failure
+      - name: contracts + units (offline tier; LAN tiers are refused on CI)
+        run: uv run pytest

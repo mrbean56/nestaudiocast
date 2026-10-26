@@ -2,14 +2,27 @@
 
 from __future__ import annotations
 
-import math
 import time
 
 from v020.contracts import (
-    MSG_CLOCK, MSG_CLOCK_REPLY, MSG_ENDED, MSG_HELLO, MSG_IDLE, MSG_LOAD, MSG_PAUSE,
-    MSG_PLAY_AT, MSG_RATE, MSG_SEEK, MSG_STATE, MSG_STOP,
-    PLAYER_BUFFERING, PLAYER_IDLE, PLAYER_PAUSED, PLAYER_PLAYING,
-    ClockEstimate, Sample,
+    MSG_CLOCK,
+    MSG_CLOCK_REPLY,
+    MSG_ENDED,
+    MSG_HELLO,
+    MSG_IDLE,
+    MSG_LOAD,
+    MSG_PAUSE,
+    MSG_PLAY_AT,
+    MSG_RATE,
+    MSG_SEEK,
+    MSG_STATE,
+    MSG_STOP,
+    PLAYER_BUFFERING,
+    PLAYER_IDLE,
+    PLAYER_PAUSED,
+    PLAYER_PLAYING,
+    ClockEstimate,
+    Sample,
 )
 
 
@@ -25,9 +38,15 @@ class FakeReceiver:
     of ``play_at`` in seconds (the video-side counterpart of evidence/27).
     """
 
-    def __init__(self, app_id: str = "28028CD2", clock=time.monotonic, rate_gain: float = 1.0,
-                 start_jitter: float = 0.0, clock_offset_ms: float = 0.0,
-                 rtt_ms: float = 4.0):
+    def __init__(
+        self,
+        app_id: str = "28028CD2",
+        clock=time.monotonic,
+        rate_gain: float = 1.0,
+        start_jitter: float = 0.0,
+        clock_offset_ms: float = 0.0,
+        rtt_ms: float = 4.0,
+    ):
         self.app_id = app_id
         self.clock = clock
         self.rate_gain = rate_gain
@@ -45,16 +64,22 @@ class FakeReceiver:
         self.outbox: list[dict] = []
         self.calls: list[str] = []
         self.loaded_url: str | None = None
-        self._anchor_ms: float | None = None      # rx_ms at which self.media was valid
+        self._anchor_ms: float | None = None  # rx_ms at which self.media was valid
         self._playing = False
 
     # -- lifecycle ---------------------------------------------------------------------------
     def launch(self, timeout: float = 20.0) -> dict:
         self.launched = True
-        self.outbox.append({"type": MSG_HELLO, "seq": 0, "rx_ms": self.rx_ms(),
-                            "ua": "fake", "codecs": {"h264": True, "hevc": False,
-                                                     "vp9": False, "av1": False},
-                            "version": "0.2.0-fake"})
+        self.outbox.append(
+            {
+                "type": MSG_HELLO,
+                "seq": 0,
+                "rx_ms": self.rx_ms(),
+                "ua": "fake",
+                "codecs": {"h264": True, "hevc": False, "vp9": False, "av1": False},
+                "version": "0.2.0-fake",
+            }
+        )
         return {"applications": [{"appId": self.app_id, "sessionId": "fake-session"}]}
 
     def connect(self, timeout: float = 10.0) -> None:
@@ -85,20 +110,32 @@ class FakeReceiver:
         self.seq += 1
         self.inbox.append({"type": msg_type, "seq": self.seq, **payload})
         handler = {
-            MSG_CLOCK: self._on_clock, MSG_LOAD: self._on_load, MSG_PLAY_AT: self._on_play_at,
-            MSG_PAUSE: self._on_pause, MSG_SEEK: self._on_seek, MSG_RATE: self._on_rate,
-            MSG_STOP: self._on_stop, MSG_IDLE: self._on_stop,
+            MSG_CLOCK: self._on_clock,
+            MSG_LOAD: self._on_load,
+            MSG_PLAY_AT: self._on_play_at,
+            MSG_PAUSE: self._on_pause,
+            MSG_SEEK: self._on_seek,
+            MSG_RATE: self._on_rate,
+            MSG_STOP: self._on_stop,
+            MSG_IDLE: self._on_stop,
         }.get(msg_type)
         if handler is not None:
             handler(self.seq, payload)
         return self.seq
 
     def _emit_state(self, seq: int) -> None:
-        self.outbox.append({
-            "type": MSG_STATE, "seq": seq, "rx_ms": self.rx_ms(),
-            "media": self._media_at(self.rx_ms()), "rate": self.rate,
-            "player_state": self.state, "buffered_end": self.media + 30.0, "dropped": 0,
-        })
+        self.outbox.append(
+            {
+                "type": MSG_STATE,
+                "seq": seq,
+                "rx_ms": self.rx_ms(),
+                "media": self._media_at(self.rx_ms()),
+                "rate": self.rate,
+                "player_state": self.state,
+                "buffered_end": self.media + 30.0,
+                "dropped": 0,
+            }
+        )
 
     def _on_clock(self, seq: int, payload: dict) -> None:
         self.outbox.append({"type": MSG_CLOCK_REPLY, "seq": seq, "rx_ms": self.rx_ms()})
@@ -158,13 +195,23 @@ class FakeReceiver:
 
     def ping(self, n: int = 5) -> ClockEstimate:
         self._on_clock(self.seq, {})
-        return ClockEstimate(offset_ms=self.clock_offset_ms, residual_ms=self.rtt_ms / 2.0,
-                             rtt_ms=self.rtt_ms, samples=n, measured_at=self.clock())
+        return ClockEstimate(
+            offset_ms=self.clock_offset_ms,
+            residual_ms=self.rtt_ms / 2.0,
+            rtt_ms=self.rtt_ms,
+            samples=n,
+            measured_at=self.clock(),
+        )
 
     def latest(self) -> Sample | None:
         rx = self.rx_ms()
-        return Sample(rx_ms=rx, media=self._media_at(rx), rate=self.applied_rate,
-                      player_state=self.state, buffered_end=self.media + 30.0)
+        return Sample(
+            rx_ms=rx,
+            media=self._media_at(rx),
+            rate=self.applied_rate,
+            player_state=self.state,
+            buffered_end=self.media + 30.0,
+        )
 
     def is_ours(self) -> bool:
         return not self.foreign
@@ -173,5 +220,6 @@ class FakeReceiver:
     def end_naturally(self) -> None:
         self._playing = False
         self.state = PLAYER_IDLE
-        self.outbox.append({"type": MSG_ENDED, "seq": self.seq, "rx_ms": self.rx_ms(),
-                            "media": self.media})
+        self.outbox.append(
+            {"type": MSG_ENDED, "seq": self.seq, "rx_ms": self.rx_ms(), "media": self.media}
+        )

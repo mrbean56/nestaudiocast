@@ -15,7 +15,11 @@ import unittest
 from test_sender_support import TempDir, read_log
 
 from sender.group_lock import (
-    GroupLock, boot_cleanup, read_session_record, session_record_path, write_session_record,
+    GroupLock,
+    boot_cleanup,
+    read_session_record,
+    session_record_path,
+    write_session_record,
 )
 from sender.log import EventLog
 from v020.contracts import OWNER_RELAY, OWNER_SENDER
@@ -42,8 +46,9 @@ class LockCase(TempDir, unittest.TestCase):
 class TestAcquire(LockCase):
     def test_creates_the_three_documented_keys(self):
         self.assertTrue(self.lock.acquire())
-        self.assertEqual(self.body(), {"owner": OWNER_SENDER, "pid": 4242,
-                                       "since": self.lock.read()["since"]})
+        self.assertEqual(
+            self.body(), {"owner": OWNER_SENDER, "pid": 4242, "since": self.lock.read()["since"]}
+        )
         self.assertEqual(sorted(self.body()), ["owner", "pid", "since"])
         self.assertEqual(self.lock.owner_name(), OWNER_SENDER)
 
@@ -63,7 +68,7 @@ class TestAcquire(LockCase):
 
     def test_a_stale_lock_is_taken_over_and_logged(self):
         GroupLock(self.path, owner="cast-sender", pid=9999).acquire()
-        self.age(20.0)                                   # > OWNER_STALE_S (15 s)
+        self.age(20.0)  # > OWNER_STALE_S (15 s)
         self.assertTrue(self.lock.acquire())
         self.assertEqual(self.body()["pid"], 4242)
         takeover = [e for e in read_log(self.log.path) if e["event"] == "lock_takeover"]
@@ -92,8 +97,7 @@ class TestAcquire(LockCase):
         self.assertTrue(os.path.exists(self.path))
         self.assertTrue(self.lock.release())
         self.assertFalse(os.path.exists(self.path))
-        self.assertTrue([e for e in read_log(self.log.path)
-                         if e["event"] == "lock_release_skipped"])
+        self.assertTrue([e for e in read_log(self.log.path) if e["event"] == "lock_release_skipped"])
 
     def test_heartbeat_refreshes_and_notices_a_loss(self):
         self.assertTrue(self.lock.acquire())
@@ -130,6 +134,7 @@ class TestBootCleanup(TempDir, unittest.TestCase):
 
     def _seams(self):
         from test_sender_support import seams
+
         link, group, proxy, _resolver = seams()
         return link, group, proxy
 
@@ -156,8 +161,9 @@ class TestBootCleanup(TempDir, unittest.TestCase):
         self.assertEqual(result["actions"], [])
         self.assertEqual(group.calls, [])
         self.assertEqual(link.calls, [])
-        self.assertTrue([e for e in read_log(self.log.path)
-                         if e["event"] == "boot_cleanup_nothing_recorded"])
+        self.assertTrue(
+            [e for e in read_log(self.log.path) if e["event"] == "boot_cleanup_nothing_recorded"]
+        )
 
     def test_our_record_is_undone_in_order(self):
         self._record()
@@ -169,14 +175,15 @@ class TestBootCleanup(TempDir, unittest.TestCase):
         self.assertEqual(link.calls, ["stop"])
         self.assertNotIn("s1", proxy.sessions)
         self.assertFalse(os.path.exists(self.path))
-        self.assertTrue([e for e in read_log(self.log.path)
-                         if e["event"] == "boot_cleanup_done"])
+        self.assertTrue([e for e in read_log(self.log.path) if e["event"] == "boot_cleanup_done"])
 
     def test_only_our_mutes_are_undone(self):
-        self._record(mutes=[
-            {"name": "Cuisine", "level": 0.35, "muted": False, "by": OWNER_SENDER},
-            {"name": "Cuisine", "level": 0.5, "muted": True, "by": OWNER_RELAY},
-        ])
+        self._record(
+            mutes=[
+                {"name": "Cuisine", "level": 0.35, "muted": False, "by": OWNER_SENDER},
+                {"name": "Cuisine", "level": 0.5, "muted": True, "by": OWNER_RELAY},
+            ]
+        )
         link, group, proxy = self._seams()
         result = boot_cleanup(self.path, group=group, link=link, proxy=proxy, log=self.log)
         self.assertEqual(result["actions"][-1], "mute_undone:Cuisine")
@@ -190,7 +197,7 @@ class TestBootCleanup(TempDir, unittest.TestCase):
         self.assertEqual(result["actions"], [])
         self.assertEqual(group.calls, [])
         self.assertEqual(link.calls, [])
-        self.assertTrue(os.path.exists(self.path))       # never deleted by the wrong owner
+        self.assertTrue(os.path.exists(self.path))  # never deleted by the wrong owner
         self.assertEqual(read_session_record(self.path)["owner"], OWNER_RELAY)
 
     def test_a_session_that_never_prepared_the_group_is_not_stopped(self):
@@ -213,13 +220,18 @@ class TestBootCleanup(TempDir, unittest.TestCase):
             def close_session(self, _sid):
                 raise RuntimeError("gone")
 
-        result = boot_cleanup(self.path, group=Broken(), link=Broken(), proxy=Broken(),
-                              log=self.log)
-        self.assertEqual(result["actions"], ["group_stop_failed:RuntimeError",
-                                            "receiver_stop_failed:RuntimeError",
-                                            "proxy_close_failed:RuntimeError"])
-        self.assertEqual(len([e for e in read_log(self.log.path)
-                              if e["event"] == "boot_cleanup_error"]), 3)
+        result = boot_cleanup(self.path, group=Broken(), link=Broken(), proxy=Broken(), log=self.log)
+        self.assertEqual(
+            result["actions"],
+            [
+                "group_stop_failed:RuntimeError",
+                "receiver_stop_failed:RuntimeError",
+                "proxy_close_failed:RuntimeError",
+            ],
+        )
+        self.assertEqual(
+            len([e for e in read_log(self.log.path) if e["event"] == "boot_cleanup_error"]), 3
+        )
 
 
 if __name__ == "__main__":

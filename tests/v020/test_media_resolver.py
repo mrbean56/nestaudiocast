@@ -34,8 +34,9 @@ def recorded() -> dict:
 class Extractor:
     """Stands in for ``resolve._ytdlp_extract``: records calls, returns a fixed answer."""
 
-    def __init__(self, info: dict | None = None, *, exc: BaseException | None = None,
-                 delay: float = 0.0):
+    def __init__(
+        self, info: dict | None = None, *, exc: BaseException | None = None, delay: float = 0.0
+    ):
         self.info = info if info is not None else recorded()
         self.exc = exc
         self.delay = delay
@@ -88,12 +89,12 @@ class TestVideoId(unittest.TestCase):
     def test_prefix_traps_rejected(self):
         """The A33 lesson: a predicate that accepts a prefix passes on a wrong string."""
         traps = [
-            "ai_gI0Jbr_E.m4a",                       # the exact failure of A33
-            "ai_gI0Jbr_Ex",                          # 12 chars
-            "ai_gI0Jbr_",                            # 10 chars
+            "ai_gI0Jbr_E.m4a",  # the exact failure of A33
+            "ai_gI0Jbr_Ex",  # 12 chars
+            "ai_gI0Jbr_",  # 10 chars
             "https://www.youtube.com/watch?v=ai_gI0Jbr_Ex",
             "https://www.youtube.com/watch?v=ai_gI0Jbr_E.m4a",
-            "https://youtu.be/ai_gI0Jbr_E/extra",    # id then more path
+            "https://youtu.be/ai_gI0Jbr_E/extra",  # id then more path
             "https://youtu.be/ai_gI0Jbr_Ex",
             "https://www.youtube.com/watch?v=ai_gI0Jbr_E&v=abcdefghijk",  # two v=
             "https://www.youtube.com/watch?v=",
@@ -110,8 +111,10 @@ class TestVideoId(unittest.TestCase):
 
 class TestRedact(unittest.TestCase):
     def test_token_never_survives(self):
-        url = ("https://rr4---sn-cxaaj5o5q5-t0ay.googlevideo.com/videoplayback?expire=1793000373"
-               "&ei=Va_eaqaf&ip=184.146.252.246&id=o-AH&itag=140&sig=SECRETSIGNATURE&lsig=X")
+        url = (
+            "https://rr4---sn-cxaaj5o5q5-t0ay.googlevideo.com/videoplayback?expire=1793000373"
+            "&ei=Va_eaqaf&ip=184.146.252.246&id=o-AH&itag=140&sig=SECRETSIGNATURE&lsig=X"
+        )
         out = R.redact(url)
         self.assertEqual(out, "https://rr4---sn-cxaaj5o5q5-t0ay.googlevideo.com/videop…")
         for leak in ("expire", "sig", "SECRET", "184.146", "videoplayback"):
@@ -149,7 +152,7 @@ class TestResolve(Base):
         media = R.resolve("ai_gI0Jbr_E", max_height=720)
         self.assertEqual(media.video.height, 720)
         self.assertEqual(media.video.itag, 136)
-        self.assertEqual(media.audio.itag, 140)          # audio untouched by the cap
+        self.assertEqual(media.audio.itag, 140)  # audio untouched by the cap
 
     def test_extractor_ranges_are_kept_and_absent_by_default(self):
         info = recorded()
@@ -163,7 +166,7 @@ class TestResolve(Base):
         self.assertEqual(media.video.index_range, (742, 19901))
         self.use(Extractor())
         media = R.resolve("ai_gI0Jbr_E")
-        self.assertIsNone(media.video.init_range)        # the proxy discovers them instead
+        self.assertIsNone(media.video.init_range)  # the proxy discovers them instead
         self.assertIsNone(media.video.index_range)
 
     def test_expiry_is_the_earliest_source_token(self):
@@ -171,8 +174,9 @@ class TestResolve(Base):
         for fmt in info["formats"]:
             if fmt["format_id"] in ("137", "140"):
                 fmt["url"] = fmt["url"].replace("expire=1793000571", "expire=1793000571")
-        info["formats"][0]["url"] = info["formats"][0]["url"].replace("expire=1793000571",
-                                                                     "expire=1793000000")
+        info["formats"][0]["url"] = info["formats"][0]["url"].replace(
+            "expire=1793000571", "expire=1793000000"
+        )
         self.use(Extractor(info))
         media = R.resolve("ai_gI0Jbr_E")
         self.assertAlmostEqual(media.expires_at, 1793000000 - 60)
@@ -186,9 +190,11 @@ class TestResolve(Base):
         self.assertEqual(extractor.calls[0][1], 0.2)
 
     def test_live_and_upcoming_refused(self):
-        for live in ({"is_live": True, "live_status": "is_live"},
-                     {"is_live": False, "live_status": "is_upcoming"},
-                     {"is_live": False, "live_status": "post_live"}):
+        for live in (
+            {"is_live": True, "live_status": "is_live"},
+            {"is_live": False, "live_status": "is_upcoming"},
+            {"is_live": False, "live_status": "post_live"},
+        ):
             info = recorded()
             info.update(live)
             self.use(Extractor(info))
@@ -207,20 +213,23 @@ class TestResolve(Base):
         class DownloadError(Exception):
             pass
 
-        exc = DownloadError("ERROR: [youtube] ai_gI0Jbr_E: Private video. Sign in if you've "
-                            "been granted access. See https://rr1.googlevideo.com/v?expire=1")
+        exc = DownloadError(
+            "ERROR: [youtube] ai_gI0Jbr_E: Private video. Sign in if you've "
+            "been granted access. See https://rr1.googlevideo.com/v?expire=1"
+        )
         self.use(Extractor(exc=exc))
         with self.assertRaises(R.ResolveError) as caught:
             R.resolve("ai_gI0Jbr_E")
         text = str(caught.exception)
         self.assertIn("Private video", text)
-        self.assertNotIn("expire=1", text)               # a token in a message is a leak
+        self.assertNotIn("expire=1", text)  # a token in a message is a leak
         self.assertNotIn("googlevideo", text)
 
     def test_no_avc1_refused(self):
         info = recorded()
-        info["formats"] = [f for f in info["formats"]
-                           if not str(f.get("vcodec") or "").startswith("avc1")]
+        info["formats"] = [
+            f for f in info["formats"] if not str(f.get("vcodec") or "").startswith("avc1")
+        ]
         self.use(Extractor(info))
         with self.assertRaises(R.ResolveError) as caught:
             R.resolve("ai_gI0Jbr_E")
@@ -228,8 +237,9 @@ class TestResolve(Base):
 
     def test_no_aac_refused(self):
         info = recorded()
-        info["formats"] = [f for f in info["formats"]
-                           if not str(f.get("acodec") or "").startswith("mp4a")]
+        info["formats"] = [
+            f for f in info["formats"] if not str(f.get("acodec") or "").startswith("mp4a")
+        ]
         self.use(Extractor(info))
         with self.assertRaises(R.ResolveError) as caught:
             R.resolve("ai_gI0Jbr_E")
@@ -240,7 +250,7 @@ class TestResolve(Base):
         with self.assertRaises(R.ResolveError) as caught:
             R.resolve("ai_gI0Jbr_E", max_height=240)
         self.assertIn("240", str(caught.exception))
-        self.assertIn("720", str(caught.exception))      # says what is available
+        self.assertIn("720", str(caught.exception))  # says what is available
 
     def test_no_duration_refused(self):
         info = recorded()

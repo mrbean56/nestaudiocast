@@ -47,8 +47,8 @@ from typing import Any, Iterable, Sequence
 from . import contracts as C
 
 _LIB = str(Path(__file__).resolve().parent.parent)
-if _LIB not in sys.path:            # lib/ holds castv2.py; CI imports this module on a bare
-    sys.path.insert(0, _LIB)        # python, so the pychromecast-backed import stays lazy
+if _LIB not in sys.path:  # lib/ holds castv2.py; CI imports this module on a bare
+    sys.path.insert(0, _LIB)  # python, so the pychromecast-backed import stays lazy
 
 _CASTV2 = None
 
@@ -61,7 +61,7 @@ def _castv2():
     """
     global _CASTV2
     if _CASTV2 is None:
-        import castv2 as mod     # noqa: PLC0415  (deliberate: see docstring)
+        import castv2 as mod  # noqa: PLC0415  (deliberate: see docstring)
 
         _CASTV2 = mod
     return _CASTV2
@@ -152,7 +152,7 @@ def estimate_clock(samples: Iterable[Sequence[float]]) -> tuple[C.ClockEstimate,
     for t0, rx, t3 in samples:
         t0, rx, t3 = float(t0), float(rx), float(t3)
         rtt = t3 - t0
-        if rtt < 0.0:                      # impossible without a clock jump: ignore
+        if rtt < 0.0:  # impossible without a clock jump: ignore
             continue
         rows.append({"rtt_ms": rtt, "offset_ms": rx - (t0 + t3) / 2.0})
     if not rows:
@@ -161,8 +161,7 @@ def estimate_clock(samples: Iterable[Sequence[float]]) -> tuple[C.ClockEstimate,
     offset = best["offset_ms"]
     deviations = sorted(abs(row["offset_ms"] - offset) for row in rows)
     n = len(deviations)
-    median_dev = (deviations[n // 2] if n % 2
-                  else (deviations[n // 2 - 1] + deviations[n // 2]) / 2.0)
+    median_dev = deviations[n // 2] if n % 2 else (deviations[n // 2 - 1] + deviations[n // 2]) / 2.0
     residual = 1.4826 * median_dev
     est = C.ClockEstimate(
         offset_ms=offset,
@@ -197,7 +196,7 @@ class SenderLink:
         self._owns = False
 
         # protocol state
-        self.seq = 0                       # never reset across reconnects
+        self.seq = 0  # never reset across reconnects
         self.hello: dict | None = None
         self.hellos = 0
         self.last_state: C.Sample | None = None
@@ -206,9 +205,9 @@ class SenderLink:
         self._hello_pending = False
         self._media_loaded = False
         self._last_send_at = 0.0
-        self.last_send_ms = 0.0            # controller clock at the write of the last message
+        self.last_send_ms = 0.0  # controller clock at the write of the last message
         self._status: dict = {}
-        self._adopt_at = 0.0               # statuses older than this describe a previous owner
+        self._adopt_at = 0.0  # statuses older than this describe a previous owner
 
         # clock state
         self.clock: C.ClockEstimate | None = None
@@ -230,7 +229,7 @@ class SenderLink:
         except TypeError:
             try:
                 self.log(json.dumps({"ev": event, **fields}, default=str, ensure_ascii=False))
-            except Exception:          # noqa: BLE001  (a logger must never break the link)
+            except Exception:  # noqa: BLE001  (a logger must never break the link)
                 pass
 
     # -- lifecycle ---------------------------------------------------------------------------
@@ -256,7 +255,8 @@ class SenderLink:
         elif app_id is not None:
             self._mark_lost(f"foreign_app:{app_id}")
             raise LostDevice(
-                f"{self.host} is running {app_id!r}, not ours ({self.app_id}); refusing to launch")
+                f"{self.host} is running {app_id!r}, not ours ({self.app_id}); refusing to launch"
+            )
         else:
             try:
                 payload = self.link.launch(self.app_id, timeout=timeout)
@@ -270,8 +270,13 @@ class SenderLink:
         self.lost_reason = None
         self._adopt_app(status, attach=True)
         self._wait_hello(timeout)
-        self._emit("launched", app_id=self.app_id, transport=self.transport,
-                   session_id=self.session_id, hellos=self.hellos)
+        self._emit(
+            "launched",
+            app_id=self.app_id,
+            transport=self.transport,
+            session_id=self.session_id,
+            hellos=self.hellos,
+        )
         return status
 
     def connect(self, timeout: float = 10.0) -> None:
@@ -300,8 +305,13 @@ class SenderLink:
         self.lost_reason = None
         self._adopt_app(status, attach=True)
         self._wait_hello(timeout)
-        self._emit("connected", transport=self.transport, session_id=self.session_id,
-                   seq=self.seq, hellos=self.hellos)
+        self._emit(
+            "connected",
+            transport=self.transport,
+            session_id=self.session_id,
+            seq=self.seq,
+            hellos=self.hellos,
+        )
 
     def reconnect(self, attempts: int | None = None, timeout: float = 5.0) -> None:
         """Bounded backoff reconnect; keeps ``seq``, ``last_state`` and the last clock.
@@ -320,20 +330,28 @@ class SenderLink:
             try:
                 self.connect(timeout=timeout)
                 self.reconnects += 1
-                self._emit("reconnected", attempt=attempt + 1, transport=self.transport,
-                           seq=self.seq, host=self.host)
+                self._emit(
+                    "reconnected",
+                    attempt=attempt + 1,
+                    transport=self.transport,
+                    seq=self.seq,
+                    host=self.host,
+                )
                 return
             except LostDevice:
                 raise
-            except Exception as exc:       # noqa: BLE001  (LinkDown, CastError, OSError)
+            except Exception as exc:  # noqa: BLE001  (LinkDown, CastError, OSError)
                 last = exc
             delay = RECONNECT_DELAYS_S[min(attempt, len(RECONNECT_DELAYS_S) - 1)]
             delay *= 1.0 + random.uniform(-0.2, 0.2)
-            self._emit("reconnect_failed", attempt=attempt + 1, delay_ms=round(delay * 1000),
-                       error=f"{type(last).__name__}: {last}")
+            self._emit(
+                "reconnect_failed",
+                attempt=attempt + 1,
+                delay_ms=round(delay * 1000),
+                error=f"{type(last).__name__}: {last}",
+            )
             time.sleep(delay)
-        raise LinkDown(
-            f"reconnect to {self.host}:{self.port} failed after {attempts} attempts: {last}")
+        raise LinkDown(f"reconnect to {self.host}:{self.port} failed after {attempts} attempts: {last}")
 
     def close(self) -> None:
         self.closed = True
@@ -345,7 +363,8 @@ class SenderLink:
         if msg_type not in C.CONTROLLER_MESSAGES:
             raise ValueError(
                 f"unknown controller message type {msg_type!r}; "
-                f"allowed: {', '.join(C.CONTROLLER_MESSAGES)}")
+                f"allowed: {', '.join(C.CONTROLLER_MESSAGES)}"
+            )
         for reserved in ("type", "seq"):
             if reserved in payload:
                 raise ValueError(f"payload may not carry {reserved!r}: the link owns that field")
@@ -364,10 +383,10 @@ class SenderLink:
         if not self.transport:
             raise LinkDown("not attached to the receiver transport; call connect()")
 
-        self._service()                    # keepalive + harvest before we write
+        self._service()  # keepalive + harvest before we write
         if self.link is None or self.closed:
             raise LinkDown("link dropped while sending")
-        if self.lost_reason:               # a status read by that pass may have just lost it
+        if self.lost_reason:  # a status read by that pass may have just lost it
             raise LostDevice(self.lost_reason)
 
         self.seq += 1
@@ -375,7 +394,7 @@ class SenderLink:
         try:
             self.last_send_ms = now_ms()
             self.link.send(self.transport, C.NS_RECEIVER, body)
-        except Exception as exc:           # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
             self._link_error(exc)
             raise LinkDown(f"send {msg_type} failed: {type(exc).__name__}: {exc}") from exc
 
@@ -414,7 +433,7 @@ class SenderLink:
         samples: list[tuple[float, float, float]] = []
         for _ in range(n):
             seq = self.send(C.MSG_CLOCK)
-            t0 = self.last_send_ms   # stamped just before the write, not before the service pass
+            t0 = self.last_send_ms  # stamped just before the write, not before the service pass
             reply = self._wait_reply(C.MSG_CLOCK_REPLY, seq, CLOCK_TIMEOUT_S)
             if reply is None:
                 self._emit("clock_no_reply", seq=seq)
@@ -442,7 +461,7 @@ class SenderLink:
         except cv.CastError as exc:
             self._mark_lost(f"status_failed:{type(exc).__name__}")
             return False
-        except Exception as exc:           # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
             self._mark_lost(f"status_failed:{type(exc).__name__}")
             return False
 
@@ -496,10 +515,15 @@ class SenderLink:
         if backwards or abs(jump) > tol:
             self.clock_flagged = True
             self.clock_jump_ms = round(jump, 3)
-            self._emit("clock_jump_flagged", jump_ms=round(jump, 3), backwards=backwards,
-                       rtt_ms=round(est.rtt_ms, 3), residual_ms=round(est.residual_ms, 3),
-                       kept_offset_ms=round(self.clock.offset_ms, 3))
-            return self.clock               # flagged, not followed
+            self._emit(
+                "clock_jump_flagged",
+                jump_ms=round(jump, 3),
+                backwards=backwards,
+                rtt_ms=round(est.rtt_ms, 3),
+                residual_ms=round(est.residual_ms, 3),
+                kept_offset_ms=round(self.clock.offset_ms, 3),
+            )
+            return self.clock  # flagged, not followed
         self.clock = est
         self.clock_flagged = False
         self.clock_jump_ms = None
@@ -524,7 +548,7 @@ class SenderLink:
             pass
         try:
             self.link.connect_platform()
-        except Exception as exc:           # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
             self._close_link()
             self.closed = True
             raise LinkDown(f"CONNECT to {self.host}:{self.port} failed: {exc}") from exc
@@ -534,7 +558,7 @@ class SenderLink:
         if link is not None:
             try:
                 link.close()
-            except Exception:              # noqa: BLE001
+            except Exception:  # noqa: BLE001
                 pass
 
     def _adopt_app(self, status: dict, attach: bool = True) -> None:
@@ -549,11 +573,11 @@ class SenderLink:
             self._emit("transport_changed", old=self.transport, new=transport)
         self.transport = transport
         self._owns = True
-        self._adopt_at = time.time()       # older RECEIVER_STATUSes are stale by definition
+        self._adopt_at = time.time()  # older RECEIVER_STATUSes are stale by definition
         if attach or changed:
             try:
                 self.link.connect_transport(transport)
-            except Exception as exc:       # noqa: BLE001
+            except Exception as exc:  # noqa: BLE001
                 self._link_error(exc)
                 raise LinkDown(f"CONNECT to transport {transport} failed: {exc}") from exc
             self._hello_pending = True
@@ -567,8 +591,8 @@ class SenderLink:
                 self._close_link()
                 self.closed = True
                 raise LinkDown(
-                    f"no hello on {C.NS_RECEIVER} from {self.host}:{self.port} "
-                    f"within {timeout:.1f}s")
+                    f"no hello on {C.NS_RECEIVER} from {self.host}:{self.port} within {timeout:.1f}s"
+                )
             self._service(timeout=min(0.05, max(0.001, deadline - time.monotonic())))
             if self.link is None:
                 raise LinkDown(f"link to {self.host} died while waiting for hello")
@@ -584,7 +608,7 @@ class SenderLink:
             return
         try:
             self.link.keepalive(HEARTBEAT_S)
-        except Exception as exc:           # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
             self._link_error(exc)
             return
         self._harvest()
@@ -594,7 +618,7 @@ class SenderLink:
             for _ in range(4096):
                 try:
                     got = self.link.pump(0.0)
-                except Exception as exc:   # noqa: BLE001
+                except Exception as exc:  # noqa: BLE001
                     self._link_error(exc)
                     return
                 self._harvest()
@@ -611,7 +635,7 @@ class SenderLink:
                     return
                 try:
                     got = self.link.pump(min(0.002, left))
-                except Exception as exc:   # noqa: BLE001
+                except Exception as exc:  # noqa: BLE001
                     self._link_error(exc)
                     return
                 self._harvest()
@@ -648,11 +672,11 @@ class SenderLink:
         payload = rec.get("payload")
         if not isinstance(payload, dict):
             return
-        if ns == NS_CAST_RECEIVER:         # the google receiver namespace: presence only
+        if ns == NS_CAST_RECEIVER:  # the google receiver namespace: presence only
             if payload.get("type") == "RECEIVER_STATUS":
                 self._note_status(payload.get("status") or {}, rec.get("t"))
             return
-        if ns != C.NS_RECEIVER:            # media/heartbeat/connection noise: not ours
+        if ns != C.NS_RECEIVER:  # media/heartbeat/connection noise: not ours
             return
         typ = payload.get("type")
         if typ == C.MSG_HELLO:
@@ -674,9 +698,15 @@ class SenderLink:
         self.clock_flagged = False
         self.clock_jump_ms = None
         self._backwards_at_last_ping = self.clock_backwards
-        self._emit("hello", ua=payload.get("ua"), version=payload.get("version"),
-                   codecs=payload.get("codecs"), seq=payload.get("seq"),
-                   rx_ms=payload.get("rx_ms"), hellos=self.hellos)
+        self._emit(
+            "hello",
+            ua=payload.get("ua"),
+            version=payload.get("version"),
+            codecs=payload.get("codecs"),
+            seq=payload.get("seq"),
+            rx_ms=payload.get("rx_ms"),
+            hellos=self.hellos,
+        )
         if had_clock:
             self._emit("clock_rebased", reason="hello")
         if self._media_loaded:
@@ -698,7 +728,7 @@ class SenderLink:
             self._emit("state_malformed", payload=payload)
             return None
         if not self._guard_clock(payload):
-            return None                    # flagged, not followed
+            return None  # flagged, not followed
         rate = payload.get("rate", 1.0)
         buffered = payload.get("buffered_end")
         return C.Sample(
@@ -717,9 +747,12 @@ class SenderLink:
         rx = float(rx)
         if self._last_rx_ms is not None and rx < self._last_rx_ms - CLOCK_BACKWARDS_TOL_MS:
             self.clock_backwards += 1
-            self._emit("receiver_clock_backwards", rx_ms=round(rx, 3),
-                       last_rx_ms=round(self._last_rx_ms, 3),
-                       delta_ms=round(rx - self._last_rx_ms, 3))
+            self._emit(
+                "receiver_clock_backwards",
+                rx_ms=round(rx, 3),
+                last_rx_ms=round(self._last_rx_ms, 3),
+                delta_ms=round(rx - self._last_rx_ms, 3),
+            )
             return False
         self._last_rx_ms = rx if self._last_rx_ms is None else max(self._last_rx_ms, rx)
         return True
@@ -748,8 +781,12 @@ class SenderLink:
             self._mark_lost(f"foreign_app:{app_id}")
             return
         new_transport = app.get("transportId")
-        if (new_transport and self.link is not None and self.transport is not None
-                and new_transport != self.transport):
+        if (
+            new_transport
+            and self.link is not None
+            and self.transport is not None
+            and new_transport != self.transport
+        ):
             self._emit("receiver_restarted", old=self.transport, new=new_transport)
             try:
                 self._adopt_app(self._status, attach=True)
@@ -760,8 +797,9 @@ class SenderLink:
         self._owns = False
         if self.lost_reason is None:
             self.lost_reason = reason
-            self._emit("device_lost", reason=reason, host=self.host, seq=self.seq,
-                       transport=self.transport)
+            self._emit(
+                "device_lost", reason=reason, host=self.host, seq=self.seq, transport=self.transport
+            )
 
     def _link_error(self, exc: Exception | str) -> None:
         name = exc if isinstance(exc, str) else f"{type(exc).__name__}: {exc}"
@@ -787,8 +825,11 @@ def probe(host: str, port: int = 8008, timeout: float = 4.0) -> dict:
     conn = None
     try:
         conn = http.client.HTTPConnection(host, port, timeout=timeout)
-        conn.request("GET", "/setup/eureka_info?options=detail",
-                     headers={"User-Agent": "nestaudiocast-v020-probe", "Connection": "close"})
+        conn.request(
+            "GET",
+            "/setup/eureka_info?options=detail",
+            headers={"User-Agent": "nestaudiocast-v020-probe", "Connection": "close"},
+        )
         reply = conn.getresponse()
         raw = reply.read(262144)
         res["status"] = reply.status
@@ -798,8 +839,19 @@ def probe(host: str, port: int = 8008, timeout: float = 4.0) -> dict:
             return res
         data = json.loads(raw.decode("utf-8", "replace"))
         device = data.get("device_info") or {}
-        for key in ("name", "version", "build_version", "uptime", "ip_address", "locale",
-                    "release_track", "signal_level", "has_update", "time_format", "timezone"):
+        for key in (
+            "name",
+            "version",
+            "build_version",
+            "uptime",
+            "ip_address",
+            "locale",
+            "release_track",
+            "signal_level",
+            "has_update",
+            "time_format",
+            "timezone",
+        ):
             if key in data:
                 res[key] = data[key]
         for key in ("manufacturer", "model_name", "capabilities"):
@@ -812,6 +864,6 @@ def probe(host: str, port: int = 8008, timeout: float = 4.0) -> dict:
         if conn is not None:
             try:
                 conn.close()
-            except Exception:              # noqa: BLE001
+            except Exception:  # noqa: BLE001
                 pass
     return res

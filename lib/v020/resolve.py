@@ -30,9 +30,14 @@ _ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
 
 #: Hosts we accept a link from. ``youtu.be`` is the short form.
 _SHORT_HOST = "youtu.be"
-_LONG_HOSTS = frozenset({
-    "youtube.com", "m.youtube.com", "music.youtube.com", "youtube-nocookie.com",
-})
+_LONG_HOSTS = frozenset(
+    {
+        "youtube.com",
+        "m.youtube.com",
+        "music.youtube.com",
+        "youtube-nocookie.com",
+    }
+)
 #: Path prefixes that carry the id as the second segment.
 _PATH_FORMS = frozenset({"shorts", "embed", "live", "v", "e"})
 
@@ -106,7 +111,7 @@ def video_id_of(url: str) -> str:
         if len(segments) == 1 and _ID_RE.match(segments[0]):
             return segments[0]
         raise ResolveError(f"not a youtu.be/<id> path: {redact(text)}")
-    if (len(segments) == 2 and segments[0] in _PATH_FORMS and _ID_RE.match(segments[1])):
+    if len(segments) == 2 and segments[0] in _PATH_FORMS and _ID_RE.match(segments[1]):
         return segments[1]
     raise ResolveError(f"no 11-char video id in {redact(text)}")
 
@@ -126,7 +131,6 @@ def _extract(url: str, timeout: float) -> dict:
             box["error"] = exc
 
     thread = threading.Thread(target=work, name="resolve-extract", daemon=True)
-    started = time.monotonic()
     thread.start()
     thread.join(timeout)
     if thread.is_alive():
@@ -180,7 +184,8 @@ def _is_direct(fmt: dict) -> bool:
 
 def _pick_video(formats: list[dict], max_height: int) -> dict:
     usable = [
-        f for f in formats
+        f
+        for f in formats
         if _is_direct(f)
         and str(f.get("vcodec") or "").startswith("avc1")
         and str(f.get("acodec") or "none") in ("none", "")
@@ -191,15 +196,14 @@ def _pick_video(formats: list[dict], max_height: int) -> dict:
         smallest = min((f["height"] for f in usable), default=None)
         if smallest is None:
             raise ResolveError("no direct avc1 video track in the extraction")
-        raise ResolveError(
-            f"no avc1 track at or below {max_height}p (smallest available: {smallest}p)")
-    return max(capped, key=lambda f: (f["height"], f.get("fps") or 0.0,
-                                      f.get("tbr") or 0.0))
+        raise ResolveError(f"no avc1 track at or below {max_height}p (smallest available: {smallest}p)")
+    return max(capped, key=lambda f: (f["height"], f.get("fps") or 0.0, f.get("tbr") or 0.0))
 
 
 def _pick_audio(formats: list[dict]) -> dict:
     usable = [
-        f for f in formats
+        f
+        for f in formats
         if _is_direct(f)
         and str(f.get("acodec") or "").startswith("mp4a")
         and str(f.get("vcodec") or "none") in ("none", "")
@@ -240,8 +244,7 @@ def _expiry(url: str) -> float | None:
 def _check_not_live(info: dict) -> None:
     status = str(info.get("live_status") or "").lower()
     if info.get("is_live") or status in ("is_live", "is_upcoming", "post_live"):
-        raise ResolveError(f"live stream ({status or 'is_live'}): no known duration, "
-                           f"not a bounded file")
+        raise ResolveError(f"live stream ({status or 'is_live'}): no known duration, not a bounded file")
     if int(info.get("age_limit") or 0) >= 18:
         raise ResolveError("age-gated video: the extractor returns no playable formats")
 
@@ -254,8 +257,7 @@ def resolve(url: str, *, max_height: int = 1080, timeout: float = 30.0) -> Resol
     expiry of the two source URLs; the proxy refreshes before it.
     """
     video_id = video_id_of(url)
-    target = (url.strip() if "://" in url else
-              f"https://www.youtube.com/watch?v={video_id}")
+    target = url.strip() if "://" in url else f"https://www.youtube.com/watch?v={video_id}"
     info = _extract(target, float(timeout))
     _check_not_live(info)
 
@@ -277,17 +279,24 @@ def resolve(url: str, *, max_height: int = 1080, timeout: float = 30.0) -> Resol
     fetched_at = time.time()
 
     video = Track(
-        itag=_itag(vfmt), codecs=str(vfmt.get("vcodec") or ""),
-        content_type="video/mp4", url=str(vfmt.get("url") or ""),
-        width=vfmt.get("width"), height=vfmt.get("height"),
+        itag=_itag(vfmt),
+        codecs=str(vfmt.get("vcodec") or ""),
+        content_type="video/mp4",
+        url=str(vfmt.get("url") or ""),
+        width=vfmt.get("width"),
+        height=vfmt.get("height"),
         fps=float(vfmt["fps"]) if vfmt.get("fps") else None,
         init_range=_range_pair(vfmt, "init_range"),
         index_range=_range_pair(vfmt, "index_range"),
     )
     audio = Track(
-        itag=_itag(afmt), codecs=str(afmt.get("acodec") or ""),
-        content_type="audio/mp4", url=str(afmt.get("url") or ""),
-        width=None, height=None, fps=None,
+        itag=_itag(afmt),
+        codecs=str(afmt.get("acodec") or ""),
+        content_type="audio/mp4",
+        url=str(afmt.get("url") or ""),
+        width=None,
+        height=None,
+        fps=None,
         init_range=_range_pair(afmt, "init_range"),
         index_range=_range_pair(afmt, "index_range"),
     )

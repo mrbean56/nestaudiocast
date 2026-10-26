@@ -20,12 +20,12 @@ for _path in (ROOT, LIB, HERE):
     if _path not in sys.path:
         sys.path.insert(0, _path)
 
-from v020 import contracts as C  # noqa: E402
 from sender.api import SenderAPI  # noqa: E402
 from sender.config import Config  # noqa: E402
 from sender.log import EventLog, NullLog  # noqa: E402
 from sender.offline import FakeClock, HostileController, TrimController, seams  # noqa: E402
 from sender.session import SessionManager  # noqa: E402
+from v020 import contracts as C  # noqa: E402
 
 YOUTUBE = "https://www.youtube.com/watch?v=QzomK1fdSUg"
 
@@ -91,8 +91,18 @@ class TempDir:
         super().tearDown()
 
 
-def make_sender(root: str, *, controller=None, quiet=None, spawn=None, config=None,
-                clock=None, log=None, link_clock=True, state_dir=None) -> types.SimpleNamespace:
+def make_sender(
+    root: str,
+    *,
+    controller=None,
+    quiet=None,
+    spawn=None,
+    config=None,
+    clock=None,
+    log=None,
+    link_clock=True,
+    state_dir=None,
+) -> types.SimpleNamespace:
     """A SessionManager wired to the fakes, with the helpers a test needs."""
     config = config or make_config(root)
     clock = clock or FakeClock()
@@ -101,14 +111,33 @@ def make_sender(root: str, *, controller=None, quiet=None, spawn=None, config=No
     log = log if log is not None else EventLog(directory=config.evidence_dir)
     state_dir = state_dir or config.state_dir
     sender = SessionManager(
-        link=link, group=group, controller=controller, proxy=proxy, config=config, log=log,
-        resolver=resolver, quiet=quiet, clock=clock, wall=getattr(clock, "now", None),
-        spawn=spawn if spawn is not None else (lambda fn: fn()), state_dir=state_dir)
+        link=link,
+        group=group,
+        controller=controller,
+        proxy=proxy,
+        config=config,
+        log=log,
+        resolver=resolver,
+        quiet=quiet,
+        clock=clock,
+        wall=getattr(clock, "now", None),
+        spawn=spawn if spawn is not None else (lambda fn: fn()),
+        state_dir=state_dir,
+    )
     fixture = types.SimpleNamespace(
-        sender=sender, link=link, group=group, proxy=proxy, resolver=resolver,
-        controller=controller, clock=clock, config=config, log=log, state_dir=state_dir,
+        sender=sender,
+        link=link,
+        group=group,
+        proxy=proxy,
+        resolver=resolver,
+        controller=controller,
+        clock=clock,
+        config=config,
+        log=log,
+        state_dir=state_dir,
         record_path=os.path.join(state_dir, "session.json"),
-        lock_path=os.path.join(state_dir, "group.owner"))
+        lock_path=os.path.join(state_dir, "group.owner"),
+    )
     _FIXTURES.append(fixture)
     return fixture
 
@@ -120,14 +149,34 @@ def tick(fixture, count: int, dt: float = 0.25) -> None:
 
 
 def make_api(fixture, *, extra_allowed=(), receiver_dir=None, assets_dir=None) -> SenderAPI:
-    return SenderAPI(fixture.sender, config=fixture.config, log=fixture.log,
-                     proxy=fixture.proxy, receiver_dir=receiver_dir or fixture.config.receiver_dir,
-                     assets_dir=assets_dir or fixture.config.assets_dir,
-                     extra_allowed=extra_allowed)
+    return SenderAPI(
+        fixture.sender,
+        config=fixture.config,
+        log=fixture.log,
+        proxy=fixture.proxy,
+        receiver_dir=receiver_dir or fixture.config.receiver_dir,
+        assets_dir=assets_dir or fixture.config.assets_dir,
+        extra_allowed=extra_allowed,
+    )
 
 
 __all__ = [
-    "C", "EventLog", "FakeClock", "HostileController", "NullLog", "SenderAPI",
-    "SessionManager", "TempDir", "TrimController", "YOUTUBE", "close_fixtures", "events_named",
-    "make_api", "make_config", "make_sender", "read_log", "seams", "tick",
+    "C",
+    "EventLog",
+    "FakeClock",
+    "HostileController",
+    "NullLog",
+    "SenderAPI",
+    "SessionManager",
+    "TempDir",
+    "TrimController",
+    "YOUTUBE",
+    "close_fixtures",
+    "events_named",
+    "make_api",
+    "make_config",
+    "make_sender",
+    "read_log",
+    "seams",
+    "tick",
 ]

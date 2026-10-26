@@ -17,10 +17,9 @@ import json
 import os
 import unittest
 
-from test_sender_support import C, TempDir, YOUTUBE
+from test_sender_support import YOUTUBE, C, TempDir
 
 from sender.api import serve_in_thread
-from sender.offline import seams
 from sender.service import build_service
 
 
@@ -46,8 +45,9 @@ class TestOfflineService(TempDir, unittest.TestCase):
         from test_sender_support import make_config
 
         self.config = make_config(self.root)
-        self.service = build_service(self.config, offline=True, log=None or _log(self.root),
-                                     state_dir=self.config.state_dir)
+        self.service = build_service(
+            self.config, offline=True, log=None or _log(self.root), state_dir=self.config.state_dir
+        )
         self.addCleanup(self.service.close)
         self.server, _thread = serve_in_thread(self.service.api, port=0)
         self.addCleanup(self.server.server_close)
@@ -73,7 +73,7 @@ class TestOfflineService(TempDir, unittest.TestCase):
         status, _body = _get(self.port, C.PATH_UI)
         self.assertEqual(status, 200)
         status, body = _get(self.port, C.PATH_RECEIVER)
-        self.assertEqual(status, 404)                     # no receiver page in this checkout
+        self.assertEqual(status, 404)  # no receiver page in this checkout
 
     def test_a_share_runs_the_whole_machine(self):
         status, body = _get(self.port, C.PATH_SHARE, "POST", {"url": YOUTUBE})
@@ -98,12 +98,20 @@ class TestOfflineService(TempDir, unittest.TestCase):
         record = os.path.join(self.config.state_dir, "session.json")
         from sender.group_lock import write_session_record
 
-        write_session_record(record, {"owner": "cast-sender", "pid": 1, "session_id": "sold",
-                                      "sid": "s9", "group_prepared": True,
-                                      "receiver_launched": True, "mutes": []})
+        write_session_record(
+            record,
+            {
+                "owner": "cast-sender",
+                "pid": 1,
+                "session_id": "sold",
+                "sid": "s9",
+                "group_prepared": True,
+                "receiver_launched": True,
+                "mutes": [],
+            },
+        )
         result = self.service.boot_cleanup()
-        self.assertEqual(result["actions"], ["group_stopped", "receiver_stopped",
-                                             "proxy_closed"])
+        self.assertEqual(result["actions"], ["group_stopped", "receiver_stopped", "proxy_closed"])
         self.assertFalse(os.path.exists(record))
 
     def test_the_lock_file_lives_where_the_contract_says(self):
@@ -125,8 +133,20 @@ class TestEntryPoint(TempDir, unittest.TestCase):
 
         state = os.path.join(self.root, "state")
         evidence = os.path.join(self.root, "evidence")
-        code = main(["--offline", "--once", "--bind", "127.0.0.1", "--port", "0",
-                     "--state-dir", state, "--evidence-dir", evidence])
+        code = main(
+            [
+                "--offline",
+                "--once",
+                "--bind",
+                "127.0.0.1",
+                "--port",
+                "0",
+                "--state-dir",
+                state,
+                "--evidence-dir",
+                evidence,
+            ]
+        )
         self.assertEqual(code, 0)
         logs = [name for name in os.listdir(evidence) if name.endswith(".jsonl")]
         self.assertTrue(logs, "the service must write its JSONL log")
@@ -157,26 +177,56 @@ class TestEntryPoint(TempDir, unittest.TestCase):
 
         state = os.path.join(self.root, "state")
         record = os.path.join(state, "session.json")
-        write_session_record(record, {"owner": "cast-sender", "pid": 1, "session_id": "sold",
-                                      "sid": "s9", "group_prepared": True,
-                                      "receiver_launched": True, "mutes": []})
+        write_session_record(
+            record,
+            {
+                "owner": "cast-sender",
+                "pid": 1,
+                "session_id": "sold",
+                "sid": "s9",
+                "group_prepared": True,
+                "receiver_launched": True,
+                "mutes": [],
+            },
+        )
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
-            code = main(["--offline", "--cleanup", "--bind", "127.0.0.1", "--port", "0",
-                         "--state-dir", state, "--evidence-dir",
-                         os.path.join(self.root, "evidence")])
+            code = main(
+                [
+                    "--offline",
+                    "--cleanup",
+                    "--bind",
+                    "127.0.0.1",
+                    "--port",
+                    "0",
+                    "--state-dir",
+                    state,
+                    "--evidence-dir",
+                    os.path.join(self.root, "evidence"),
+                ]
+            )
         self.assertEqual(code, 0)
         payload = json.loads(out.getvalue())["cleanup"]
-        self.assertEqual(payload["actions"], ["group_stopped", "receiver_stopped",
-                                              "proxy_closed"])
+        self.assertEqual(payload["actions"], ["group_stopped", "receiver_stopped", "proxy_closed"])
         self.assertFalse(os.path.exists(record))
 
     def test_cleanup_mode_does_nothing_without_a_record(self):
         from sender.service import main
 
-        code = main(["--offline", "--cleanup", "--bind", "127.0.0.1", "--port", "0",
-                     "--state-dir", os.path.join(self.root, "state"),
-                     "--evidence-dir", os.path.join(self.root, "evidence")])
+        code = main(
+            [
+                "--offline",
+                "--cleanup",
+                "--bind",
+                "127.0.0.1",
+                "--port",
+                "0",
+                "--state-dir",
+                os.path.join(self.root, "state"),
+                "--evidence-dir",
+                os.path.join(self.root, "evidence"),
+            ]
+        )
         self.assertEqual(code, 0)
 
 

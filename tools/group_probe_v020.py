@@ -30,6 +30,7 @@ What a real run measures, in this order:
 
 Output: one JSON file in ``evidence/`` (arguments and every number), URLs redacted.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -85,29 +86,49 @@ def plan(args) -> dict:
         "needs_audio_window": True,
         "sends": "nothing (no mDNS, no socket, no transport object)",
         "group": args.group,
-        "media": {"url": redact(args.url) if args.url else "<--url required for a real run>",
-                  "content_type": args.content_type, "start_s": args.start},
+        "media": {
+            "url": redact(args.url) if args.url else "<--url required for a real run>",
+            "content_type": args.content_type,
+            "start_s": args.start,
+        },
         "steps": [
-            {"step": 1, "what": "resolve the group by name over mDNS, then refuse it unless "
-                                "lib/groupguard.require_safe_group accepts every member",
-             "packets": "read-only (mDNS + MULTIZONE_STATUS)"},
-            {"step": 2, "what": "save volume/mute, then mute the group (a mute is silent)",
-             "packets": "SET_VOLUME muted=true"},
-            {"step": 3, "what": f"{args.landings} landings: PAUSE -> SEEK -> PLAY at "
-                                f"{args.start:.1f}s + n*{args.stride:.1f}s, measure where the "
-                                f"playhead lands",
-             "packets": "1 LOAD, then per landing 1 PAUSE, 1 SEEK, 1 PLAY"},
-            {"step": 4, "what": f"park and release once more, then {args.minutes:.1f} min of "
-                                f"playhead reads at {args.hz:.1f} Hz with no transport event: "
-                                f"estimator residual, 5 s medians, drift",
-             "packets": "GET_STATUS only"},
-            {"step": 5, "what": "stop the session this run created, restore the volume, undo the "
-                                "mute we set",
-             "packets": "STOP + SET_VOLUME"},
+            {
+                "step": 1,
+                "what": "resolve the group by name over mDNS, then refuse it unless "
+                "lib/groupguard.require_safe_group accepts every member",
+                "packets": "read-only (mDNS + MULTIZONE_STATUS)",
+            },
+            {
+                "step": 2,
+                "what": "save volume/mute, then mute the group (a mute is silent)",
+                "packets": "SET_VOLUME muted=true",
+            },
+            {
+                "step": 3,
+                "what": f"{args.landings} landings: PAUSE -> SEEK -> PLAY at "
+                f"{args.start:.1f}s + n*{args.stride:.1f}s, measure where the "
+                f"playhead lands",
+                "packets": "1 LOAD, then per landing 1 PAUSE, 1 SEEK, 1 PLAY",
+            },
+            {
+                "step": 4,
+                "what": f"park and release once more, then {args.minutes:.1f} min of "
+                f"playhead reads at {args.hz:.1f} Hz with no transport event: "
+                f"estimator residual, 5 s medians, drift",
+                "packets": "GET_STATUS only",
+            },
+            {
+                "step": 5,
+                "what": "stop the session this run created, restore the volume, undo the mute we set",
+                "packets": "STOP + SET_VOLUME",
+            },
         ],
         "output": args.out or "evidence/group-probe-<timestamp>.json",
-        "refuses": ["without --mute", "without --i-have-an-audio-window",
-                    "any group that fails groupguard"],
+        "refuses": [
+            "without --mute",
+            "without --i-have-an-audio-window",
+            "any group that fails groupguard",
+        ],
         "transport_constructed": TRANSPORT_CONSTRUCTED,
         "castv2_imported": CASTV2_IMPORTED,
     }
@@ -139,7 +160,7 @@ def measure(sink, args, log) -> dict:
     saved = {"volume": sink.volume, "muted": sink.muted}
     log(f"saved volumes: level={saved['volume']} muted={saved['muted']}")
     out: dict = {"restored": saved, "stopped": None, "volume_restored": None}
-    sink.set_volume(0.0)                       # A37: mutes, never zeroes a level
+    sink.set_volume(0.0)  # A37: mutes, never zeroes a level
     log("group muted for the whole run (a mute is silent)")
     try:
         out["landings"], out["playhead"] = _run_protocol(sink, args, log)
@@ -149,13 +170,13 @@ def measure(sink, args, log) -> dict:
         try:
             sink.stop()
             out["stopped"] = True
-        except Exception as exc:               # noqa: BLE001 - still restore the volume
+        except Exception as exc:  # noqa: BLE001 - still restore the volume
             out["stopped"] = f"{type(exc).__name__}: {exc}"
             log(f"stop failed: {out['stopped']}")
         try:
             restore_volume(sink, saved)
             out["volume_restored"] = True
-        except Exception as exc:               # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
             out["volume_restored"] = f"{type(exc).__name__}: {exc}"
             log(f"volume restore failed: {out['volume_restored']}")
 
@@ -185,10 +206,12 @@ def _run_protocol(sink, args, log) -> tuple[dict, dict]:
         # where the release asked the playhead to be, at the wall time of the read
         expected = target + (sample.wall - released)
         errors.append((sample.media - expected) * 1000.0)
-        log(f"landing {i + 1}/{args.landings}: target={target:.1f}s "
-            f"error={(sample.media - expected) * 1000.0:+.1f} ms")
+        log(
+            f"landing {i + 1}/{args.landings}: target={target:.1f}s "
+            f"error={(sample.media - expected) * 1000.0:+.1f} ms"
+        )
         if i < args.landings - 1:
-            sink.pause()                     # re-park: the next landing is PAUSE->SEEK->PLAY
+            sink.pause()  # re-park: the next landing is PAUSE->SEEK->PLAY
 
     landings = landing_stats(errors)
     landings["failed"] = failures
@@ -220,8 +243,10 @@ def _run_protocol(sink, args, log) -> tuple[dict, dict]:
         sink.sleep(1.0 / args.hz)
         if sink.now() - progress >= 30.0:
             progress = sink.now()
-            log(f"playhead: {len(samples)} reads, {rejected} rejected, "
-                f"{sink.now() - started:.0f}/{args.minutes * 60:.0f}s")
+            log(
+                f"playhead: {len(samples)} reads, {rejected} rejected, "
+                f"{sink.now() - started:.0f}/{args.minutes * 60:.0f}s"
+            )
 
     # contracts §2: steady = 30 s after the last transport event, and only while playing
     steady_from = last_play + 30.0
@@ -262,25 +287,33 @@ def restore_volume(sink, saved: dict) -> None:
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         description="Measure the kitchen group's actuator and its real drift (needs an audio "
-                    "window; default mode is a dry run that sends nothing).")
+        "window; default mode is a dry run that sends nothing)."
+    )
     p.add_argument("--group", default="Cuisine", help="Cast group name, resolved over mDNS")
-    p.add_argument("--url", default=None, help="audio URL the group's DMR must play (required "
-                                               "for a real run)")
+    p.add_argument(
+        "--url", default=None, help="audio URL the group's DMR must play (required for a real run)"
+    )
     p.add_argument("--content-type", default=DEFAULT_CONTENT_TYPE)
     p.add_argument("--start", type=float, default=0.0, help="first parked position, seconds")
     p.add_argument("--stride", type=float, default=20.0, help="media seconds between landings")
     p.add_argument("--landings", type=int, default=8)
     p.add_argument("--minutes", type=float, default=10.0)
     p.add_argument("--hz", type=float, default=4.0)
-    p.add_argument("--settle", type=float, default=0.8,
-                   help="seconds between PLAY and the playhead read of a landing")
+    p.add_argument(
+        "--settle",
+        type=float,
+        default=0.8,
+        help="seconds between PLAY and the playhead read of a landing",
+    )
     p.add_argument("--out", default=None, help="evidence file (default evidence/group-probe-<ts>.json)")
-    p.add_argument("--dry-run", action="store_true",
-                   help="print the plan and send nothing (this is the default)")
+    p.add_argument(
+        "--dry-run", action="store_true", help="print the plan and send nothing (this is the default)"
+    )
     p.add_argument("--run", action="store_true", help="actually measure: MAKES SOUND unless muted")
     p.add_argument("--mute", action="store_true", help="keep the speakers muted for the whole run")
-    p.add_argument("--i-have-an-audio-window", action="store_true",
-                   help="the owner opened an audio window")
+    p.add_argument(
+        "--i-have-an-audio-window", action="store_true", help="the owner opened an audio window"
+    )
     return p
 
 
@@ -297,52 +330,72 @@ def main(argv: list[str] | None = None) -> int:
         print()
         print("MODE: dry run — the plan above was printed and nothing was sent.")
         print(f"transport_constructed: {TRANSPORT_CONSTRUCTED}")
-        print("NEEDS AN AUDIO WINDOW: re-run with --run --mute --i-have-an-audio-window "
-              "to measure, and only then.")
-        if TRANSPORT_CONSTRUCTED != 0:            # can never happen: nothing calls the factory
+        print(
+            "NEEDS AN AUDIO WINDOW: re-run with --run --mute --i-have-an-audio-window "
+            "to measure, and only then."
+        )
+        if TRANSPORT_CONSTRUCTED != 0:  # can never happen: nothing calls the factory
             print("FAIL: a transport was constructed during a dry run", file=sys.stderr)
             return 3
         return 0
 
     if not args.mute:
-        print("refusing to run without --mute: the speakers must stay muted for the whole run "
-              "(a mute is silent; that is the protocol)", file=sys.stderr)
+        print(
+            "refusing to run without --mute: the speakers must stay muted for the whole run "
+            "(a mute is silent; that is the protocol)",
+            file=sys.stderr,
+        )
         return 2
     if not args.i_have_an_audio_window:
-        print("refusing to run without --i-have-an-audio-window: this measurement parks, plays "
-              "and seeks the kitchen group and is audible only if the mute fails. The owner must "
-              "say the window is open.", file=sys.stderr)
+        print(
+            "refusing to run without --i-have-an-audio-window: this measurement parks, plays "
+            "and seeks the kitchen group and is audible only if the mute fails. The owner must "
+            "say the window is open.",
+            file=sys.stderr,
+        )
         return 2
     if not args.url:
-        print("refusing to run without --url: the group's DMR has to be given something to play",
-              file=sys.stderr)
+        print(
+            "refusing to run without --url: the group's DMR has to be given something to play",
+            file=sys.stderr,
+        )
         return 2
 
-    groupmod.make_link = counting_link            # instrumented: the gate's audit trail
+    groupmod.make_link = counting_link  # instrumented: the gate's audit trail
     sink = groupmod.CastGroup(name=args.group, log=log)
     started_at = time.time()
-    result: dict = {"mode": "run", "group": args.group, "started_at": started_at,
-                    "args": {"url": redact(args.url), "content_type": args.content_type,
-                             "start_s": args.start, "stride_s": args.stride,
-                             "landings": args.landings, "minutes": args.minutes, "hz": args.hz,
-                             "mute": args.mute}}
+    result: dict = {
+        "mode": "run",
+        "group": args.group,
+        "started_at": started_at,
+        "args": {
+            "url": redact(args.url),
+            "content_type": args.content_type,
+            "start_s": args.start,
+            "stride_s": args.stride,
+            "landings": args.landings,
+            "minutes": args.minutes,
+            "hz": args.hz,
+            "mute": args.mute,
+        },
+    }
     try:
-        sink.connect()                            # mDNS + groupguard; refuses a video group
+        sink.connect()  # mDNS + groupguard; refuses a video group
     except groupmod.UnsafeGroup as exc:
         print(f"REFUSED by groupguard: {exc}", file=sys.stderr)
         return 4
     except groupmod.GroupNotFound as exc:
         print(f"REFUSED: {exc}", file=sys.stderr)
         return 4
-    except Exception as exc:                      # noqa: BLE001
+    except Exception as exc:  # noqa: BLE001
         print(f"REFUSED: cannot reach the group: {type(exc).__name__}: {exc}", file=sys.stderr)
         return 4
 
     result["endpoint"] = f"{sink.host}:{sink.port}"
     log(f"group {args.group!r} at {result['endpoint']} passed groupguard")
     try:
-        result.update(measure(sink, args, log))   # stops and restores in its own finally
-    except Exception as exc:                      # noqa: BLE001
+        result.update(measure(sink, args, log))  # stops and restores in its own finally
+    except Exception as exc:  # noqa: BLE001
         result["error"] = f"{type(exc).__name__}: {exc}"
         log(f"measurement failed: {result['error']}")
         return 5
@@ -352,13 +405,18 @@ def main(argv: list[str] | None = None) -> int:
         result["finished_at"] = time.time()
         result["duration_s"] = round(time.time() - started_at, 1)
         out = args.out or os.path.join(
-            ROOT, "evidence",
-            f"group-probe-{time.strftime('%Y%m%d-%H%M%S', time.localtime(started_at))}.json")
+            ROOT,
+            "evidence",
+            f"group-probe-{time.strftime('%Y%m%d-%H%M%S', time.localtime(started_at))}.json",
+        )
         os.makedirs(os.path.dirname(out) or ".", exist_ok=True)
         with open(out, "w") as fh:
             json.dump(result, fh, indent=2, ensure_ascii=False)
-        print(json.dumps({k: v for k, v in result.items() if k != "playhead"},
-                         indent=2, ensure_ascii=False))
+        print(
+            json.dumps(
+                {k: v for k, v in result.items() if k != "playhead"}, indent=2, ensure_ascii=False
+            )
+        )
         print(f"evidence: {out}")
     return 0
 

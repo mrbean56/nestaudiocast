@@ -17,16 +17,20 @@ Both are offline-only helpers of the owner app; nothing imports them from the pr
 
 from __future__ import annotations
 
+import os
 import re
 import sys
-import os
 
 from v020.contracts import (
-    MSG_LOAD, MSG_PLAY_AT, MSG_RATE, PLAYER_PLAYING, Command, ResolvedMedia,
+    MSG_LOAD,
+    MSG_PLAY_AT,
+    MSG_RATE,
+    PLAYER_PLAYING,
+    Command,
+    ResolvedMedia,
 )
 
-TESTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
-                         "tests", "v020")
+TESTS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "tests", "v020")
 
 #: A33's lesson: extract the id with an anchored regex, never a prefix match.
 _YT_ID = re.compile(r"(?:[?&]v=|youtu\.be/|/shorts/|/embed/)([A-Za-z0-9_-]{11})(?:[?&#/]|$)")
@@ -88,8 +92,9 @@ def seams(*, video_id: str | None = None, clock=None):
 class TrimController:
     """A controller that obeys §1: one start plan, then rate trims only."""
 
-    def __init__(self, *, rate: float = 1.0, start_position: float = 0.0,
-                 always_trim: bool = False) -> None:
+    def __init__(
+        self, *, rate: float = 1.0, start_position: float = 0.0, always_trim: bool = False
+    ) -> None:
         self.rate = float(rate)
         self.start_position = float(start_position)
         self.always_trim = bool(always_trim)
@@ -97,8 +102,9 @@ class TrimController:
         self.steps = 0
         self.planned = 0
 
-    def start(self, now: float, video_ready: float, group_ready: float,
-              lead_s: float = 0.0) -> list[Command]:
+    def start(
+        self, now: float, video_ready: float, group_ready: float, lead_s: float = 0.0
+    ) -> list[Command]:
         self.planned += 1
         # §1: the executor loads and parks both sides; the plan only schedules their release.
         return [
@@ -122,15 +128,19 @@ class TrimController:
 
     # unused parts of the contract surface, kept so the object is a drop-in
     def on_seek(self, now, position):
-        return [Command(kind="group_seek", payload={"media": float(position)}),
-                Command(kind="seek", payload={"media": float(position)})]
+        return [
+            Command(kind="group_seek", payload={"media": float(position)}),
+            Command(kind="seek", payload={"media": float(position)}),
+        ]
 
     def on_pause(self, now):
         return []
 
     def on_resume(self, now, group_position):
-        return [Command(kind="play", payload={"target": "group"}),
-                Command(kind=MSG_PLAY_AT, payload={"rx_ms": 0.0, "media": float(group_position)})]
+        return [
+            Command(kind="play", payload={"target": "group"}),
+            Command(kind=MSG_PLAY_AT, payload={"rx_ms": 0.0, "media": float(group_position)}),
+        ]
 
     def on_end(self, now):
         return []
@@ -151,8 +161,15 @@ class HostileController(TrimController):
         self.asked_seeks += 1
         self.asked_play_at += 1
         return [
-            Command(kind=MSG_LOAD, payload={"url": "", "content_type": "application/dash+xml",
-                                            "media": 0.0, "autoplay": False}),
+            Command(
+                kind=MSG_LOAD,
+                payload={
+                    "url": "",
+                    "content_type": "application/dash+xml",
+                    "media": 0.0,
+                    "autoplay": False,
+                },
+            ),
             Command(kind="seek", payload={"media": 0.0}),
             Command(kind=MSG_PLAY_AT, payload={"rx_ms": 0.0, "media": 0.0}),
         ]

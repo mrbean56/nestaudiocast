@@ -24,7 +24,12 @@ import threading
 import time
 
 from v020.contracts import (
-    MSG_IDLE, MSG_STOP, OWNER_HEARTBEAT_S, OWNER_RELAY, OWNER_SENDER, OWNER_STALE_S,
+    MSG_IDLE,
+    MSG_STOP,
+    OWNER_HEARTBEAT_S,
+    OWNER_RELAY,
+    OWNER_SENDER,
+    OWNER_STALE_S,
 )
 
 RECORD_KEYS = ("owner", "pid", "since")
@@ -36,10 +41,18 @@ RECORD_KEYS = ("owner", "pid", "since")
 class GroupLock:
     """The writer/reader of ``state/group.owner`` (contracts §7)."""
 
-    def __init__(self, path: str, *, owner: str = OWNER_SENDER, pid: int | None = None,
-                 clock=time.time, log=None, stale_s: float = OWNER_STALE_S,
-                 heartbeat_s: float = OWNER_HEARTBEAT_S,
-                 preempt: tuple[str, ...] = (OWNER_RELAY,)) -> None:
+    def __init__(
+        self,
+        path: str,
+        *,
+        owner: str = OWNER_SENDER,
+        pid: int | None = None,
+        clock=time.time,
+        log=None,
+        stale_s: float = OWNER_STALE_S,
+        heartbeat_s: float = OWNER_HEARTBEAT_S,
+        preempt: tuple[str, ...] = (OWNER_RELAY,),
+    ) -> None:
         self.path = path
         self.owner = owner
         self.pid = os.getpid() if pid is None else int(pid)
@@ -134,8 +147,7 @@ class GroupLock:
             if current is None:
                 # Raced with a release; one more attempt is enough (no loop, no sleep).
                 if self._write_new(payload):
-                    self.log("lock_acquired", owner=self.owner, pid=self.pid, path=self.path,
-                             raced=True)
+                    self.log("lock_acquired", owner=self.owner, pid=self.pid, path=self.path, raced=True)
                     return True
                 current = self.read() or {}
             if self.is_mine(current):
@@ -149,8 +161,12 @@ class GroupLock:
             if age is not None and age > self.stale_s:
                 self._replace(payload, previous=current, reason="stale")
                 return True
-            self.log("lock_contended", holder=previous_owner, pid=current.get("pid"),
-                     age_s=None if age is None else round(age, 3))
+            self.log(
+                "lock_contended",
+                holder=previous_owner,
+                pid=current.get("pid"),
+                age_s=None if age is None else round(age, 3),
+            )
             return False
 
     def heartbeat(self) -> bool:
@@ -158,8 +174,11 @@ class GroupLock:
         with self._lock:
             current = self.read()
             if not self.is_mine(current):
-                self.log("lock_lost", holder=None if current is None else current.get("owner"),
-                         pid=None if current is None else current.get("pid"))
+                self.log(
+                    "lock_lost",
+                    holder=None if current is None else current.get("owner"),
+                    pid=None if current is None else current.get("pid"),
+                )
                 return False
             self._replace(self._payload())
             return True
@@ -169,8 +188,9 @@ class GroupLock:
         with self._lock:
             current = self.read()
             if not self.is_mine(current):
-                self.log("lock_release_skipped",
-                         holder=None if current is None else current.get("owner"))
+                self.log(
+                    "lock_release_skipped", holder=None if current is None else current.get("owner")
+                )
                 return False
             try:
                 os.unlink(self.path)
@@ -237,8 +257,9 @@ def clear_session_record(path: str) -> None:
         pass
 
 
-def boot_cleanup(path: str, *, group=None, link=None, proxy=None, log=None,
-                 owner: str = OWNER_SENDER) -> dict:
+def boot_cleanup(
+    path: str, *, group=None, link=None, proxy=None, log=None, owner: str = OWNER_SENDER
+) -> dict:
     """Stop only the sessions **we** recorded, undo only the mutes **we** set (contracts §8).
 
     Called on startup and from ``ExecStopPost``. A missing record means "we created nothing",
@@ -255,8 +276,12 @@ def boot_cleanup(path: str, *, group=None, link=None, proxy=None, log=None,
         return {"session": record.get("session_id"), "actions": actions, "record": record}
 
     session_id = record.get("session_id")
-    log("boot_cleanup_start", session_id=session_id, sid=record.get("sid"),
-        group_prepared=bool(record.get("group_prepared")))
+    log(
+        "boot_cleanup_start",
+        session_id=session_id,
+        sid=record.get("sid"),
+        group_prepared=bool(record.get("group_prepared")),
+    )
 
     # 1. the group session, only if this record says we prepared it
     if group is not None and record.get("group_prepared"):

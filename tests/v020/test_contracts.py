@@ -18,8 +18,8 @@ if LIB not in sys.path:
 if HERE not in sys.path:
     sys.path.insert(0, HERE)
 
-from v020 import contracts as C  # noqa: E402
 from v020 import chromecast, group, media_proxy, resolve, sync  # noqa: E402
+from v020 import contracts as C  # noqa: E402
 
 
 class TestConstants(unittest.TestCase):
@@ -27,10 +27,11 @@ class TestConstants(unittest.TestCase):
         self.assertEqual(C.NS_RECEIVER, "urn:x-cast:com.beansden.nestaudiocast.v1")
         self.assertEqual(
             set(C.CONTROLLER_MESSAGES),
-            {"clock", "load", "play_at", "pause", "seek", "rate", "stop", "idle"})
+            {"clock", "load", "play_at", "pause", "seek", "rate", "stop", "idle"},
+        )
         self.assertEqual(
-            set(C.RECEIVER_MESSAGES),
-            {"hello", "clock_reply", "state", "intent", "ended", "error"})
+            set(C.RECEIVER_MESSAGES), {"hello", "clock_reply", "state", "intent", "ended", "error"}
+        )
 
     def test_frozen_url_and_port(self):
         # registered in the Cast console: changing it costs a 15 min propagation
@@ -43,7 +44,8 @@ class TestConstants(unittest.TestCase):
     def test_states_and_actions(self):
         self.assertEqual(
             set(C.SESSION_STATES),
-            {"idle", "resolving", "starting", "playing", "paused", "ended", "quiet_refused"})
+            {"idle", "resolving", "starting", "playing", "paused", "ended", "quiet_refused"},
+        )
         self.assertEqual(set(C.ACTIONS), {"play", "pause", "seek", "volume", "stop"})
         self.assertEqual(set(C.QUIET_POLICIES), {"refuse", "video_only"})
 
@@ -66,8 +68,7 @@ class TestSignatures(unittest.TestCase):
         self.assertTrue(callable(resolve.video_id_of))
 
     def test_proxy(self):
-        for name in ("open_session", "close_session", "mpd_for", "audio_url_for", "refresh",
-                     "stats"):
+        for name in ("open_session", "close_session", "mpd_for", "audio_url_for", "refresh", "stats"):
             self.assertTrue(callable(getattr(media_proxy.MediaProxy, name)), name)
 
     def test_sender_link(self):
@@ -77,14 +78,34 @@ class TestSignatures(unittest.TestCase):
         self.assertTrue(issubclass(chromecast.LostDevice, RuntimeError))
 
     def test_group(self):
-        for name in ("connect", "reconnect", "prepare", "play", "pause", "seek", "set_volume",
-                     "stop", "sample", "playhead", "close"):
+        for name in (
+            "connect",
+            "reconnect",
+            "prepare",
+            "play",
+            "pause",
+            "seek",
+            "set_volume",
+            "stop",
+            "sample",
+            "playhead",
+            "close",
+        ):
             self.assertTrue(callable(getattr(group.CastGroup, name)), name)
         self.assertTrue(issubclass(group.UnsafeGroup, RuntimeError))
 
     def test_controller(self):
-        for name in ("start", "step", "on_seek", "on_pause", "on_resume", "on_end", "error",
-                     "steady", "window_median_ms"):
+        for name in (
+            "start",
+            "step",
+            "on_seek",
+            "on_pause",
+            "on_resume",
+            "on_end",
+            "error",
+            "steady",
+            "window_median_ms",
+        ):
             self.assertTrue(callable(getattr(sync.Controller, name)), name)
 
 
@@ -92,22 +113,24 @@ class TestFakes(unittest.TestCase):
     """The fakes must satisfy the same surface, otherwise nobody is unblocked by them."""
 
     def setUp(self):
-        from fakes import FakeGroup, FakeProxy, FakeMedia, FakeReceiver
+        from fakes import FakeGroup, FakeMedia, FakeProxy, FakeReceiver
+
         self.FakeGroup, self.FakeProxy = FakeGroup, FakeProxy
         self.FakeMedia, self.FakeReceiver = FakeMedia, FakeReceiver
 
     def test_fake_group_refuses_unsafe(self):
         from fakes import FakeGroup
+        from fakes.fake_group import UnsafeGroup
+
         g = FakeGroup(unsafe=True)
-        with self.assertRaises(Exception):
+        with self.assertRaises(UnsafeGroup):
             g.connect()
 
     def test_fake_receiver_rate_gain_idempotent(self):
         r = self.FakeReceiver(rate_gain=0.0)
-        r.send(C.MSG_LOAD, url="http://x/y", content_type="video/mp4", media=0.0,
-               autoplay=True)
+        r.send(C.MSG_LOAD, url="http://x/y", content_type="video/mp4", media=0.0, autoplay=True)
         r.send(C.MSG_RATE, value=1.002)
-        self.assertAlmostEqual(r.applied_rate, 1.0)   # echoes 1.002 and does nothing
+        self.assertAlmostEqual(r.applied_rate, 1.0)  # echoes 1.002 and does nothing
         self.assertAlmostEqual(r.rate, 1.002)
 
     def test_fake_proxy_roundtrip(self):

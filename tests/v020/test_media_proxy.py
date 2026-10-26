@@ -10,7 +10,6 @@ the ``sidx`` arithmetic are the production ones.
 from __future__ import annotations
 
 import hashlib
-import http.client
 import os
 import re
 import socket
@@ -42,10 +41,9 @@ def box(kind: bytes, payload: bytes) -> bytes:
     return (8 + len(payload)).to_bytes(4, "big") + kind + payload
 
 
-def sidx_box(timescale: int, earliest: int, first_offset: int,
-             refs: list[tuple[int, int]]) -> bytes:
-    payload = b"\x00\x00\x00\x00"                          # version 0, flags 0
-    payload += (1).to_bytes(4, "big")                      # reference_ID
+def sidx_box(timescale: int, earliest: int, first_offset: int, refs: list[tuple[int, int]]) -> bytes:
+    payload = b"\x00\x00\x00\x00"  # version 0, flags 0
+    payload += (1).to_bytes(4, "big")  # reference_ID
     payload += timescale.to_bytes(4, "big")
     payload += earliest.to_bytes(4, "big")
     payload += first_offset.to_bytes(4, "big")
@@ -73,9 +71,9 @@ class StubSource:
     def __init__(self) -> None:
         self.bodies = {"/video.mp4": sample_mp4(), "/audio.m4a": sample_mp4(fragments=8)}
         self.expired = False
-        self.drop_after: int | None = None       # truncate one body after N bytes
-        self.drop_once = True                   # a dead connection is not a broken source
-        self.expire_on_drop = False              # ... and stale the token at that instant
+        self.drop_after: int | None = None  # truncate one body after N bytes
+        self.drop_once = True  # a dead connection is not a broken source
+        self.expire_on_drop = False  # ... and stale the token at that instant
         self.requests: list[str] = []
         self.bytes_sent: dict[str, int] = {}
         self.drops = 0
@@ -125,7 +123,7 @@ class StubSource:
                 else:
                     start, end = 0, total - 1
                     self.send_response(200)
-                chunk = body[start:end + 1]
+                chunk = body[start : end + 1]
                 self.send_header("Content-Type", "video/mp4")
                 self.send_header("Accept-Ranges", "bytes")
                 self.send_header("Content-Length", str(len(chunk)))
@@ -175,21 +173,34 @@ class Resolver:
         self.token += 1
         now = time.time()
         return ResolvedMedia(
-            video_id="ai_gI0Jbr_E", title="stub", duration_s=DURATION,
-            video=Track(itag=137, codecs="avc1.640028", content_type="video/mp4",
-                        url=self.stub.url("/video.mp4", self.token), width=1920, height=1080,
-                        fps=25.0),
-            audio=Track(itag=140, codecs="mp4a.40.2", content_type="audio/mp4",
-                        url=self.stub.url("/audio.m4a", self.token)),
-            fetched_at=now, expires_at=now + 3600)
+            video_id="ai_gI0Jbr_E",
+            title="stub",
+            duration_s=DURATION,
+            video=Track(
+                itag=137,
+                codecs="avc1.640028",
+                content_type="video/mp4",
+                url=self.stub.url("/video.mp4", self.token),
+                width=1920,
+                height=1080,
+                fps=25.0,
+            ),
+            audio=Track(
+                itag=140,
+                codecs="mp4a.40.2",
+                content_type="audio/mp4",
+                url=self.stub.url("/audio.m4a", self.token),
+            ),
+            fetched_at=now,
+            expires_at=now + 3600,
+        )
 
 
 class ProxyCase(unittest.TestCase):
     def setUp(self):
         self.stub = StubSource()
         self.resolver = Resolver(self.stub)
-        self.proxy = M.MediaProxy("127.0.0.1", 0, log=lambda *_: None,
-                                  resolver=self.resolver).start()
+        self.proxy = M.MediaProxy("127.0.0.1", 0, log=lambda *_: None, resolver=self.resolver).start()
         self.sid = self.proxy.open_session(self.resolver("https://www.youtube.com/watch?v=x"))
 
     def tearDown(self):
@@ -199,8 +210,9 @@ class ProxyCase(unittest.TestCase):
     # -- helpers ---------------------------------------------------------------------
 
     def get(self, path: str, headers: dict | None = None) -> tuple[int, dict, bytes]:
-        request = urllib.request.Request(f"http://127.0.0.1:{self.proxy.port}{path}",
-                                         headers=headers or {})
+        request = urllib.request.Request(
+            f"http://127.0.0.1:{self.proxy.port}{path}", headers=headers or {}
+        )
         try:
             with urllib.request.urlopen(request, timeout=10) as response:
                 return response.status, dict(response.headers), response.read()
@@ -235,8 +247,7 @@ class TestBoxes(unittest.TestCase):
         self.assertEqual(ranges["init"], (0, ftyp_size + moov_size - 1))
         self.assertIsNotNone(ranges["index"])
         boxes = {kind: (offset, size) for kind, offset, size in M.box_list(data)}
-        self.assertEqual(ranges["index"], (boxes["sidx"][0], boxes["sidx"][0] +
-                                           boxes["sidx"][1] - 1))
+        self.assertEqual(ranges["index"], (boxes["sidx"][0], boxes["sidx"][0] + boxes["sidx"][1] - 1))
 
     def test_sidx_maps_seconds_to_bytes(self):
         data = sample_mp4()
@@ -247,7 +258,7 @@ class TestBoxes(unittest.TestCase):
         start, end, media = sidx.range_at(0.0)
         self.assertEqual(media, 0.0)
         self.assertEqual(start, ranges["index"][1] + 1 + sidx.first_offset)
-        start, end, media = sidx.range_at(250.0)          # third 120 s subsegment
+        start, end, media = sidx.range_at(250.0)  # third 120 s subsegment
         self.assertEqual(media, 240.0)
         self.assertEqual(end - start + 1, sidx.references[2][0])
 
@@ -296,8 +307,7 @@ class TestManifest(ProxyCase):
         state = self.proxy.sessions[self.sid].video
         source = self.stub.body("/video.mp4")
         boxes = {kind: (offset, size) for kind, offset, size in M.box_list(source)}
-        self.assertEqual(state.index_range, (boxes["sidx"][0], boxes["sidx"][0] +
-                                             boxes["sidx"][1] - 1))
+        self.assertEqual(state.index_range, (boxes["sidx"][0], boxes["sidx"][0] + boxes["sidx"][1] - 1))
         self.assertEqual(state.init_range, (0, boxes["moov"][0] + boxes["moov"][1] - 1))
         self.assertEqual(state.total, len(source))
 
@@ -345,8 +355,10 @@ class TestRanges(ProxyCase):
 
     def test_audio_endpoint(self):
         source = self.stub.body("/audio.m4a")
-        self.assertEqual(self.proxy.audio_url_for(self.sid),
-                         f"http://127.0.0.1:{self.proxy.port}/media/{self.sid}/audio.m4a")
+        self.assertEqual(
+            self.proxy.audio_url_for(self.sid),
+            f"http://127.0.0.1:{self.proxy.port}/media/{self.sid}/audio.m4a",
+        )
         status, headers, body = self.get(self.media_path(leaf="audio.m4a"))
         self.assertEqual((status, body), (200, source))
         self.assertEqual(headers["Content-Type"], "audio/mp4")
@@ -355,8 +367,7 @@ class TestRanges(ProxyCase):
 
     def test_416(self):
         source = self.stub.body("/video.mp4")
-        status, headers, body = self.get(self.media_path(),
-                                         {"Range": f"bytes={len(source) + 10}-"})
+        status, headers, body = self.get(self.media_path(), {"Range": f"bytes={len(source) + 10}-"})
         self.assertEqual(status, 416)
         self.assertEqual(headers["Content-Range"], f"bytes */{len(source)}")
 
@@ -364,7 +375,9 @@ class TestRanges(ProxyCase):
         source = self.stub.body("/video.mp4")
         request = urllib.request.Request(
             f"http://127.0.0.1:{self.proxy.port}{self.media_path()}",
-            method="HEAD", headers={"Range": "bytes=10-19"})
+            method="HEAD",
+            headers={"Range": "bytes=10-19"},
+        )
         with urllib.request.urlopen(request, timeout=10) as response:
             self.assertEqual(response.status, 206)
             self.assertEqual(response.headers["Content-Length"], "10")
@@ -444,7 +457,8 @@ class TestRevocation(ProxyCase):
         def reader():
             request = urllib.request.Request(
                 f"http://127.0.0.1:{self.proxy.port}{self.media_path()}",
-                headers={"Range": f"bytes=0-{len(source) - 1}"})
+                headers={"Range": f"bytes=0-{len(source) - 1}"},
+            )
             with urllib.request.urlopen(request, timeout=20) as response:
                 while True:
                     chunk = response.read(2048)
@@ -459,12 +473,11 @@ class TestRevocation(ProxyCase):
         thread.start()
         self.assertTrue(started.wait(5), "the reader never started")
         time.sleep(0.02)
-        self.proxy.close_session(self.sid)          # revoke while bytes are on the wire
+        self.proxy.close_session(self.sid)  # revoke while bytes are on the wire
         self.assertTrue(done.wait(20), "the reader was cut")
         thread.join(1)
         self.assertEqual(len(collected), len(source))
-        self.assertEqual(hashlib.sha256(collected).hexdigest(),
-                         hashlib.sha256(source).hexdigest())
+        self.assertEqual(hashlib.sha256(collected).hexdigest(), hashlib.sha256(source).hexdigest())
 
     def test_stats_shape(self):
         stats = self.proxy.stats()
@@ -479,8 +492,7 @@ class TestRevocation(ProxyCase):
 class TestRefresh(ProxyCase):
     def test_403_triggers_one_refresh_and_the_same_session_continues(self):
         source = self.stub.body("/video.mp4")
-        self.assertEqual(self.get(self.media_path(), {"Range": "bytes=0-999"})[2],
-                         source[:1000])
+        self.assertEqual(self.get(self.media_path(), {"Range": "bytes=0-999"})[2], source[:1000])
         old_url = self.proxy.sessions[self.sid].media.video.url
         self.stub.expired = True
         status, _, body = self.get(self.media_path(), {"Range": "bytes=1000-1999"})
@@ -493,12 +505,11 @@ class TestRefresh(ProxyCase):
 
     def test_midbody_drop_with_a_stale_token_is_recovered_transparently(self):
         source = self.stub.body("/video.mp4")
-        self.proxy.mpd_for(self.sid)               # discovery first, on a healthy source
+        self.proxy.mpd_for(self.sid)  # discovery first, on a healthy source
         old_url = self.proxy.sessions[self.sid].media.video.url
-        self.stub.drop_after = 20000               # the source dies 20 kB into the body
-        self.stub.expire_on_drop = True            # and its token is stale at that instant
-        status, headers, body = self.get(self.media_path(),
-                                         {"Range": f"bytes=0-{len(source) - 1}"})
+        self.stub.drop_after = 20000  # the source dies 20 kB into the body
+        self.stub.expire_on_drop = True  # and its token is stale at that instant
+        status, headers, body = self.get(self.media_path(), {"Range": f"bytes=0-{len(source) - 1}"})
         self.assertEqual(status, 206)
         self.assertEqual(len(body), len(source), "a truncated body would be shorter")
         self.assertEqual(hashlib.sha256(body).hexdigest(), hashlib.sha256(source).hexdigest())
@@ -526,7 +537,8 @@ class TestMemory(ProxyCase):
         def reader(offset: int):
             request = urllib.request.Request(
                 f"http://127.0.0.1:{self.proxy.port}{self.media_path()}",
-                headers={"Range": f"bytes={offset}-"})
+                headers={"Range": f"bytes={offset}-"},
+            )
             with urllib.request.urlopen(request, timeout=20) as response:
                 digest = hashlib.sha256()
                 size = 0
@@ -539,8 +551,7 @@ class TestMemory(ProxyCase):
             with lock:
                 results.append((size, digest.hexdigest()))
 
-        threads = [threading.Thread(target=reader, args=(offset,))
-                   for offset in (0, 1024 * 1024)]
+        threads = [threading.Thread(target=reader, args=(offset,)) for offset in (0, 1024 * 1024)]
         for thread in threads:
             thread.start()
         peak = 0.0
@@ -552,7 +563,7 @@ class TestMemory(ProxyCase):
         for thread in threads:
             thread.join(20)
         expected_zero = hashlib.sha256(source).hexdigest()
-        expected_one = hashlib.sha256(source[1024 * 1024:]).hexdigest()
+        expected_one = hashlib.sha256(source[1024 * 1024 :]).hexdigest()
         self.assertIn((len(source), expected_zero), results)
         self.assertIn((len(source) - 1024 * 1024, expected_one), results)
         self.assertLess(peak, M.RSS_BUDGET_MB, f"rss peaked at {peak} MB")
@@ -561,15 +572,18 @@ class TestMemory(ProxyCase):
         self.stub.bodies["/video.mp4"] = sample_mp4(fragments=2000, fragment=4096)  # ~8 MB
         source = self.stub.body("/video.mp4")
         sock = socket.create_connection(("127.0.0.1", self.proxy.port), timeout=10)
-        sock.sendall((f"GET {self.media_path()} HTTP/1.1\r\nHost: x\r\n"
-                      f"Range: bytes=0-{len(source) - 1}\r\n\r\n").encode())
+        sock.sendall(
+            (
+                f"GET {self.media_path()} HTTP/1.1\r\nHost: x\r\n"
+                f"Range: bytes=0-{len(source) - 1}\r\n\r\n"
+            ).encode()
+        )
         sock.recv(4096)
         time.sleep(0.05)
         sock.close()
         time.sleep(0.4)
         sent = self.stub.bytes_sent.get("/video.mp4", 0)
-        self.assertLess(sent, len(source) // 2,
-                        f"the proxy kept pulling {sent} B after the client left")
+        self.assertLess(sent, len(source) // 2, f"the proxy kept pulling {sent} B after the client left")
 
 
 if __name__ == "__main__":

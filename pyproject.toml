@@ -1,0 +1,88 @@
+[project]
+name = "nestaudiocast"
+version = "0.2.0.dev0"
+description = "A YouTube video on a Chromecast, its audio on a Cast speaker group, held in sync"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.13"
+# Runtime: what CT 121 needs. Exact versions live in uv.lock; requirements.txt is exported
+# from it for hosts without uv (CT 121 installs with pip).
+dependencies = [
+    "cryptography>=50.0.2",
+    "numpy>=2.5.4",
+    "protobuf>=7.36.2",
+    "PyChromecast>=14.0.10",
+    "yt-dlp>=2026.10.21",
+    "zeroconf>=0.151.5",
+]
+
+[dependency-groups]
+# Development only: never installed on CT 121.
+dev = [
+    "pre-commit>=4",
+    "pytest>=8",
+    "ruff>=0.14",
+]
+
+[tool.uv]
+# Not an installable package: scripts and modules run from the checkout.
+package = false
+
+# ------------------------------------------------------------------------------------- pytest
+[tool.pytest.ini_options]
+testpaths = ["tests/v020"]
+# The suite is written with unittest; pytest runs it unchanged. "fakes" is a helper package.
+python_files = ["test_*.py"]
+norecursedirs = ["fakes", "fixtures", "__pycache__"]
+addopts = ["-ra", "--strict-markers"]
+# Safety tiers. Unmarked tests are "offline". tests/v020/conftest.py refuses to run the
+# other tiers unless the matching NAC_ALLOW_* variable is set (docs/dev.md).
+markers = [
+    "offline: no socket outside 127.0.0.1, no device, no sound (the default)",
+    "lan: read-only traffic to LAN devices (mDNS, status reads); needs NAC_ALLOW_LAN=1",
+    "device: may launch an app on the Chromecast; needs NAC_ALLOW_DEVICE=1",
+    "audible: may make sound in the house; needs NAC_ALLOW_SOUND=1 and not quiet hours",
+]
+
+# --------------------------------------------------------------------------------------- ruff
+[tool.ruff]
+target-version = "py313"
+line-length = 105
+extend-exclude = ["sandbox", "evidence", "assets", "bin", "certs", "logs", "state"]
+
+[tool.ruff.lint]
+# Correctness first: pyflakes, syntax/runtime errors, bugbear, and import order.
+select = ["E4", "E7", "E9", "F", "B", "I"]
+ignore = [
+    "E731",   # a named lambda in a test fixture is fine
+]
+
+[tool.ruff.lint.per-file-ignores]
+# v0.1 code (frozen, cited by notes/00-labo.md): style findings are tolerated, real errors are
+# not. Pyflakes' undefined-name and syntax checks stay on everywhere.
+"{lib/castv2.py,lib/silence.py,lib/emergency.py,lib/groupguard.py,lib/asset_server.py,relay/*.py,measure/analyze_offset.py,measure/analyze_session.py,measure/realcontent_offset.py,measure/selftest_analyzer.py,probe/actuator_test.py,probe/group_load_test.py,probe/group_membership.py,probe/group_video_test.py,probe/groups_seek_rate.py,probe/probe_status.py,probe/rate_gain.py,probe/seek_precision.py,probe/single_device_latency.py,probe/snapshot_all.py,probe/test_virtual_receiver.py,probe/virtual_receiver.py,tools/acoustic_session.py,tools/discover_cast.py,tools/make_assets.py,tools/measure3.py,tools/measure_track.py,tools/rollback_test.py,tools/scenario.py,tools/transport_matrix.py,tools/yt_tv.py}" = [
+    "E702", "E741", "B007", "B905", "I001", "F401", "F841",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["v020", "castv2", "groupguard", "silence", "emergency", "asset_server",
+                     "cast_relay", "sender", "fakes"]
+
+[tool.ruff.format]
+# Markdown is quoted evidence (notes/), never reformatted.
+# v0.1 code is cited line by line in notes/00-labo.md and guarded by tools/prove.sh:
+# it is linted, not reformatted.
+exclude = [
+    "*.md",
+    "lib/castv2.py", "lib/silence.py", "lib/emergency.py", "lib/groupguard.py",
+    "lib/asset_server.py", "relay/**",
+    "measure/analyze_offset.py", "measure/analyze_session.py", "measure/realcontent_offset.py",
+    "measure/selftest_analyzer.py",
+    "probe/actuator_test.py", "probe/group_load_test.py", "probe/group_membership.py",
+    "probe/group_video_test.py", "probe/groups_seek_rate.py", "probe/probe_status.py",
+    "probe/rate_gain.py", "probe/seek_precision.py", "probe/single_device_latency.py",
+    "probe/snapshot_all.py", "probe/test_virtual_receiver.py", "probe/virtual_receiver.py",
+    "tools/acoustic_session.py", "tools/discover_cast.py", "tools/make_assets.py",
+    "tools/measure3.py", "tools/measure_track.py", "tools/rollback_test.py",
+    "tools/scenario.py", "tools/transport_matrix.py", "tools/yt_tv.py",
+]

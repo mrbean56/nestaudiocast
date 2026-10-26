@@ -1,0 +1,54 @@
+# Installed with: uv run pre-commit install --hook-type pre-commit --hook-type pre-push
+# Run everything by hand: uv run pre-commit run --all-files
+default_install_hook_types: [pre-commit, pre-push]
+exclude: ^(sandbox|evidence|assets|bin|certs|logs|state)/
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: check-yaml
+      - id: check-added-large-files
+        args: [--maxkb=1024]
+      - id: detect-private-key
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.2
+    hooks:
+      # Python only: the lab notes quote code verbatim and must not be reformatted
+      - id: ruff-check
+        args: [--fix]
+        types_or: [python, pyi]
+      - id: ruff-format
+        types_or: [python, pyi]
+
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.13.5
+    hooks:
+      - id: uv-lock
+      # requirements.txt is generated from uv.lock for hosts without uv (CT 121 uses pip)
+      - id: uv-export
+        args: [--frozen, --no-dev, --no-emit-project, --output-file=requirements.txt]
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
+
+  - repo: local
+    hooks:
+      - id: safety-guards
+        name: safety regressions (tools/safety_guards.sh)
+        entry: tools/safety_guards.sh
+        language: system
+        pass_filenames: false
+        always_run: true
+      - id: offline-suite
+        name: offline suite (pytest, offline tier only)
+        entry: .venv/bin/pytest -q -p no:cacheprovider
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-push]

@@ -32,6 +32,7 @@ OWNER-SIDE PRECONDITION (this tool makes noise; written tonight, run at the gate
 matrix against a loopback fake service and against four deliberately broken variants, and exits
 non-zero if a broken variant passes or a good one fails.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -57,9 +58,12 @@ def redact(url: str) -> str:
 
 def call(url: str, body: dict | None = None, timeout: float = 15.0) -> dict:
     data = None if body is None else json.dumps(body).encode()
-    req = urllib.request.Request(url, data=data,
-                                 headers={"Content-Type": "application/json"} if data else {},
-                                 method="POST" if data else "GET")
+    req = urllib.request.Request(
+        url,
+        data=data,
+        headers={"Content-Type": "application/json"} if data else {},
+        method="POST" if data else "GET",
+    )
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return json.loads(r.read().decode() or "{}")
@@ -95,6 +99,7 @@ def group_volume() -> dict:
         sys.path.insert(0, os.path.join(ROOT, "lib"))
         import groupguard
         from castv2 import CastLink
+
         groups = groupguard.discover_groups(timeout=4)
         if "Cuisine" not in groups:
             return {"error": "group Cuisine not found by mDNS"}
@@ -106,7 +111,7 @@ def group_volume() -> dict:
             return {"level": round(float(v.get("level") or 0.0), 4), "muted": v.get("muted")}
         finally:
             link.close()
-    except Exception as exc:                       # noqa: BLE001
+    except Exception as exc:  # noqa: BLE001
         return {"error": f"{type(exc).__name__}: {exc}"}
 
 
@@ -131,13 +136,20 @@ def advances(svc: Service, seconds: float = 3.0) -> tuple[bool, float]:
 
 
 class Matrix:
-    def __init__(self, svc: Service, share_url: str, duration_s: float | None,
-                 volume_probe, keep_running: bool = False, sleep_scale: float = 1.0,
-                 timeout_scale: float = 1.0):
+    def __init__(
+        self,
+        svc: Service,
+        share_url: str,
+        duration_s: float | None,
+        volume_probe,
+        keep_running: bool = False,
+        sleep_scale: float = 1.0,
+        timeout_scale: float = 1.0,
+    ):
         self.svc, self.share_url, self.duration_s = svc, share_url, duration_s
         self.volume_probe = volume_probe
         self.keep_running = keep_running
-        self.sleep_scale = float(sleep_scale)     # self-test hook: 1.0 in the gate
+        self.sleep_scale = float(sleep_scale)  # self-test hook: 1.0 in the gate
         self.timeout_scale = float(timeout_scale)  # self-test hook: 1.0 in the gate
         self.rows: list[dict] = []
         self.first_session = None
@@ -146,10 +158,15 @@ class Matrix:
     def t(self, seconds: float) -> float:
         return seconds * self.timeout_scale
 
-    def record(self, name: str, ok: bool | None, seconds: float | None, detail: dict,
-               unverified_reason: str | None = None) -> None:
-        row = {"check": name, "pass": None if ok is None else bool(ok),
-               "seconds": seconds, **detail}
+    def record(
+        self,
+        name: str,
+        ok: bool | None,
+        seconds: float | None,
+        detail: dict,
+        unverified_reason: str | None = None,
+    ) -> None:
+        row = {"check": name, "pass": None if ok is None else bool(ok), "seconds": seconds, **detail}
         if unverified_reason:
             row["unverified"] = unverified_reason
         self.rows.append(row)
@@ -162,8 +179,11 @@ class Matrix:
             return {**v, "source": "castv2 GET_STATUS (read-only)"}
         st = self.svc.status()
         if isinstance(st.get("group_volume"), (int, float)):
-            return {"level": st["group_volume"], "muted": st.get("group_muted"),
-                    "source": "status.group_volume (not in contracts §5)"}
+            return {
+                "level": st["group_volume"],
+                "muted": st.get("group_muted"),
+                "source": "status.group_volume (not in contracts §5)",
+            }
         return {"error": "no group level available (pass --group-probe castv2)"}
 
     def run(self) -> dict:
@@ -176,16 +196,27 @@ class Matrix:
         # 1/2. play
         t0 = time.time()
         r = self.svc.share(self.share_url)
-        self.record("play: share accepted", r.get("state") in ("resolving", "playing", "starting")
-                    or r.get("_http") in (200, 202), round(time.time() - t0, 2), {"reply": r})
+        self.record(
+            "play: share accepted",
+            r.get("state") in ("resolving", "playing", "starting") or r.get("_http") in (200, 202),
+            round(time.time() - t0, 2),
+            {"reply": r},
+        )
         t, st = wait_for(self.svc, lambda s: s.get("state") == "playing", self.t(60))
         self.record("play: state playing", t is not None, t, {"state": st.get("state")})
         self.first_session = st.get("session_id")
         t_v = 3.0 * self.sleep_scale
         adv, d = advances(self.svc, t_v)
-        self.record("video: the video side is playing", adv, round(t_v, 2),
-                    {"position_delta_s": d, "video_id": st.get("video_id"),
-                     "position_video": st.get("position_video")})
+        self.record(
+            "video: the video side is playing",
+            adv,
+            round(t_v, 2),
+            {
+                "position_delta_s": d,
+                "video_id": st.get("video_id"),
+                "position_video": st.get("position_video"),
+            },
+        )
 
         # 3. pause
         t0 = time.time()
@@ -196,82 +227,130 @@ class Matrix:
             a = self.svc.status().get("position_video")
             time.sleep(2.5 * self.sleep_scale)
             b = self.svc.status().get("position_video")
-            frozen = isinstance(a, (int, float)) and isinstance(b, (int, float)) and abs(b - a) < POS_EPS_S
-        self.record("pause: paused and frozen", bool(t is not None and frozen), t,
-                    {"state": st.get("state"), "frozen": frozen})
+            frozen = (
+                isinstance(a, (int, float)) and isinstance(b, (int, float)) and abs(b - a) < POS_EPS_S
+            )
+        self.record(
+            "pause: paused and frozen",
+            bool(t is not None and frozen),
+            t,
+            {"state": st.get("state"), "frozen": frozen},
+        )
 
         # 4. resume
         t0 = time.time()
         self.svc.control("play")
         t, st = wait_for(self.svc, lambda s: s.get("state") == "playing", self.t(30))
-        adv2, d2 = advances(self.svc, 3.0 * self.sleep_scale) if t is not None \
-            else (False, 0.0)
-        self.record("resume: playing and advancing", bool(t is not None and adv2), t,
-                    {"state": st.get("state"), "position_delta_s": d2})
+        adv2, d2 = advances(self.svc, 3.0 * self.sleep_scale) if t is not None else (False, 0.0)
+        self.record(
+            "resume: playing and advancing",
+            bool(t is not None and adv2),
+            t,
+            {"state": st.get("state"), "position_delta_s": d2},
+        )
 
         # 5/6. seek forward and back
         cur = self.svc.status().get("position_video") or 0.0
-        for label, target in (("seek +: lands forward", min(cur + 60.0, (self.duration_s or 1e9) - 10.0)),
-                              ("seek -: lands backward", max(10.0, cur - 45.0))):
+        for label, target in (
+            ("seek +: lands forward", min(cur + 60.0, (self.duration_s or 1e9) - 10.0)),
+            ("seek -: lands backward", max(10.0, cur - 45.0)),
+        ):
             t0 = time.time()
             r = self.svc.control("seek", position=target)
-            t, st = wait_for(self.svc, lambda s, tg=target: isinstance(s.get("position_video"),
-                                                                     (int, float)) and
-                             abs(s["position_video"] - tg) <= SEEK_TOL_S, self.t(40))
-            self.record(label, t is not None, t,
-                        {"target_s": round(target, 1), "position_video": st.get("position_video"),
-                         "reply": r})
+            t, st = wait_for(
+                self.svc,
+                lambda s, tg=target: (
+                    isinstance(s.get("position_video"), (int, float))
+                    and abs(s["position_video"] - tg) <= SEEK_TOL_S
+                ),
+                self.t(40),
+            )
+            self.record(
+                label,
+                t is not None,
+                t,
+                {"target_s": round(target, 1), "position_video": st.get("position_video"), "reply": r},
+            )
 
         # 7/8. volume, both directions, while playing
         back, st = wait_for(self.svc, lambda s: s.get("state") == "playing", self.t(30))
         if back is None:
             for label in ("volume down: group follows", "volume up: group follows"):
-                self.record(label, False, None, {"state": st.get("state")},
-                            unverified_reason=None)
+                self.record(label, False, None, {"state": st.get("state")}, unverified_reason=None)
             base = {"error": "the session is not playing"}
         else:
             base = self._volume()
-        for label, delta in ([("volume down: group follows", -0.05),
-                              ("volume up: group follows", +0.05)]
-                             if back is not None else []):
+        for label, delta in (
+            [("volume down: group follows", -0.05), ("volume up: group follows", +0.05)]
+            if back is not None
+            else []
+        ):
             if not isinstance(base.get("level"), (int, float)):
-                self.record(label, None, None, {"volume": base},
-                            unverified_reason="no group level: " + str(base.get("error")))
+                self.record(
+                    label,
+                    None,
+                    None,
+                    {"volume": base},
+                    unverified_reason="no group level: " + str(base.get("error")),
+                )
                 continue
             target = max(0.01, min(0.99, base["level"] + delta))
             t0 = time.time()
             r = self.svc.control("volume", level=round(target, 3))
-            t, _ = wait_for(self.svc, lambda s, tg=target: abs(
-                (self._volume().get("level") or -1) - tg) <= 0.02, self.t(12), step=0.5)
+            t, _ = wait_for(
+                self.svc,
+                lambda s, tg=target: abs((self._volume().get("level") or -1) - tg) <= 0.02,
+                self.t(12),
+                step=0.5,
+            )
             got = self._volume()
-            self.record(label, bool(t is not None and r.get("ok")), t,
-                        {"target": round(target, 3), "level": got.get("level"),
-                         "reply": r, "source": got.get("source")})
+            self.record(
+                label,
+                bool(t is not None and r.get("ok")),
+                t,
+                {
+                    "target": round(target, 3),
+                    "level": got.get("level"),
+                    "reply": r,
+                    "source": got.get("source"),
+                },
+            )
             base = got if isinstance(got.get("level"), (int, float)) else base
 
         # 9. stop
         t0 = time.time()
         r = self.svc.control("stop")
         t, st = wait_for(self.svc, lambda s: s.get("state") == "idle", self.t(20))
-        self.record("stop: idle, no session", bool(t is not None and not st.get("session_id")), t,
-                    {"state": st.get("state"), "session_id": st.get("session_id"), "reply": r})
+        self.record(
+            "stop: idle, no session",
+            bool(t is not None and not st.get("session_id")),
+            t,
+            {"state": st.get("state"), "session_id": st.get("session_id"), "reply": r},
+        )
 
         # 10. end of media
         if not self.duration_s:
-            self.record("end of media: ended then idle", None, None, {},
-                        unverified_reason="no --duration-s given: the duration is not in "
-                                          "/api/status (proposed amendment)")
+            self.record(
+                "end of media: ended then idle",
+                None,
+                None,
+                {},
+                unverified_reason="no --duration-s given: the duration is not in "
+                "/api/status (proposed amendment)",
+            )
         else:
             t0 = time.time()
             self.svc.share(self.share_url, measure=False)
             wait_for(self.svc, lambda s: s.get("state") == "playing", self.t(60))
             self.svc.control("seek", position=max(0.0, self.duration_s - 4.0))
-            t, st = wait_for(self.svc, lambda s: s.get("state") in ("ended", "idle"),
-                             self.t(45))
+            t, st = wait_for(self.svc, lambda s: s.get("state") in ("ended", "idle"), self.t(45))
             t2, st2 = wait_for(self.svc, lambda s: s.get("state") == "idle", self.t(20))
-            self.record("end of media: ended then idle", bool(t is not None and t2 is not None),
-                        round(time.time() - t0, 2),
-                        {"state_after_end": st.get("state"), "final": st2.get("state")})
+            self.record(
+                "end of media: ended then idle",
+                bool(t is not None and t2 is not None),
+                round(time.time() - t0, 2),
+                {"state_after_end": st.get("state"), "final": st2.get("state")},
+            )
 
         # 11. new share mid-session
         self.svc.share(self.share_url, measure=False)
@@ -279,30 +358,46 @@ class Matrix:
         old = self.svc.status().get("session_id")
         t0 = time.time()
         r = self.svc.share(self.share_url, measure=False)
-        t, st = wait_for(self.svc, lambda s, o=old: s.get("state") == "playing" and
-                         s.get("session_id") not in (None, o), self.t(60))
-        self.record("new share mid-session: new session", bool(t is not None),
-                    round(time.time() - t0, 2),
-                    {"old_session": old, "new_session": st.get("session_id"),
-                     "state": st.get("state"), "reply": r})
+        t, st = wait_for(
+            self.svc,
+            lambda s, o=old: s.get("state") == "playing" and s.get("session_id") not in (None, o),
+            self.t(60),
+        )
+        self.record(
+            "new share mid-session: new session",
+            bool(t is not None),
+            round(time.time() - t0, 2),
+            {
+                "old_session": old,
+                "new_session": st.get("session_id"),
+                "state": st.get("state"),
+                "reply": r,
+            },
+        )
 
         if not self.keep_running:
             self.svc.control("stop")
         if isinstance(self.volume_before.get("level"), (int, float)):
-            self.svc.control("volume", level=self.volume_before["level"],
-                             muted=bool(self.volume_before.get("muted")))
+            self.svc.control(
+                "volume", level=self.volume_before["level"], muted=bool(self.volume_before.get("muted"))
+            )
         return {"checks": self.rows}
 
     def verdict(self) -> dict:
         fails = [r for r in self.rows if r["pass"] is False]
         unver = [r for r in self.rows if r["pass"] is None]
-        return {"passed": sum(1 for r in self.rows if r["pass"] is True),
-                "failed": len(fails), "unverified": len(unver), "total": len(self.rows),
-                "failed_checks": [r["check"] for r in fails],
-                "unverified_checks": [r["check"] for r in unver]}
+        return {
+            "passed": sum(1 for r in self.rows if r["pass"] is True),
+            "failed": len(fails),
+            "unverified": len(unver),
+            "total": len(self.rows),
+            "failed_checks": [r["check"] for r in fails],
+            "unverified_checks": [r["check"] for r in unver],
+        }
 
 
 # --- fake service for --self-test -----------------------------------------------------------
+
 
 class FakeService:
     """A loopback service with a real clock, plus four deliberate faults.
@@ -311,8 +406,9 @@ class FakeService:
     """
 
     def __init__(self, fault: str | None = None, duration: float = 600.0):
-        from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
         import threading
+        from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+
         self.fault = fault
         self.duration = duration
         self.state = "idle"
@@ -368,18 +464,28 @@ class FakeService:
             self._ended_at = time.time()
         if self.state == "ended" and time.time() - getattr(self, "_ended_at", 0) > 0.2:
             self.state, self.session, self.position = "idle", None, 0.0
-        return {"state": self.state, "session_id": self.session, "video_id": "FAKE",
-                "position_video": round(self.pos(), 3), "position_group": round(self.pos(), 3),
-                "digital_error_ms": 2.0, "p95_ms": 6.0, "rate": 1.0,
-                "steady_since": self.steady_since, "quiet": False,
-                "group_owner": "cast-sender" if self.session else None, "delta_v2": 0.0,
-                "last_event": "share" if self.session else "stop", "last_error": None,
-                "group_volume": self.group_volume}
+        return {
+            "state": self.state,
+            "session_id": self.session,
+            "video_id": "FAKE",
+            "position_video": round(self.pos(), 3),
+            "position_group": round(self.pos(), 3),
+            "digital_error_ms": 2.0,
+            "p95_ms": 6.0,
+            "rate": 1.0,
+            "steady_since": self.steady_since,
+            "quiet": False,
+            "group_owner": "cast-sender" if self.session else None,
+            "delta_v2": 0.0,
+            "last_event": "share" if self.session else "stop",
+            "last_error": None,
+            "group_volume": self.group_volume,
+        }
 
     def do_share(self) -> dict:
         self.shares += 1
         if self.state == "playing" and self.fault == "newshare":
-            return {"session_id": self.session, "state": "resolving"}   # same session: broken
+            return {"session_id": self.session, "state": "resolving"}  # same session: broken
         self.session_n += 1
         self.session = f"s{self.session_n}"
         self.state = "playing"
@@ -395,26 +501,26 @@ class FakeService:
             self.state = "paused"
         elif a == "play":
             if self.fault == "resume":
-                return {"ok": True, "state": self.state}                 # ignores the resume
+                return {"ok": True, "state": self.state}  # ignores the resume
             self.state = "playing"
             self._anchor = time.time()
             self.steady_since = time.time()
         elif a == "seek":
             if self.fault == "seek":
-                pass                                                      # ignores the seek
+                pass  # ignores the seek
             else:
                 self.position = float(body.get("position") or 0.0)
                 self._anchor = time.time()
                 self.steady_since = time.time()
-                if self.position >= self.duration - 4.0:      # models an end of file
+                if self.position >= self.duration - 4.0:  # models an end of file
                     self.position, self.state = self.duration, "ended"
                     self._ended_at = time.time()
         elif a == "volume":
-            if self.fault != "volume":                                    # "volume": ignores it
+            if self.fault != "volume":  # "volume": ignores it
                 self.group_volume = float(body.get("level", self.group_volume))
         elif a == "stop":
             if self.fault == "stop":
-                return {"ok": True, "state": self.state}                 # keeps playing
+                return {"ok": True, "state": self.state}  # keeps playing
             self.state = "idle"
             self.session = None
             self.position = 0.0
@@ -431,6 +537,7 @@ class FakeService:
 
 def assert_offline(tag: str) -> None:
     import socket
+
     real = socket.socket.connect
 
     def guarded(sock, address, *a, **kw):
@@ -444,9 +551,16 @@ def assert_offline(tag: str) -> None:
 
 # --- self-test ------------------------------------------------------------------------------
 
-def run_matrix(url: str, share_url: str, duration_s: float | None, probe=None,
-               keep_running: bool = False, sleep_scale: float = 1.0,
-               timeout_scale: float = 1.0) -> dict:
+
+def run_matrix(
+    url: str,
+    share_url: str,
+    duration_s: float | None,
+    probe=None,
+    keep_running: bool = False,
+    sleep_scale: float = 1.0,
+    timeout_scale: float = 1.0,
+) -> dict:
     svc = Service(url)
     m = Matrix(svc, share_url, duration_s, probe, keep_running, sleep_scale, timeout_scale)
     out = m.run()
@@ -466,15 +580,21 @@ def self_test(out_path: str) -> int:
         print(("  ok   " if ok else "  FAIL ") + name)
 
     with FakeService() as svc:
-        rep = run_matrix(svc.url, "http://fake/video", duration_s=600.0, sleep_scale=0.2, timeout_scale=0.08)
+        rep = run_matrix(
+            svc.url, "http://fake/video", duration_s=600.0, sleep_scale=0.2, timeout_scale=0.08
+        )
         ok = rep["failed"] == 0 and rep["unverified"] == 0 and rep["passed"] == 12
-        case("healthy fake service: 12/12 rows pass", ok,
-             {k: rep[k] for k in ("passed", "failed", "unverified", "total",
-                                  "failed_checks")})
+        case(
+            "healthy fake service: 12/12 rows pass",
+            ok,
+            {k: rep[k] for k in ("passed", "failed", "unverified", "total", "failed_checks")},
+        )
         # the same matrix must expose the time each check took
-        case("every check carries a duration or an unverified reason",
-             all((r["seconds"] is not None) or r.get("unverified") for r in rep["checks"]),
-             {"rows": len(rep["checks"])})
+        case(
+            "every check carries a duration or an unverified reason",
+            all((r["seconds"] is not None) or r.get("unverified") for r in rep["checks"]),
+            {"rows": len(rep["checks"])},
+        )
 
     expect_fail = {
         "volume": "volume down: group follows",
@@ -485,34 +605,49 @@ def self_test(out_path: str) -> int:
     }
     for fault, check_name in expect_fail.items():
         with FakeService(fault=fault) as svc:
-            rep = run_matrix(svc.url, "http://fake/video", duration_s=600.0, sleep_scale=0.2, timeout_scale=0.08)
+            rep = run_matrix(
+                svc.url, "http://fake/video", duration_s=600.0, sleep_scale=0.2, timeout_scale=0.08
+            )
             bad = check_name in rep["failed_checks"]
-            case(f"broken '{fault}' is caught ({check_name})", bad and rep["failed"] >= 1,
-                 {"failed_checks": rep["failed_checks"]})
+            case(
+                f"broken '{fault}' is caught ({check_name})",
+                bad and rep["failed"] >= 1,
+                {"failed_checks": rep["failed_checks"]},
+            )
 
     # the end-of-media row cannot be judged without a duration: it must say so
     with FakeService() as svc:
         rep = run_matrix(svc.url, "http://fake/video", duration_s=None, sleep_scale=0.2)
         unv = [r for r in rep["checks"] if r["check"].startswith("end of media")]
-        case("no duration -> end of media is unverified, not a pass",
-             bool(unv and unv[0]["pass"] is None and unv[0].get("unverified")),
-             {"row": unv[0] if unv else None})
+        case(
+            "no duration -> end of media is unverified, not a pass",
+            bool(unv and unv[0]["pass"] is None and unv[0].get("unverified")),
+            {"row": unv[0] if unv else None},
+        )
 
     # a non-idle service must be refused before any packet is sent
     with FakeService() as svc:
         svc.state, svc.session = "playing", "s-existing"
         rep = run_matrix(svc.url, "http://fake/video", duration_s=None, sleep_scale=0.2)
-        case("non-idle service refused before the matrix",
-             bool(rep["failed"] == 1 and rep["checks"][0]["check"].startswith("precondition")),
-             {"checks": rep["checks"]})
+        case(
+            "non-idle service refused before the matrix",
+            bool(rep["failed"] == 1 and rep["checks"][0]["check"].startswith("precondition")),
+            {"checks": rep["checks"]},
+        )
 
     ok_all = all(c["ok"] for c in cases)
-    res = {"tool": "transport_v020", "self_test": True,
-           "when": time.strftime("%Y-%m-%d %H:%M:%S"), "offline": True,
-           "targets_touched": [],
-           "note": "a loopback fake service only; no speaker, no group, no Chromecast",
-           "cases": cases, "passed": sum(1 for c in cases if c["ok"]), "total": len(cases),
-           "result": "SELF-TEST PASS" if ok_all else "SELF-TEST FAIL"}
+    res = {
+        "tool": "transport_v020",
+        "self_test": True,
+        "when": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "offline": True,
+        "targets_touched": [],
+        "note": "a loopback fake service only; no speaker, no group, no Chromecast",
+        "cases": cases,
+        "passed": sum(1 for c in cases if c["ok"]),
+        "total": len(cases),
+        "result": "SELF-TEST PASS" if ok_all else "SELF-TEST FAIL",
+    }
     if out_path:
         os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
         json.dump(res, open(out_path, "w"), indent=1, ensure_ascii=False)
@@ -526,14 +661,18 @@ def preflight(url: str) -> dict:
     out = {"url": url, "healthz": svc.health()}
     try:
         st = svc.status()
-        out["status"] = {k: st.get(k) for k in ("state", "session_id", "quiet", "group_owner",
-                                                "delta_v2", "group_volume")}
+        out["status"] = {
+            k: st.get(k)
+            for k in ("state", "session_id", "quiet", "group_owner", "delta_v2", "group_volume")
+        }
         out["status_fields"] = sorted(st.keys())
-    except Exception as exc:                        # noqa: BLE001
+    except Exception as exc:  # noqa: BLE001
         out["status"] = {"error": f"{type(exc).__name__}: {exc}"}
     out["group_volume_castv2"] = group_volume()
-    out["precondition"] = ("music will be audible: an open audio window is required; "
-                           "the group volume is restored at the end")
+    out["precondition"] = (
+        "music will be audible: an open audio window is required; "
+        "the group volume is restored at the end"
+    )
     return out
 
 
@@ -541,20 +680,31 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(
         description="Acceptance §5 transport matrix against a running v0.2 service.",
         epilog="Owner-side precondition" + __doc__.split("OWNER-SIDE PRECONDITION")[1],
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     ap.add_argument("--url", default=DEFAULT_URL)
     ap.add_argument("--share-url", default=None, help="the party URL to play")
-    ap.add_argument("--duration-s", type=float, default=None,
-                    help="real media duration, to judge the end-of-media row")
-    ap.add_argument("--group-probe", choices=("castv2", "status"), default="castv2",
-                    help="how to read the group level for the volume rows (default castv2, "
-                         "read-only GET_STATUS)")
+    ap.add_argument(
+        "--duration-s",
+        type=float,
+        default=None,
+        help="real media duration, to judge the end-of-media row",
+    )
+    ap.add_argument(
+        "--group-probe",
+        choices=("castv2", "status"),
+        default="castv2",
+        help="how to read the group level for the volume rows (default castv2, read-only GET_STATUS)",
+    )
     ap.add_argument("--keep-running", action="store_true")
     ap.add_argument("--json", help="write the matrix report here")
     ap.add_argument("--preflight", action="store_true", help="print reachability; touch nothing")
-    ap.add_argument("--self-test", action="store_true",
-                    help="loopback fake service + four broken variants; exits non-zero if a "
-                         "broken variant slips through")
+    ap.add_argument(
+        "--self-test",
+        action="store_true",
+        help="loopback fake service + four broken variants; exits non-zero if a "
+        "broken variant slips through",
+    )
     a = ap.parse_args(argv)
     if a.self_test:
         return self_test(a.json)
@@ -562,8 +712,7 @@ def main(argv=None) -> int:
         print(json.dumps(preflight(a.url), indent=1, ensure_ascii=False))
         return 0
     if not a.share_url:
-        print("transport_v020: --share-url is required (or --self-test / --preflight)",
-              file=sys.stderr)
+        print("transport_v020: --share-url is required (or --self-test / --preflight)", file=sys.stderr)
         return 2
     probe = group_volume if a.group_probe == "castv2" else None
     rep = run_matrix(a.url, a.share_url, a.duration_s, probe, a.keep_running)
@@ -572,8 +721,10 @@ def main(argv=None) -> int:
         os.makedirs(os.path.dirname(os.path.abspath(a.json)), exist_ok=True)
         json.dump(rep, open(a.json, "w"), indent=1, ensure_ascii=False)
         print(f"  -> {a.json}")
-    print(f"  {rep['passed']} passed, {rep['failed']} failed, {rep['unverified']} unverified "
-          f"/ {rep['total']}")
+    print(
+        f"  {rep['passed']} passed, {rep['failed']} failed, {rep['unverified']} unverified "
+        f"/ {rep['total']}"
+    )
     if rep["failed"]:
         return 1
     if rep["unverified"]:

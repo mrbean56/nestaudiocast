@@ -67,7 +67,7 @@ class TestEventLog(TempDir, unittest.TestCase):
     def test_last_event_and_callable(self):
         path = os.path.join(self.root, "log.jsonl")
         log = EventLog(path=path)
-        log("from_the_seam", detail="x")          # seams take a plain callable
+        log("from_the_seam", detail="x")  # seams take a plain callable
         self.assertEqual(log.last_event, "from_the_seam")
         self.assertEqual(log.last["detail"], "x")
         self.assertEqual(log.count, 1)

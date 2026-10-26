@@ -11,7 +11,7 @@ import json
 import os
 import unittest
 
-from test_sender_support import C, TempDir, YOUTUBE, make_api, make_sender
+from test_sender_support import YOUTUBE, C, TempDir, make_api, make_sender
 
 from sender.api import SenderAPI, serve_in_thread
 
@@ -23,8 +23,7 @@ class ApiCase(TempDir, unittest.TestCase):
         super().setUp()
         self.fixture = make_sender(self.root)
         os.makedirs(os.path.join(self.root, "assets", "measure"), exist_ok=True)
-        with open(os.path.join(self.root, "assets", "measure", "click_train_2310.m4a"),
-                  "wb") as handle:
+        with open(os.path.join(self.root, "assets", "measure", "click_train_2310.m4a"), "wb") as handle:
             handle.write(b"\x00" * 512)
         self.api = make_api(self.fixture, extra_allowed=self.extra_allowed)
         self.server, _thread = serve_in_thread(self.api, port=0)
@@ -77,9 +76,22 @@ class TestReadEndpoints(ApiCase):
     def test_status_has_the_contract_fields(self):
         status, parsed, _data, _ctype = self.call("GET", C.PATH_STATUS)
         self.assertEqual(status, 200)
-        expected = {"state", "session_id", "video_id", "position_video", "position_group",
-                    "digital_error_ms", "p95_ms", "rate", "steady_since", "quiet",
-                    "group_owner", "delta_v2", "last_event", "last_error"}
+        expected = {
+            "state",
+            "session_id",
+            "video_id",
+            "position_video",
+            "position_group",
+            "digital_error_ms",
+            "p95_ms",
+            "rate",
+            "steady_since",
+            "quiet",
+            "group_owner",
+            "delta_v2",
+            "last_event",
+            "last_error",
+        }
         self.assertEqual(set(parsed), expected)
 
     def test_the_ui_is_one_self_contained_page(self):
@@ -116,20 +128,19 @@ class TestReadEndpoints(ApiCase):
 
 class TestShare(ApiCase):
     def test_a_good_share_answers_202_resolving(self):
-        status, parsed, _data, _ctype = self.call("POST", C.PATH_SHARE,
-                                                 {"url": YOUTUBE, "start": 12.5})
+        status, parsed, _data, _ctype = self.call("POST", C.PATH_SHARE, {"url": YOUTUBE, "start": 12.5})
         self.assertEqual(status, 202)
         self.assertEqual(set(parsed), {"session_id", "state"})
         self.assertTrue(parsed["session_id"].startswith("s"))
         self.assertEqual(parsed["state"], C.STATE_RESOLVING)
         status, status_doc, _data, _ctype = self.call("GET", C.PATH_STATUS)
         self.assertEqual(status_doc["session_id"], parsed["session_id"])
-        self.assertIn(status_doc["state"], (C.STATE_PLAYING, C.STATE_STARTING,
-                                            C.STATE_RESOLVING))
+        self.assertIn(status_doc["state"], (C.STATE_PLAYING, C.STATE_STARTING, C.STATE_RESOLVING))
 
     def test_measure_is_accepted(self):
         status, parsed, _data, _ctype = self.call(
-            "POST", C.PATH_SHARE, {"url": YOUTUBE, "measure": True})
+            "POST", C.PATH_SHARE, {"url": YOUTUBE, "measure": True}
+        )
         self.assertEqual(status, 202)
         self.assertEqual(parsed["state"], C.STATE_RESOLVING)
 
@@ -141,17 +152,29 @@ class TestShare(ApiCase):
         self.assert_error("POST", C.PATH_SHARE, 400, {"url": "https://h/x", "start": -1})
         self.assert_error("POST", C.PATH_SHARE, 400, {"url": "https://h/x", "measure": "yes"})
         self.assert_error("POST", C.PATH_SHARE, 400, {"url": "https://h/x", "Start": 1})
-        self.assert_error("POST", C.PATH_SHARE, 400, raw=b"{oops",
-                          headers={"Content-Type": "application/json"})
-        self.assert_error("POST", C.PATH_SHARE, 400, raw=b"[]",
-                          headers={"Content-Type": "application/json"})
-        self.assert_error("POST", C.PATH_SHARE, 400, raw=b"",
-                          headers={"Content-Type": "application/json"})
-        self.assert_error("POST", C.PATH_SHARE, 415, raw=b'{"url":"https://h/x"}',
-                          headers={"Content-Type": "text/plain"})
-        self.assert_error("POST", C.PATH_SHARE, 413,
-                          raw=b"{" + b"x" * 70000 + b"}",
-                          headers={"Content-Type": "application/json"})
+        self.assert_error(
+            "POST", C.PATH_SHARE, 400, raw=b"{oops", headers={"Content-Type": "application/json"}
+        )
+        self.assert_error(
+            "POST", C.PATH_SHARE, 400, raw=b"[]", headers={"Content-Type": "application/json"}
+        )
+        self.assert_error(
+            "POST", C.PATH_SHARE, 400, raw=b"", headers={"Content-Type": "application/json"}
+        )
+        self.assert_error(
+            "POST",
+            C.PATH_SHARE,
+            415,
+            raw=b'{"url":"https://h/x"}',
+            headers={"Content-Type": "text/plain"},
+        )
+        self.assert_error(
+            "POST",
+            C.PATH_SHARE,
+            413,
+            raw=b"{" + b"x" * 70000 + b"}",
+            headers={"Content-Type": "application/json"},
+        )
 
     def test_a_quiet_share_answers_202_quiet_refused(self):
         from sender.quiet import QuietWindow
@@ -166,8 +189,13 @@ class TestShare(ApiCase):
         self.assertEqual(doc["quiet"]["decision"], "refuse")
 
     def test_an_oversized_body_does_not_poison_the_next_request(self):
-        self.assert_error("POST", C.PATH_SHARE, 413, raw=b"{" + b"x" * 70000 + b"}",
-                          headers={"Content-Type": "application/json"})
+        self.assert_error(
+            "POST",
+            C.PATH_SHARE,
+            413,
+            raw=b"{" + b"x" * 70000 + b"}",
+            headers={"Content-Type": "application/json"},
+        )
         status, _parsed, _data, _ctype = self.call("GET", C.PATH_HEALTH)
         self.assertEqual(status, 200)
 
@@ -192,7 +220,7 @@ class TestControl(ApiCase):
         self.assertEqual(status, 200)
         self.assertIn(parsed["state"], (C.STATE_ENDED, C.STATE_IDLE))
         status, parsed, _data, _ctype = self.call("POST", C.PATH_CONTROL, {"action": "stop"})
-        self.assertEqual(parsed, {"ok": True, "state": C.STATE_IDLE})    # idempotent
+        self.assertEqual(parsed, {"ok": True, "state": C.STATE_IDLE})  # idempotent
 
     def test_bad_control_bodies(self):
         self.call("POST", C.PATH_SHARE, {"url": YOUTUBE})
@@ -218,8 +246,7 @@ class TestMediaAndMeasure(ApiCase):
     def test_the_manifest_is_served_for_an_open_session(self):
         self.call("POST", C.PATH_SHARE, {"url": YOUTUBE})
         sid = next(iter(self.fixture.proxy.sessions))
-        status, _parsed, data, ctype = self.call("GET",
-                                                 f"{C.PATH_MEDIA_PREFIX}{sid}/manifest.mpd")
+        status, _parsed, data, ctype = self.call("GET", f"{C.PATH_MEDIA_PREFIX}{sid}/manifest.mpd")
         self.assertEqual(status, 200)
         self.assertIn("dash+xml", ctype)
         self.assertIn(b"<MPD", data)
@@ -241,7 +268,11 @@ class TestMediaAndMeasure(ApiCase):
 
     def test_a_proxy_that_speaks_http_is_used(self):
         def serve_http(method, path, headers):
-            return 206, {"Content-Type": "audio/mp4", "Content-Range": "bytes 0-3/8"}, b"\x00\x01\x02\x03"
+            return (
+                206,
+                {"Content-Type": "audio/mp4", "Content-Range": "bytes 0-3/8"},
+                b"\x00\x01\x02\x03",
+            )
 
         self.fixture.proxy.serve_http = serve_http
         self.call("POST", C.PATH_SHARE, {"url": YOUTUBE})
@@ -264,7 +295,7 @@ class TestMediaAndMeasure(ApiCase):
 
 
 class TestLanOnly(ApiCase):
-    extra_allowed = ()          # nothing but 192.168.2.0/24
+    extra_allowed = ()  # nothing but 192.168.2.0/24
 
     def test_a_loopback_client_is_not_a_lan_client(self):
         parsed = self.assert_error("GET", C.PATH_HEALTH, 403)
@@ -272,13 +303,17 @@ class TestLanOnly(ApiCase):
         self.assertIn("192.168.2.0/24", parsed["detail"])
 
     def test_the_allow_list_itself(self):
-        api = SenderAPI(self.fixture.sender, config=self.fixture.config, proxy=self.fixture.proxy,
-                        extra_allowed=("127.0.0.1", "::1"))
+        api = SenderAPI(
+            self.fixture.sender,
+            config=self.fixture.config,
+            proxy=self.fixture.proxy,
+            extra_allowed=("127.0.0.1", "::1"),
+        )
         for allowed in ("192.168.2.1", "192.168.2.21", "192.168.2.255", "127.0.0.1", "::1"):
             self.assertTrue(api.allowed(allowed), allowed)
         for refused in ("10.0.0.5", "192.168.3.1", "8.8.8.8", "", "not-an-ip", "::ffff:10.0.0.5"):
             self.assertFalse(api.allowed(refused), refused)
-        self.assertTrue(api.allowed("::ffff:192.168.2.18"))     # IPv4-mapped IPv6
+        self.assertTrue(api.allowed("::ffff:192.168.2.18"))  # IPv4-mapped IPv6
 
 
 if __name__ == "__main__":

@@ -67,20 +67,29 @@ class TestProtocolSurface(unittest.TestCase):
     def test_every_message_type_is_handled_or_sent(self):
         src = page()
         for msg_type in C.CONTROLLER_MESSAGES + C.RECEIVER_MESSAGES:
-            self.assertRegex(src, r"""['"]%s['"]""" % re.escape(msg_type),
-                             "message type %r does not appear in receiver.html" % msg_type)
+            self.assertRegex(
+                src,
+                r"""['"]%s['"]""" % re.escape(msg_type),
+                "message type %r does not appear in receiver.html" % msg_type,
+            )
 
     def test_controller_messages_are_all_dispatched(self):
         src = page()
         for msg_type in C.CONTROLLER_MESSAGES:
-            self.assertRegex(src, r"case\s+['\"]%s['\"]\s*:" % re.escape(msg_type),
-                             "no case for controller message %r" % msg_type)
+            self.assertRegex(
+                src,
+                r"case\s+['\"]%s['\"]\s*:" % re.escape(msg_type),
+                "no case for controller message %r" % msg_type,
+            )
 
     def test_every_player_state_can_be_reported(self):
         src = page()
         for state in C.PLAYER_STATES:
-            self.assertIn("'%s'" % state if state != "idle" else "'idle'", src,
-                          "player_state %r is never produced" % state)
+            self.assertIn(
+                "'%s'" % state if state != "idle" else "'idle'",
+                src,
+                "player_state %r is never produced" % state,
+            )
 
     def test_state_cadence_is_4hz(self):
         src = page()
@@ -106,16 +115,23 @@ class TestClock(unittest.TestCase):
     def test_rx_ms_and_currenttime_are_sampled_in_the_same_statement(self):
         # contracts §3: a pair that straddles a frame boundary looks like a rate error
         src = page()
-        m = re.search(r"var rx_ms = performance\.timeOrigin \+ performance\.now\(\), "
-                      r"media = [^;]+;", src)
+        m = re.search(
+            r"var rx_ms = performance\.timeOrigin \+ performance\.now\(\), "
+            r"media = [^;]+;",
+            src,
+        )
         self.assertIsNotNone(
-            m, "rx_ms and the media position must be read in one statement, as contracts §3 says")
+            m, "rx_ms and the media position must be read in one statement, as contracts §3 says"
+        )
 
     def test_play_at_schedules_one_play_at_the_target_time(self):
         src = page()
         # the release is computed from the target and the receiver clock, not from a burst of seeks
         self.assertIn("target - rxNow()", src)
-        self.assertRegex(src, r"setTimeout\([^)]*wait", )
+        self.assertRegex(
+            src,
+            r"setTimeout\([^)]*wait",
+        )
 
 
 class TestSelfContained(unittest.TestCase):
@@ -127,8 +143,9 @@ class TestSelfContained(unittest.TestCase):
 
     def test_no_other_remote_resource(self):
         src = page()
-        self.assertEqual(len(re.findall(r"<script[^>]+src=", src)), 1,
-                         "exactly one script src: the CAF loader")
+        self.assertEqual(
+            len(re.findall(r"<script[^>]+src=", src)), 1, "exactly one script src: the CAF loader"
+        )
         self.assertNotRegex(src, r"<link[^>]+href=", "no external stylesheet")
         self.assertNotRegex(src, r"@import|fonts\.googleapis|fonts\.gstatic")
         for tracker in ("gtag(", "googletagmanager", "google-analytics", "analytics.js", "ga("):

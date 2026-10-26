@@ -36,7 +36,10 @@ from v020 import contracts as C
 from v020.contracts import OWNER_SENDER
 
 from .group_lock import (
-    GroupLock, clear_session_record, session_record_path, stop_receiver_idle,
+    GroupLock,
+    clear_session_record,
+    session_record_path,
+    stop_receiver_idle,
     write_session_record,
 )
 from .quiet import DECISION_OK, QuietWindow
@@ -46,12 +49,12 @@ LIVE_STATES = (C.STATE_RESOLVING, C.STATE_STARTING, C.STATE_PLAYING, C.STATE_PAU
 #: States a control action can act on.
 CONTROLLABLE = (C.STATE_PLAYING, C.STATE_PAUSED)
 
-DEFAULT_TICK_S = 0.25           # ≤ 1 s poll, so a foreign takeover is seen within one poll (§3.3)
-TRANSITION_S = 5.0              # a re-landing window after a user transport action
-TRANSITION_BUDGET = 2           # one group re-landing + one play_at, per window (§1)
-ENDED_LINGER_S = 2.0            # how long `ended` is visible before `idle`
-REFUSE_LOG_EVERY_S = 10.0       # throttle for the guard's own log lines (a hostile controller)
-START_LEAD_S = 0.2              # only used by the stopgap plan, never by the real controller
+DEFAULT_TICK_S = 0.25  # ≤ 1 s poll, so a foreign takeover is seen within one poll (§3.3)
+TRANSITION_S = 5.0  # a re-landing window after a user transport action
+TRANSITION_BUDGET = 2  # one group re-landing + one play_at, per window (§1)
+ENDED_LINGER_S = 2.0  # how long `ended` is visible before `idle`
+REFUSE_LOG_EVERY_S = 10.0  # throttle for the guard's own log lines (a hostile controller)
+START_LEAD_S = 0.2  # only used by the stopgap plan, never by the real controller
 #: How long the *parked* group takes from PLAY to actually playing. Evidence/27 (C): the
 #: PAUSE->SEEK->PLAY landing lands -44 ms from the instant it was told, so the group is told
 #: 44 ms early. Not the 0.55 s of evidence/16/A4 — that is a LOAD from idle, never this path.
@@ -69,12 +72,21 @@ GUARDED = (C.MSG_LOAD, C.MSG_SEEK, C.MSG_PLAY_AT)
 GUARDED_GROUP = ("prepare", "load", "seek", "group_prepare", "group_seek")
 
 _GROUP_ALIASES = {
-    "play": "play", "group_play": "play", "resume": "play",
-    "pause": "pause", "group_pause": "pause",
-    "stop": "stop", "group_stop": "stop",
-    "seek": "seek", "group_seek": "seek", "land": "seek",
-    "prepare": "prepare", "group_prepare": "prepare", "load": "prepare",
-    "volume": "volume", "set_volume": "volume",
+    "play": "play",
+    "group_play": "play",
+    "resume": "play",
+    "pause": "pause",
+    "group_pause": "pause",
+    "stop": "stop",
+    "group_stop": "stop",
+    "seek": "seek",
+    "group_seek": "seek",
+    "land": "seek",
+    "prepare": "prepare",
+    "group_prepare": "prepare",
+    "load": "prepare",
+    "volume": "volume",
+    "set_volume": "volume",
 }
 
 _HTTP_URL = re.compile(r"^https?://[^\s]+$", re.IGNORECASE)
@@ -99,7 +111,7 @@ class Session:
 
     id: str
     url: str
-    mode: str = "normal"                  # normal | measure | video_only
+    mode: str = "normal"  # normal | measure | video_only
     start_at: float = 0.0
     created: float = 0.0
     state: str = C.STATE_RESOLVING
@@ -129,16 +141,25 @@ class Session:
 class SessionManager:
     """The one session of the owner app, driven by :meth:`tick` and by HTTP calls."""
 
-    def __init__(self, *, link, group, controller, proxy, config, log,
-                 resolver: Callable[..., Any] | None = None,
-                 quiet: QuietWindow | None = None,
-                 clock: Callable[[], float] = time.monotonic,
-                 wall: Callable[[], float] = time.time,
-                 spawn: Callable[[Callable[[], None]], Any] | None = None,
-                 lock: GroupLock | None = None,
-                 state_dir: str | None = None,
-                 tick_s: float = DEFAULT_TICK_S,
-                 transition_s: float = TRANSITION_S) -> None:
+    def __init__(
+        self,
+        *,
+        link,
+        group,
+        controller,
+        proxy,
+        config,
+        log,
+        resolver: Callable[..., Any] | None = None,
+        quiet: QuietWindow | None = None,
+        clock: Callable[[], float] = time.monotonic,
+        wall: Callable[[], float] = time.time,
+        spawn: Callable[[Callable[[], None]], Any] | None = None,
+        lock: GroupLock | None = None,
+        state_dir: str | None = None,
+        tick_s: float = DEFAULT_TICK_S,
+        transition_s: float = TRANSITION_S,
+    ) -> None:
         self._link = link
         self._group = group
         self._controller = controller
@@ -155,21 +176,20 @@ class SessionManager:
         self._state_dir = state_dir if state_dir is not None else config.state_dir
         self._record_path = session_record_path(self._state_dir)
         self._lock = threading.RLock()
-        self._group_lock = lock or GroupLock(
-            path=_group_lock_path(self._state_dir), log=log)
+        self._group_lock = lock or GroupLock(path=_group_lock_path(self._state_dir), log=log)
         self._session: Session | None = None
         self._ended_at: float | None = None
         self._start_done = False
         self._transition_until = 0.0
         self._reload_budget = 0
-        self._errors: list[tuple[float, float]] = []      # (monotonic, ms)
+        self._errors: list[tuple[float, float]] = []  # (monotonic, ms)
         self._refusals = 0
         self._last_refusal_log = -1e9
         self._idle_video_reads = 0
         self._last_error: str | None = None
-        self._level: float | None = None      # last level we commanded (no getter in the seam)
+        self._level: float | None = None  # last level we commanded (no getter in the seam)
         self._controller_missing = False
-        self._clock_offset_ms = 0.0           # receiver-clock minus controller-clock (§3)
+        self._clock_offset_ms = 0.0  # receiver-clock minus controller-clock (§3)
         self._clock_residual_ms: float | None = None
         self._clock_at = -1e9
 
@@ -205,12 +225,19 @@ class SessionManager:
             if mode != "video_only":
                 if not self._group_lock.acquire():
                     raise ControlError(
-                        "the group is owned by another cast-sender (or a live lock)", code=409,
-                        kind="group_busy")
+                        "the group is owned by another cast-sender (or a live lock)",
+                        code=409,
+                        kind="group_busy",
+                    )
                 self._group_lock.start_heartbeat()
 
-            session = Session(id=f"s{uuid.uuid4().hex[:10]}", url=url, mode=mode,
-                              start_at=start_at, created=self._clock())
+            session = Session(
+                id=f"s{uuid.uuid4().hex[:10]}",
+                url=url,
+                mode=mode,
+                start_at=start_at,
+                created=self._clock(),
+            )
             self._session = session
             self._ended_at = None
             self._start_done = False
@@ -220,26 +247,41 @@ class SessionManager:
             self._idle_video_reads = 0
             self._last_error = None
             self._level = None
-            self._log("share_accepted", session_id=session.id, mode=session.mode,
-                      start=round(start_at, 3), measure=bool(measure),
-                      quiet=self._quiet.decision(self._wall()))
-            accepted_state = session.state          # contracts §5: 202 {"state": "resolving"}
+            self._log(
+                "share_accepted",
+                session_id=session.id,
+                mode=session.mode,
+                start=round(start_at, 3),
+                measure=bool(measure),
+                quiet=self._quiet.decision(self._wall()),
+            )
+            accepted_state = session.state  # contracts §5: 202 {"state": "resolving"}
             self._spawn(lambda: self._begin(session))
             return {"session_id": session.id, "state": accepted_state}
 
     def _refuse_for_quiet(self, url: str, start_at: float, measure: bool) -> dict:
         """``refuse`` policy: the share is answered ``quiet_refused`` and nothing plays (§7)."""
-        session = Session(id=f"s{uuid.uuid4().hex[:10]}", url=url, start_at=start_at,
-                          created=self._clock(), state=C.STATE_QUIET_REFUSED,
-                          mode="video_only")
+        session = Session(
+            id=f"s{uuid.uuid4().hex[:10]}",
+            url=url,
+            start_at=start_at,
+            created=self._clock(),
+            state=C.STATE_QUIET_REFUSED,
+            mode="video_only",
+        )
         running = self._session is not None and self._session.live
         if not running:
             # Show the refusal in /api/status; a session that is already running is NOT
             # stopped and NOT replaced (the rule is about starting, §7).
             self._session = session
-        self._log("share_refused", session_id=session.id, reason="quiet_hours",
-                  policy=self._quiet.policy, running_session=running,
-                  quiet=self._quiet.describe(self._wall()))
+        self._log(
+            "share_refused",
+            session_id=session.id,
+            reason="quiet_hours",
+            policy=self._quiet.policy,
+            running_session=running,
+            quiet=self._quiet.describe(self._wall()),
+        )
         return {"session_id": session.id, "state": session.state}
 
     # =====================================================================================
@@ -256,8 +298,14 @@ class SessionManager:
             session.sid = self._open_media(session, resolved)
             if session.sid is None:
                 return
-            self._log("media_resolved", session_id=session.id, video_id=session.video_id,
-                      sid=session.sid, duration_s=session.duration_s, mode=session.mode)
+            self._log(
+                "media_resolved",
+                session_id=session.id,
+                video_id=session.video_id,
+                sid=session.sid,
+                duration_s=session.duration_s,
+                mode=session.mode,
+            )
             with self._lock:
                 if session.live:
                     session.state = C.STATE_STARTING
@@ -269,12 +317,17 @@ class SessionManager:
                 self._link.connect()
                 session.receiver_launched = True
             except NotImplementedError:
-                return self._fail(session, "sender_link_unavailable",
-                                  "the receiver link is a stub (task D)")
+                return self._fail(
+                    session, "sender_link_unavailable", "the receiver link is a stub (task D)"
+                )
             except Exception as exc:  # noqa: BLE001 - LostDevice included, on purpose
                 return self._fail(session, "receiver_failed", f"{type(exc).__name__}: {exc}")
-            self._log("receiver_ready", session_id=session.id,
-                      host=self._config.chromecast, app_id=self._config.app_id)
+            self._log(
+                "receiver_ready",
+                session_id=session.id,
+                host=self._config.chromecast,
+                app_id=self._config.app_id,
+            )
             if self._aborted(session):
                 return
 
@@ -286,8 +339,12 @@ class SessionManager:
             # session.start_at when it is computed, and never loads anything itself.
             if not self._load_video(session):
                 return
-            self._log("video_parked", session_id=session.id, at=round(session.start_at, 3),
-                      ready=self._wait_receiver_ready(session))
+            self._log(
+                "video_parked",
+                session_id=session.id,
+                at=round(session.start_at, 3),
+                ready=self._wait_receiver_ready(session),
+            )
             if self._aborted(session):
                 return
 
@@ -295,16 +352,20 @@ class SessionManager:
             if session.audible:
                 try:
                     self._group.connect()
-                    group_ready = bool(self._group.prepare(
-                        self._audio_url(session), "audio/mp4", session.start_at))
+                    group_ready = bool(
+                        self._group.prepare(self._audio_url(session), "audio/mp4", session.start_at)
+                    )
                     session.group_prepared = group_ready
                 except NotImplementedError:
-                    return self._fail(session, "group_unavailable", "the group seam is a stub "
-                                                                   "(task E)")
+                    return self._fail(session, "group_unavailable", "the group seam is a stub (task E)")
                 except Exception as exc:  # noqa: BLE001 - UnsafeGroup and friends
                     return self._fail(session, "group_failed", f"{type(exc).__name__}: {exc}")
-                self._log("group_prepared", session_id=session.id, ok=group_ready,
-                          at=round(session.start_at, 3))
+                self._log(
+                    "group_prepared",
+                    session_id=session.id,
+                    ok=group_ready,
+                    at=round(session.start_at, 3),
+                )
 
             if self._aborted(session):
                 return
@@ -322,9 +383,15 @@ class SessionManager:
                 session.started_at = now
                 self._note_transport(now)
                 session.state = C.STATE_PLAYING
-            self._log("session_started", session_id=session.id, video_id=session.video_id,
-                      mode=session.mode, group_ready=group_ready,
-                      start=round(session.start_at, 3), state=session.state)
+            self._log(
+                "session_started",
+                session_id=session.id,
+                video_id=session.video_id,
+                mode=session.mode,
+                group_ready=group_ready,
+                start=round(session.start_at, 3),
+                state=session.state,
+            )
         except Exception as exc:  # noqa: BLE001 - a session must never take the server down
             self._fail(session, "start_failed", f"{type(exc).__name__}: {exc}")
 
@@ -358,22 +425,26 @@ class SessionManager:
         so it is told to play that much earlier (evidence/27 C: -44 ms).
         """
         try:
-            plan = self._controller.start(now, session.start_at, session.start_at,
-                                          lead_s=GROUP_LEAD_S)
+            plan = self._controller.start(now, session.start_at, session.start_at, lead_s=GROUP_LEAD_S)
             return list(plan or [])
         except NotImplementedError:
             self._controller_missing = True
-            self._log("controller_unavailable", session_id=session.id,
-                      fallback="stopgap_start", task="F")
+            self._log(
+                "controller_unavailable", session_id=session.id, fallback="stopgap_start", task="F"
+            )
             return self._stopgap_start(session, group_ready)
 
     # -- the receiver's parked load, and its readiness ------------------------------------
     def _load_video(self, session: Session) -> bool:
         """LOAD the manifest paused at ``session.start_at``; False ends the session cleanly."""
         try:
-            self._link.send(C.MSG_LOAD, url=self._mpd_url(session),
-                            content_type="application/dash+xml",
-                            media=session.start_at, autoplay=False)
+            self._link.send(
+                C.MSG_LOAD,
+                url=self._mpd_url(session),
+                content_type="application/dash+xml",
+                media=session.start_at,
+                autoplay=False,
+            )
         except NotImplementedError:
             self._fail(session, "sender_link_unavailable", "the receiver link is a stub (task D)")
             return False
@@ -382,8 +453,7 @@ class SessionManager:
             return False
         return True
 
-    def _wait_receiver_ready(self, session: Session,
-                             timeout: float = RECEIVER_READY_TIMEOUT_S) -> bool:
+    def _wait_receiver_ready(self, session: Session, timeout: float = RECEIVER_READY_TIMEOUT_S) -> bool:
         """Wait (bounded) for the parked position to be buffered; the plan starts either way.
 
         A landing computed on an unbuffered receiver simply lands late — measurable, not fatal —
@@ -396,8 +466,11 @@ class SessionManager:
             if sample is not None:
                 state = getattr(sample, "player_state", None)
                 buffered = getattr(sample, "buffered_end", None)
-                if state in (C.PLAYER_PAUSED, C.PLAYER_PLAYING) and buffered is not None \
-                        and float(buffered) >= need:
+                if (
+                    state in (C.PLAYER_PAUSED, C.PLAYER_PLAYING)
+                    and buffered is not None
+                    and float(buffered) >= need
+                ):
                     return True
                 if state == C.PLAYER_ERROR:
                     return False
@@ -426,9 +499,13 @@ class SessionManager:
             self._controller.on_clock(estimate)
         except Exception:  # noqa: BLE001 - a stub controller has no clock
             pass
-        self._log("clock_estimate", offset_ms=round(self._clock_offset_ms, 3),
-                  residual_ms=None if self._clock_residual_ms is None
-                  else round(float(self._clock_residual_ms), 3))
+        self._log(
+            "clock_estimate",
+            offset_ms=round(self._clock_offset_ms, 3),
+            residual_ms=None
+            if self._clock_residual_ms is None
+            else round(float(self._clock_residual_ms), 3),
+        )
 
     def _stopgap_start(self, session: Session, group_ready: bool) -> list:
         """Release the group, then tell the receiver where to be.
@@ -440,8 +517,11 @@ class SessionManager:
         plan = []
         if group_ready and session.audible:
             plan.append(C.Command(kind="play", payload={"target": "group"}))
-        plan.append(C.Command(kind=C.MSG_PLAY_AT, payload={
-            "rx_ms": self._receiver_ms(), "media": session.start_at}))
+        plan.append(
+            C.Command(
+                kind=C.MSG_PLAY_AT, payload={"rx_ms": self._receiver_ms(), "media": session.start_at}
+            )
+        )
         return plan
 
     # =====================================================================================
@@ -454,7 +534,7 @@ class SessionManager:
             if session is None:
                 return
             now = self._clock()
-            self._refresh_clock()          # throttled by CLOCK_REFRESH_S (§3.1)
+            self._refresh_clock()  # throttled by CLOCK_REFRESH_S (§3.1)
             if session.state == C.STATE_ENDED:
                 if self._ended_at is not None and now - self._ended_at >= ENDED_LINGER_S:
                     self._session = None
@@ -502,12 +582,17 @@ class SessionManager:
                 except NotImplementedError:
                     if not self._controller_missing:
                         self._controller_missing = True
-                        self._log("controller_unavailable", session_id=session.id,
-                                  fallback="no_corrections", task="F")
+                        self._log(
+                            "controller_unavailable",
+                            session_id=session.id,
+                            fallback="no_corrections",
+                            task="F",
+                        )
                     commands = []
                 except Exception as exc:  # noqa: BLE001
-                    self._log("controller_error", session_id=session.id,
-                              error=f"{type(exc).__name__}: {exc}")
+                    self._log(
+                        "controller_error", session_id=session.id, error=f"{type(exc).__name__}: {exc}"
+                    )
                     commands = []
             self._apply(session, commands, now, phase="steady")
 
@@ -522,14 +607,17 @@ class SessionManager:
         elif kind == C.MSG_ERROR:
             session.last_error = f"receiver: {message.get('code')}: {message.get('message')}"
             self._last_error = session.last_error
-            self._log("receiver_error", session_id=session.id, code=message.get("code"),
-                      message=message.get("message"))
+            self._log(
+                "receiver_error",
+                session_id=session.id,
+                code=message.get("code"),
+                message=message.get("message"),
+            )
 
     def _mirror_intent(self, session: Session, message: dict, now: float) -> None:
         """§3.2: the receiver forwards what another sender pressed; we mirror it on the group."""
         action = str(message.get("action") or "")
-        self._log("intent", session_id=session.id, action=action,
-                  media=message.get("media"))
+        self._log("intent", session_id=session.id, action=action, media=message.get("media"))
         if action == C.INTENT_PAUSE:
             self._group_safe(session, "pause")
             with self._lock:
@@ -572,8 +660,7 @@ class SessionManager:
                 self._idle_video_reads = 0
 
         if video is not None and group_sample is not None:
-            error_ms = C.digital_error(group_sample.media, video.media,
-                                       self._config.delta_v2) * 1000.0
+            error_ms = C.digital_error(group_sample.media, video.media, self._config.delta_v2) * 1000.0
             self._errors.append((now, error_ms))
             horizon = now - C.STEADY_WINDOW_S
             self._errors = [item for item in self._errors if item[0] >= horizon]
@@ -611,15 +698,13 @@ class SessionManager:
             else:
                 self._group_command(session, kind, payload, now, phase)
 
-    def _group_command(self, session: Session, kind: str, payload: dict, now: float,
-                       phase: str) -> None:
+    def _group_command(self, session: Session, kind: str, payload: dict, now: float, phase: str) -> None:
         name = _GROUP_ALIASES.get(kind)
         if name is None:
             self._log("command_unknown", session_id=session.id, kind=kind)
             return
         if not session.audible:
-            self._log("group_action_refused", session_id=session.id, kind=name,
-                      reason="video_only")
+            self._log("group_action_refused", session_id=session.id, kind=name, reason="video_only")
             return
         guarded = name in ("prepare", "seek")
         if guarded and not self._reload_allowed(session, name, now):
@@ -627,9 +712,11 @@ class SessionManager:
         try:
             if name == "prepare":
                 at = _as_float(payload.get("media", payload.get("at")))
-                self._group.prepare(payload.get("url") or self._audio_url(session),
-                                    payload.get("content_type") or "audio/mp4",
-                                    session.start_at if at is None else at)
+                self._group.prepare(
+                    payload.get("url") or self._audio_url(session),
+                    payload.get("content_type") or "audio/mp4",
+                    session.start_at if at is None else at,
+                )
             elif name == "play":
                 self._play_group_at(payload.get("at"), phase)
             elif name == "pause":
@@ -644,17 +731,18 @@ class SessionManager:
             elif name == "volume":
                 level = _as_float(payload.get("level"))
                 if level is not None and level <= 0.0:
-                    raise ControlError("refusing a level of 0: mute instead (A37)", code=400,
-                                       kind="invalid")
+                    raise ControlError(
+                        "refusing a level of 0: mute instead (A37)", code=400, kind="invalid"
+                    )
                 self._group.set_volume(level, payload.get("muted"))
         except ControlError as exc:
-            self._log("group_action_refused", session_id=session.id, kind=name,
-                      reason=str(exc))
+            self._log("group_action_refused", session_id=session.id, kind=name, reason=str(exc))
         except NotImplementedError:
             self._log("group_unavailable", session_id=session.id, kind=name)
         except Exception as exc:  # noqa: BLE001 - a group error must not kill the server
-            self._log("group_error", session_id=session.id, kind=name,
-                      error=f"{type(exc).__name__}: {exc}")
+            self._log(
+                "group_error", session_id=session.id, kind=name, error=f"{type(exc).__name__}: {exc}"
+            )
 
     def _play_group_at(self, at, phase: str) -> None:
         """Release the parked group at a controller-clock instant, if one was asked for.
@@ -685,8 +773,9 @@ class SessionManager:
                 # The injected clock did not move while we slept (a frozen test clock, or a
                 # clock that jumped backwards). Release now and say so: the landing error is
                 # measurable, a deadlock is not.
-                self._log("group_play_clock_stalled", phase=phase,
-                          short_by_s=round(instant - self._clock(), 4))
+                self._log(
+                    "group_play_clock_stalled", phase=phase, short_by_s=round(instant - self._clock(), 4)
+                )
         self._group.play()
 
     def _reload_allowed(self, session: Session, kind: str, now: float) -> bool:
@@ -695,8 +784,9 @@ class SessionManager:
             return True
         if now < self._transition_until and self._reload_budget > 0:
             self._reload_budget -= 1
-            self._log("reload_allowed", session_id=session.id, kind=str(kind),
-                      remaining=self._reload_budget)
+            self._log(
+                "reload_allowed", session_id=session.id, kind=str(kind), remaining=self._reload_budget
+            )
             return True
         self._refuse(session, kind, now)
         return False
@@ -705,15 +795,25 @@ class SessionManager:
         self._refusals += 1
         if now - self._last_refusal_log >= REFUSE_LOG_EVERY_S:
             self._last_refusal_log = now
-            self._log("reload_refused", session_id=session.id, kind=str(kind),
-                      total=self._refusals,
-                      reason="after the start event only rate trims are allowed (§1)")
+            self._log(
+                "reload_refused",
+                session_id=session.id,
+                kind=str(kind),
+                total=self._refusals,
+                reason="after the start event only rate trims are allowed (§1)",
+            )
 
     # =====================================================================================
     # control (HTTP)
     # =====================================================================================
-    def control(self, action: str, *, position: float | None = None,
-                level: float | None = None, muted: bool | None = None) -> dict:
+    def control(
+        self,
+        action: str,
+        *,
+        position: float | None = None,
+        level: float | None = None,
+        muted: bool | None = None,
+    ) -> dict:
         if action not in C.ACTIONS:
             raise ControlError(f"unknown action {action!r}", code=400, kind="invalid")
         # A malformed body is a 400 whether or not a session exists; only a well-formed action
@@ -749,8 +849,12 @@ class SessionManager:
             if action == C.ACTION_PAUSE:
                 if session.state == C.STATE_PAUSED:
                     return {"ok": True, "state": session.state}
-                self._apply(session, self._ensure(self._call("on_pause", now), C.MSG_PAUSE, {}),
-                            now, phase="user")
+                self._apply(
+                    session,
+                    self._ensure(self._call("on_pause", now), C.MSG_PAUSE, {}),
+                    now,
+                    phase="user",
+                )
                 self._group_safe(session, "pause")
                 session.state = C.STATE_PAUSED
                 self._note_transport(now)
@@ -762,19 +866,26 @@ class SessionManager:
                 self._note_transport(now)
                 self._open_transition(now, "resume", budget=TRANSITION_BUDGET)
                 current = self._group_position() or 0.0
-                self._apply(session,
-                            self._ensure(self._resume_plan(session, now, current),
-                                         C.MSG_PLAY_AT, {"media": current}), now, phase="user")
+                self._apply(
+                    session,
+                    self._ensure(
+                        self._resume_plan(session, now, current), C.MSG_PLAY_AT, {"media": current}
+                    ),
+                    now,
+                    phase="user",
+                )
                 session.state = C.STATE_PLAYING
-                self._log("control_play", session_id=session.id,
-                          position=round(current, 3))
+                self._log("control_play", session_id=session.id, position=round(current, 3))
                 return {"ok": True, "state": session.state}
             if action == C.ACTION_SEEK:
                 self._note_transport(now)
                 self._open_transition(now, "seek", budget=TRANSITION_BUDGET)
-                self._apply(session,
-                            self._ensure(self._seek_plan(session, now, target), C.MSG_SEEK,
-                                         {"media": target}), now, phase="user")
+                self._apply(
+                    session,
+                    self._ensure(self._seek_plan(session, now, target), C.MSG_SEEK, {"media": target}),
+                    now,
+                    phase="user",
+                )
                 if session.state == C.STATE_PAUSED:
                     pass  # a seek while paused stays paused; the position still moves
                 self._log("control_seek", session_id=session.id, position=round(target, 3))
@@ -790,8 +901,9 @@ class SessionManager:
             raise ControlError("level must be within 0…1", code=400, kind="invalid")
         if level_v is not None and level_v == 0.0:
             # A37: muting is the way to silence; a level of 0 stays silent after an unmute.
-            raise ControlError("refusing a level of 0: send muted=true instead", code=400,
-                               kind="invalid")
+            raise ControlError(
+                "refusing a level of 0: send muted=true instead", code=400, kind="invalid"
+            )
         if level_v is None and muted is None:
             raise ControlError("volume needs level and/or muted", code=400, kind="invalid")
         if muted is not None and not isinstance(muted, bool):
@@ -805,15 +917,18 @@ class SessionManager:
         if level_v is None:
             raise ControlError(
                 "muted needs a known level: CastGroup has no volume getter, so send level once "
-                "(then mute-only calls work)", code=409, kind="no_known_level")
+                "(then mute-only calls work)",
+                code=409,
+                kind="no_known_level",
+            )
         try:
             self._group.set_volume(float(level_v), muted)
         except NotImplementedError:
-            raise ControlError("the group seam is a stub (task E)", code=503,
-                               kind="unavailable") from None
+            raise ControlError(
+                "the group seam is a stub (task E)", code=503, kind="unavailable"
+            ) from None
         except Exception as exc:  # noqa: BLE001
-            raise ControlError(f"group refused the volume: {exc}", code=502,
-                               kind="group_error") from exc
+            raise ControlError(f"group refused the volume: {exc}", code=502, kind="group_error") from exc
         if level is not None:
             self._level = float(level_v)
         self._log("control_volume", session_id=session.id, level=level_v, muted=muted)
@@ -837,16 +952,21 @@ class SessionManager:
         plan = self._call("on_resume", now, group_position)
         if plan:
             return plan
-        return [C.Command(kind="play", payload={"target": "group"}),
-                C.Command(kind=C.MSG_PLAY_AT,
-                          payload={"rx_ms": self._receiver_ms(), "media": group_position})]
+        return [
+            C.Command(kind="play", payload={"target": "group"}),
+            C.Command(
+                kind=C.MSG_PLAY_AT, payload={"rx_ms": self._receiver_ms(), "media": group_position}
+            ),
+        ]
 
     def _seek_plan(self, session: Session, now: float, position: float) -> list:
         plan = self._call("on_seek", now, position)
         if plan:
             return plan
-        return [C.Command(kind="group_seek", payload={"media": position}),
-                C.Command(kind=C.MSG_SEEK, payload={"media": position})]
+        return [
+            C.Command(kind="group_seek", payload={"media": position}),
+            C.Command(kind=C.MSG_SEEK, payload={"media": position}),
+        ]
 
     @staticmethod
     def _ensure(plan: list, kind: str, payload: dict) -> list:
@@ -881,16 +1001,21 @@ class SessionManager:
             except NotImplementedError:
                 self._log("group_unavailable", session_id=session.id, step="stop")
             except Exception as exc:  # noqa: BLE001
-                self._log("group_error", session_id=session.id, step="stop",
-                          error=f"{type(exc).__name__}: {exc}")
+                self._log(
+                    "group_error",
+                    session_id=session.id,
+                    step="stop",
+                    error=f"{type(exc).__name__}: {exc}",
+                )
         if session.receiver_launched:
             stop_receiver_idle(self._link, self._log)
         if session.sid:
             try:
                 self._proxy.close_session(session.sid)
             except Exception as exc:  # noqa: BLE001
-                self._log("media_close_failed", session_id=session.id,
-                          error=f"{type(exc).__name__}: {exc}")
+                self._log(
+                    "media_close_failed", session_id=session.id, error=f"{type(exc).__name__}: {exc}"
+                )
         self._close_bookkeeping(session, state)
         session.ended_at = self._clock()
         self._ended_at = session.ended_at
@@ -914,7 +1039,7 @@ class SessionManager:
             self._log("device_lost", session_id=session.id, why=why)
             self._stop_locked(session, "device_lost", state=C.STATE_ENDED)
             session.state = C.STATE_IDLE
-            self._session = None      # a lost device goes straight to idle, no linger
+            self._session = None  # a lost device goes straight to idle, no linger
 
     def _close_bookkeeping(self, session: Session, state: str) -> None:
         session.state = state
@@ -949,8 +1074,12 @@ class SessionManager:
             position_group = None if group_sample is None else round(float(group_sample.media), 3)
             error_ms = None
             if position_video is not None and position_group is not None:
-                error_ms = _no_negative_zero(round(C.digital_error(
-                    position_group, position_video, self._config.delta_v2) * 1000.0, 1))
+                error_ms = _no_negative_zero(
+                    round(
+                        C.digital_error(position_group, position_video, self._config.delta_v2) * 1000.0,
+                        1,
+                    )
+                )
             steady_since = self._steady_since(now)
             try:
                 group_owner = self._group_lock.owner_name()
@@ -1006,8 +1135,13 @@ class SessionManager:
     def _open_transition(self, now: float, why: str, budget: int = TRANSITION_BUDGET) -> None:
         self._transition_until = now + self._transition_s
         self._reload_budget = int(budget)
-        self._log("transition_open", why=why, budget=int(budget), window_s=self._transition_s,
-                  session_id=None if self._session is None else self._session.id)
+        self._log(
+            "transition_open",
+            why=why,
+            budget=int(budget),
+            window_s=self._transition_s,
+            session_id=None if self._session is None else self._session.id,
+        )
 
     def _aborted(self, session: Session) -> bool:
         if self._session is not session or not session.live:
@@ -1047,20 +1181,26 @@ class SessionManager:
         return None if sample is None else float(sample.media)
 
     def _mpd_url(self, session: Session) -> str:
-        return (f"http://{self._config.http_bind}:{self._config.http_port}"
-                f"{C.PATH_MEDIA_PREFIX}{session.sid}/manifest.mpd")
+        return (
+            f"http://{self._config.http_bind}:{self._config.http_port}"
+            f"{C.PATH_MEDIA_PREFIX}{session.sid}/manifest.mpd"
+        )
 
     def _audio_url(self, session: Session) -> str:
         if session.mode == "measure":
             # contracts §5 `measure: true`: the group plays the click train, the video
             # keeps its own track. The asset is served read-only next to /media/*.
-            return (f"http://{self._config.http_bind}:{self._config.http_port}"
-                    f"/assets/measure/click_train_2310.m4a")
+            return (
+                f"http://{self._config.http_bind}:{self._config.http_port}"
+                f"/assets/measure/click_train_2310.m4a"
+            )
         try:
             return str(self._proxy.audio_url_for(session.sid))
         except Exception:  # noqa: BLE001
-            return (f"http://{self._config.http_bind}:{self._config.http_port}"
-                    f"{C.PATH_MEDIA_PREFIX}{session.sid}/audio.m4a")
+            return (
+                f"http://{self._config.http_bind}:{self._config.http_port}"
+                f"{C.PATH_MEDIA_PREFIX}{session.sid}/audio.m4a"
+            )
 
     def _receiver_ms(self) -> float:
         """A controller-clock instant expressed on the receiver's clock (§3 clock convention).
@@ -1073,7 +1213,7 @@ class SessionManager:
         offset = 0.0
         try:
             if self._clock_offset_ms == 0.0 and self._clock_at < 0.0:
-                self._refresh_clock(force=True)     # first use: nothing cached yet
+                self._refresh_clock(force=True)  # first use: nothing cached yet
             offset = float(self._clock_offset_ms)
         except Exception:  # noqa: BLE001 - no clock estimate is a valid state
             offset = 0.0
@@ -1091,7 +1231,7 @@ class SessionManager:
             "group_prepared": bool(session.group_prepared),
             "receiver_launched": bool(session.receiver_launched),
             "started_at": session.started_at or self._clock(),
-            "mutes": [],          # CastGroup has no volume getter: we mute nothing (see notes)
+            "mutes": [],  # CastGroup has no volume getter: we mute nothing (see notes)
         }
         try:
             write_session_record(self._record_path, record)

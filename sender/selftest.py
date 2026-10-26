@@ -33,7 +33,7 @@ from .offline import FakeClock, HostileController, TrimController, seams
 from .service import build_service
 from .session import SessionManager
 
-TICKS_10_MIN = 2400          # 600 s at 0.25 s
+TICKS_10_MIN = 2400  # 600 s at 0.25 s
 TICK_S = 0.25
 
 
@@ -68,16 +68,31 @@ class Matrix:
         self.port = 0
         self.cases: list[dict] = []
 
-    def check(self, name: str, method: str, path: str, expected, *, body=None, headers=None,
-              raw=None, need_error=False) -> tuple[int, dict | None, bytes]:
-        status, ctype, payload, data = _client(self.port, method, path, body, headers=headers,
-                                               raw=raw)
+    def check(
+        self,
+        name: str,
+        method: str,
+        path: str,
+        expected,
+        *,
+        body=None,
+        headers=None,
+        raw=None,
+        need_error=False,
+    ) -> tuple[int, dict | None, bytes]:
+        status, ctype, payload, data = _client(self.port, method, path, body, headers=headers, raw=raw)
         want = expected if isinstance(expected, (tuple, list)) else (expected,)
         ok = status in want
         if need_error:
             ok = ok and isinstance(payload, dict) and "error" in payload
-        record = {"case": name, "method": method, "path": path, "status": status,
-                  "expected": list(want), "ok": bool(ok)}
+        record = {
+            "case": name,
+            "method": method,
+            "path": path,
+            "status": status,
+            "expected": list(want),
+            "ok": bool(ok),
+        }
         if payload is not None and need_error:
             record["error"] = payload.get("error")
         self.cases.append(record)
@@ -92,11 +107,15 @@ class Matrix:
         return [case for case in self.cases if not case["ok"]]
 
 
-def _temp_config(root: str, *, quiet_start: str = "", quiet_end: str = "",
-                 quiet_policy: str = "refuse") -> Config:
+def _temp_config(
+    root: str, *, quiet_start: str = "", quiet_end: str = "", quiet_policy: str = "refuse"
+) -> Config:
     return Config(
-        http_bind="127.0.0.1", http_port=C.HTTP_PORT_DEFAULT,
-        quiet_start=quiet_start, quiet_end=quiet_end, quiet_policy=quiet_policy,
+        http_bind="127.0.0.1",
+        http_port=C.HTTP_PORT_DEFAULT,
+        quiet_start=quiet_start,
+        quiet_end=quiet_end,
+        quiet_policy=quiet_policy,
         state_dir=os.path.join(root, "state"),
         evidence_dir=os.path.join(root, "evidence"),
         receiver_dir=os.path.join(root, "receiver"),
@@ -116,15 +135,27 @@ def http_matrix(log) -> dict:
         with open(os.path.join(root, "assets", "measure", "notes.txt"), "w") as fh:
             fh.write("not served")
         config = _temp_config(root)
-        service = build_service(config, offline=True, log=log,
-                                state_dir=config.state_dir, spawn=lambda fn: fn(),
-                                extra_allowed=("127.0.0.1",))
+        service = build_service(
+            config,
+            offline=True,
+            log=log,
+            state_dir=config.state_dir,
+            spawn=lambda fn: fn(),
+            extra_allowed=("127.0.0.1",),
+        )
         server, _thread = serve_in_thread(service.api, port=0)
         server_refusing, _ = serve_in_thread(
-            SenderAPI(service.sender, config=config, log=log, proxy=service.proxy,
-                      receiver_dir=config.receiver_dir, assets_dir=config.assets_dir,
-                      extra_allowed=()),
-            port=0)
+            SenderAPI(
+                service.sender,
+                config=config,
+                log=log,
+                proxy=service.proxy,
+                receiver_dir=config.receiver_dir,
+                assets_dir=config.assets_dir,
+                extra_allowed=(),
+            ),
+            port=0,
+        )
         matrix = Matrix()
         matrix.port = server.server_address[1]
         try:
@@ -132,112 +163,258 @@ def http_matrix(log) -> dict:
             status, _ctype, payload, _data = matrix.check("healthz", "GET", C.PATH_HEALTH, 200)
             health_ok = payload == {"ok": True, "owner": "cast-sender"}
             status, _ctype, payload, _data = matrix.check("status idle", "GET", C.PATH_STATUS, 200)
-            fields_ok = isinstance(payload, dict) and all(k in payload for k in (
-                "state", "session_id", "video_id", "position_video", "position_group",
-                "digital_error_ms", "p95_ms", "rate", "steady_since", "quiet", "group_owner",
-                "delta_v2", "last_event", "last_error"))
-            status, ctype, payload, data = matrix.check(
-                "ui", "GET", C.PATH_UI, 200, raw=None)
+            fields_ok = isinstance(payload, dict) and all(
+                k in payload
+                for k in (
+                    "state",
+                    "session_id",
+                    "video_id",
+                    "position_video",
+                    "position_group",
+                    "digital_error_ms",
+                    "p95_ms",
+                    "rate",
+                    "steady_since",
+                    "quiet",
+                    "group_owner",
+                    "delta_v2",
+                    "last_event",
+                    "last_error",
+                )
+            )
+            status, ctype, payload, data = matrix.check("ui", "GET", C.PATH_UI, 200, raw=None)
             ui_ok = b"<html" in data.lower() and b"cdn" not in data.lower()
             matrix.check("receiver missing", "GET", C.PATH_RECEIVER, 404, need_error=True)
             os.makedirs(config.receiver_dir, exist_ok=True)
             with open(os.path.join(config.receiver_dir, "receiver.html"), "w") as fh:
                 fh.write("<!doctype html><title>receiver</title>")
-            status, ctype, payload, data = matrix.check("receiver served", "GET",
-                                                       C.PATH_RECEIVER, 200)
+            status, ctype, payload, data = matrix.check("receiver served", "GET", C.PATH_RECEIVER, 200)
             receiver_ok = b"receiver" in data
 
             # -- share --------------------------------------------------------------------
             status, _ctype, payload, _data = matrix.check(
-                "share ok", "POST", C.PATH_SHARE, 202,
-                body={"url": "https://www.youtube.com/watch?v=QzomK1fdSUg", "start": 5,
-                      "measure": False})
-            share_ok = isinstance(payload, dict) and payload.get("session_id") \
+                "share ok",
+                "POST",
+                C.PATH_SHARE,
+                202,
+                body={
+                    "url": "https://www.youtube.com/watch?v=QzomK1fdSUg",
+                    "start": 5,
+                    "measure": False,
+                },
+            )
+            share_ok = (
+                isinstance(payload, dict)
+                and payload.get("session_id")
                 and payload.get("state") == C.STATE_RESOLVING
+            )
             session_id = (payload or {}).get("session_id")
             sid = getattr(service.sender._session, "sid", None)
             matrix.check("status playing", "GET", C.PATH_STATUS, 200)
             matrix.check("media manifest", "GET", f"{C.PATH_MEDIA_PREFIX}{sid}/manifest.mpd", 200)
-            matrix.check("media manifest unknown sid", "GET",
-                         f"{C.PATH_MEDIA_PREFIX}nope/manifest.mpd", 410, need_error=True)
-            matrix.check("media bytes unavailable", "GET",
-                         f"{C.PATH_MEDIA_PREFIX}{sid}/audio.m4a", 501, need_error=True)
+            matrix.check(
+                "media manifest unknown sid",
+                "GET",
+                f"{C.PATH_MEDIA_PREFIX}nope/manifest.mpd",
+                410,
+                need_error=True,
+            )
+            matrix.check(
+                "media bytes unavailable",
+                "GET",
+                f"{C.PATH_MEDIA_PREFIX}{sid}/audio.m4a",
+                501,
+                need_error=True,
+            )
             matrix.check("measure asset", "GET", "/assets/measure/click_train_2310.m4a", 200)
-            matrix.check("measure asset wrong type", "GET", "/assets/measure/notes.txt", 403,
-                         need_error=True)
-            matrix.check("measure asset traversal", "GET", "/assets/measure/..%2Fstate", 400,
-                         need_error=True)
+            matrix.check(
+                "measure asset wrong type", "GET", "/assets/measure/notes.txt", 403, need_error=True
+            )
+            matrix.check(
+                "measure asset traversal", "GET", "/assets/measure/..%2Fstate", 400, need_error=True
+            )
 
             # -- control ------------------------------------------------------------------
-            for action, extra in (("pause", {}), ("play", {}), ("seek", {"position": 42.5}),
-                                  ("volume", {"level": 0.3}), ("volume", {"muted": True}),
-                                  ("volume", {"level": 0.4, "muted": False}), ("stop", {})):
-                matrix.check(f"control {action} {sorted(extra) or ''}".strip(), "POST",
-                             C.PATH_CONTROL, 200, body={"action": action, **extra})
+            for action, extra in (
+                ("pause", {}),
+                ("play", {}),
+                ("seek", {"position": 42.5}),
+                ("volume", {"level": 0.3}),
+                ("volume", {"muted": True}),
+                ("volume", {"level": 0.4, "muted": False}),
+                ("stop", {}),
+            ):
+                matrix.check(
+                    f"control {action} {sorted(extra) or ''}".strip(),
+                    "POST",
+                    C.PATH_CONTROL,
+                    200,
+                    body={"action": action, **extra},
+                )
             status, _ctype, payload, _data = matrix.check("status after stop", "GET", C.PATH_STATUS, 200)
-            stop_ok = isinstance(payload, dict) and payload.get("state") in (
-                C.STATE_IDLE, C.STATE_ENDED)
-            matrix.check("control play when idle", "POST", C.PATH_CONTROL, 409,
-                         body={"action": "play"}, need_error=True)
+            stop_ok = isinstance(payload, dict) and payload.get("state") in (C.STATE_IDLE, C.STATE_ENDED)
+            matrix.check(
+                "control play when idle",
+                "POST",
+                C.PATH_CONTROL,
+                409,
+                body={"action": "play"},
+                need_error=True,
+            )
 
             # -- bad input ----------------------------------------------------------------
-            matrix.check("share empty body", "POST", C.PATH_SHARE, 400, raw=b"",
-                         headers={"Content-Type": "application/json"}, need_error=True)
-            matrix.check("share bad json", "POST", C.PATH_SHARE, 400, raw=b"{nope",
-                         headers={"Content-Type": "application/json"}, need_error=True)
-            matrix.check("share not an object", "POST", C.PATH_SHARE, 400, raw=b"[]",
-                         headers={"Content-Type": "application/json"}, need_error=True)
-            matrix.check("share missing url", "POST", C.PATH_SHARE, 400, body={"start": 1},
-                         need_error=True)
-            matrix.check("share url not a string", "POST", C.PATH_SHARE, 400, body={"url": 12},
-                         need_error=True)
-            matrix.check("share url not http", "POST", C.PATH_SHARE, 400,
-                         body={"url": "ftp://example/x"}, need_error=True)
-            matrix.check("share negative start", "POST", C.PATH_SHARE, 400,
-                         body={"url": "https://e/x", "start": -1}, need_error=True)
-            matrix.check("share unknown field", "POST", C.PATH_SHARE, 400,
-                         body={"url": "https://e/x", "Start": 1, "autoplay": True},
-                         need_error=True)
-            matrix.check("share wrong content type", "POST", C.PATH_SHARE, 415,
-                         raw=b'{"url":"https://e/x"}',
-                         headers={"Content-Type": "text/plain"}, need_error=True)
-            matrix.check("share body too large", "POST", C.PATH_SHARE, 413,
-                         raw=b"{" + b"a" * (70 * 1024) + b"}",
-                         headers={"Content-Type": "application/json"}, need_error=True)
-            matrix.check("control unknown action", "POST", C.PATH_CONTROL, 400,
-                         body={"action": "explode"}, need_error=True)
-            matrix.check("control seek without position", "POST", C.PATH_CONTROL, 400,
-                         body={"action": "seek"}, need_error=True)
-            matrix.check("control volume level 0", "POST", C.PATH_CONTROL, 400,
-                         body={"action": "volume", "level": 0}, need_error=True)
-            matrix.check("control volume nothing", "POST", C.PATH_CONTROL, 400,
-                         body={"action": "volume"}, need_error=True)
-            matrix.check("control muted not bool", "POST", C.PATH_CONTROL, 400,
-                         body={"action": "volume", "muted": "yes"}, need_error=True)
+            matrix.check(
+                "share empty body",
+                "POST",
+                C.PATH_SHARE,
+                400,
+                raw=b"",
+                headers={"Content-Type": "application/json"},
+                need_error=True,
+            )
+            matrix.check(
+                "share bad json",
+                "POST",
+                C.PATH_SHARE,
+                400,
+                raw=b"{nope",
+                headers={"Content-Type": "application/json"},
+                need_error=True,
+            )
+            matrix.check(
+                "share not an object",
+                "POST",
+                C.PATH_SHARE,
+                400,
+                raw=b"[]",
+                headers={"Content-Type": "application/json"},
+                need_error=True,
+            )
+            matrix.check(
+                "share missing url", "POST", C.PATH_SHARE, 400, body={"start": 1}, need_error=True
+            )
+            matrix.check(
+                "share url not a string", "POST", C.PATH_SHARE, 400, body={"url": 12}, need_error=True
+            )
+            matrix.check(
+                "share url not http",
+                "POST",
+                C.PATH_SHARE,
+                400,
+                body={"url": "ftp://example/x"},
+                need_error=True,
+            )
+            matrix.check(
+                "share negative start",
+                "POST",
+                C.PATH_SHARE,
+                400,
+                body={"url": "https://e/x", "start": -1},
+                need_error=True,
+            )
+            matrix.check(
+                "share unknown field",
+                "POST",
+                C.PATH_SHARE,
+                400,
+                body={"url": "https://e/x", "Start": 1, "autoplay": True},
+                need_error=True,
+            )
+            matrix.check(
+                "share wrong content type",
+                "POST",
+                C.PATH_SHARE,
+                415,
+                raw=b'{"url":"https://e/x"}',
+                headers={"Content-Type": "text/plain"},
+                need_error=True,
+            )
+            matrix.check(
+                "share body too large",
+                "POST",
+                C.PATH_SHARE,
+                413,
+                raw=b"{" + b"a" * (70 * 1024) + b"}",
+                headers={"Content-Type": "application/json"},
+                need_error=True,
+            )
+            matrix.check(
+                "control unknown action",
+                "POST",
+                C.PATH_CONTROL,
+                400,
+                body={"action": "explode"},
+                need_error=True,
+            )
+            matrix.check(
+                "control seek without position",
+                "POST",
+                C.PATH_CONTROL,
+                400,
+                body={"action": "seek"},
+                need_error=True,
+            )
+            matrix.check(
+                "control volume level 0",
+                "POST",
+                C.PATH_CONTROL,
+                400,
+                body={"action": "volume", "level": 0},
+                need_error=True,
+            )
+            matrix.check(
+                "control volume nothing",
+                "POST",
+                C.PATH_CONTROL,
+                400,
+                body={"action": "volume"},
+                need_error=True,
+            )
+            matrix.check(
+                "control muted not bool",
+                "POST",
+                C.PATH_CONTROL,
+                400,
+                body={"action": "volume", "muted": "yes"},
+                need_error=True,
+            )
 
             # -- routing ------------------------------------------------------------------
             matrix.check("unknown path", "GET", "/nope", 404, need_error=True)
             matrix.check("GET on share", "GET", C.PATH_SHARE, 405, need_error=True)
-            matrix.check("POST on status", "POST", C.PATH_STATUS, 405,
-                         body={}, need_error=True)
+            matrix.check("POST on status", "POST", C.PATH_STATUS, 405, body={}, need_error=True)
             matrix.check("DELETE on ui", "DELETE", C.PATH_UI, 405, need_error=True)
             matrix.check("HEAD on status", "HEAD", C.PATH_STATUS, 405)
 
             # -- non-LAN client -----------------------------------------------------------
-            status, _ctype, payload, _data = _client(server_refusing.server_address[1], "GET",
-                                              C.PATH_HEALTH)
+            status, _ctype, payload, _data = _client(
+                server_refusing.server_address[1], "GET", C.PATH_HEALTH
+            )
             refused = status == 403 and isinstance(payload, dict) and "error" in payload
-            matrix.cases.append({"case": "non-LAN client refused", "method": "GET",
-                                 "path": C.PATH_HEALTH, "status": status, "expected": [403],
-                                 "ok": bool(refused), "error": (payload or {}).get("error")})
+            matrix.cases.append(
+                {
+                    "case": "non-LAN client refused",
+                    "method": "GET",
+                    "path": C.PATH_HEALTH,
+                    "status": status,
+                    "expected": [403],
+                    "ok": bool(refused),
+                    "error": (payload or {}).get("error"),
+                }
+            )
         finally:
             server.shutdown()
             server.server_close()
             server_refusing.shutdown()
             server_refusing.server_close()
         result = {
-            "ok": matrix.ok and health_ok and fields_ok and ui_ok and receiver_ok
-            and bool(share_ok) and stop_ok,
+            "ok": matrix.ok
+            and health_ok
+            and fields_ok
+            and ui_ok
+            and receiver_ok
+            and bool(share_ok)
+            and stop_ok,
             "cases": len(matrix.cases),
             "passed": len(matrix.cases) - len(matrix.failed),
             "failed": matrix.failed,
@@ -268,17 +445,28 @@ def ten_minute_session(log, controller_factory=HostileController) -> dict:
         clock = FakeClock()
         link, group, proxy, resolver = seams(clock=clock)
         controller = controller_factory()
-        sender = SessionManager(link=link, group=group, controller=controller, proxy=proxy,
-                                config=config, log=log, resolver=resolver, clock=clock,
-                                wall=clock.now, spawn=lambda fn: fn(),
-                                state_dir=config.state_dir)
+        sender = SessionManager(
+            link=link,
+            group=group,
+            controller=controller,
+            proxy=proxy,
+            config=config,
+            log=log,
+            resolver=resolver,
+            clock=clock,
+            wall=clock.now,
+            spawn=lambda fn: fn(),
+            state_dir=config.state_dir,
+        )
         reply = sender.share("https://www.youtube.com/watch?v=QzomK1fdSUg", start=0.0)
-        started = dict(runtime_calls=_calls(link), state=sender.status()["state"],
-                       group_calls=list(group.calls))
+        started = dict(
+            runtime_calls=_calls(link), state=sender.status()["state"], group_calls=list(group.calls)
+        )
         marks = {name: _calls(link).count(name) for name in ("load", "seek", "play_at", "rate")}
         refusals_before = _count_events(log, "reload_refused")
-        group_marks = {name: group.calls.count(name) for name in
-                       ("prepare", "play", "pause", "seek", "stop")}
+        group_marks = {
+            name: group.calls.count(name) for name in ("prepare", "play", "pause", "seek", "stop")
+        }
         loads_after = seeks_after = play_ats_after = 0
         for _ in range(TICKS_10_MIN):
             clock.advance(TICK_S)
@@ -287,8 +475,10 @@ def ten_minute_session(log, controller_factory=HostileController) -> dict:
         loads_after = after.count("load") - marks["load"]
         seeks_after = after.count("seek") - marks["seek"]
         play_ats_after = after.count("play_at") - marks["play_at"]
-        group_after = {name: group.calls.count(name) - group_marks[name] for name in
-                       ("prepare", "play", "pause", "seek", "stop")}
+        group_after = {
+            name: group.calls.count(name) - group_marks[name]
+            for name in ("prepare", "play", "pause", "seek", "stop")
+        }
         status = sender.status()
         result = {
             "controller": type(controller).__name__,
@@ -303,7 +493,8 @@ def ten_minute_session(log, controller_factory=HostileController) -> dict:
             "seek_after_start": seeks_after,
             "play_at_after_start": play_ats_after,
             "group_playhead_moves_after_start": {
-                name: count for name, count in group_after.items() if name in ("prepare", "seek")},
+                name: count for name, count in group_after.items() if name in ("prepare", "seek")
+            },
             "rate_commands_after_start": after.count("rate") - marks["rate"],
             "controller_requests": {
                 "loads": getattr(controller, "asked_loads", None),
@@ -319,9 +510,14 @@ def ten_minute_session(log, controller_factory=HostileController) -> dict:
             "position_group": status["position_group"],
             "lock_held": os.path.isfile(os.path.join(config.state_dir, "group.owner")),
         }
-        result["ok"] = (loads_after == 0 and seeks_after == 0 and play_ats_after == 0
-                        and group_after.get("prepare", 0) == 0 and group_after.get("seek", 0) == 0
-                        and status["state"] == C.STATE_PLAYING)
+        result["ok"] = (
+            loads_after == 0
+            and seeks_after == 0
+            and play_ats_after == 0
+            and group_after.get("prepare", 0) == 0
+            and group_after.get("seek", 0) == 0
+            and status["state"] == C.STATE_PLAYING
+        )
         sender.close()
         return result
     finally:
@@ -359,17 +555,28 @@ def crash_restart(log) -> dict:
         config = _temp_config(root)
         clock = FakeClock()
         link, group, proxy, resolver = seams(clock=clock)
-        sender = SessionManager(link=link, group=group, controller=TrimController(),
-                                proxy=proxy, config=config, log=log, resolver=resolver,
-                                clock=clock, wall=clock.now, spawn=lambda fn: fn(),
-                                state_dir=config.state_dir)
+        sender = SessionManager(
+            link=link,
+            group=group,
+            controller=TrimController(),
+            proxy=proxy,
+            config=config,
+            log=log,
+            resolver=resolver,
+            clock=clock,
+            wall=clock.now,
+            spawn=lambda fn: fn(),
+            state_dir=config.state_dir,
+        )
         sender.share("https://www.youtube.com/watch?v=QzomK1fdSUg")
         record_path = session_record_path(config.state_dir)
         record = read_session_record(record_path) or {}
         # A mute we set (the seam has no volume getter today, so the record is written by hand
         # to prove boot_cleanup's "only our mutes" rule end to end).
-        record["mutes"] = [{"name": "Cuisine", "level": 0.35, "muted": False, "by": "cast-sender"},
-                           {"name": "Cuisine", "level": 0.5, "muted": True, "by": "cast-relay"}]
+        record["mutes"] = [
+            {"name": "Cuisine", "level": 0.35, "muted": False, "by": "cast-sender"},
+            {"name": "Cuisine", "level": 0.5, "muted": True, "by": "cast-relay"},
+        ]
         write_session_record(record_path, record)
         # "crash": no sender.close(), a fresh process comes up with fresh seams
         link2, group2, proxy2, _resolver2 = seams(clock=FakeClock())
@@ -381,9 +588,12 @@ def crash_restart(log) -> dict:
         foreign = boot_cleanup(foreign_path, group=group3, link=link3, proxy=proxy3, log=log)
         sender.close()
         return {
-            "record": {"session_id": record.get("session_id"), "sid": record.get("sid"),
-                       "group_prepared": record.get("group_prepared"),
-                       "receiver_launched": record.get("receiver_launched")},
+            "record": {
+                "session_id": record.get("session_id"),
+                "sid": record.get("sid"),
+                "group_prepared": record.get("group_prepared"),
+                "receiver_launched": record.get("receiver_launched"),
+            },
             "actions": result.get("actions"),
             "group_calls": list(group2.calls),
             "receiver_calls": list(link2.calls),
@@ -392,12 +602,17 @@ def crash_restart(log) -> dict:
             "foreign_record_actions": foreign.get("actions"),
             "foreign_group_calls": list(group3.calls),
             "foreign_record_kept": os.path.exists(foreign_path),
-            "ok": (result.get("actions") == ["group_stopped", "receiver_stopped",
-                                             "proxy_closed", "mute_undone:Cuisine"]
-                   and "stop" in group2.calls and "stop" in link2.calls
-                   and len(proxy2.sessions) == 0 and not os.path.exists(record_path)
-                   and foreign.get("actions") == [] and group3.calls == []
-                   and os.path.exists(foreign_path)),
+            "ok": (
+                result.get("actions")
+                == ["group_stopped", "receiver_stopped", "proxy_closed", "mute_undone:Cuisine"]
+                and "stop" in group2.calls
+                and "stop" in link2.calls
+                and len(proxy2.sessions) == 0
+                and not os.path.exists(record_path)
+                and foreign.get("actions") == []
+                and group3.calls == []
+                and os.path.exists(foreign_path)
+            ),
         }
     finally:
         shutil.rmtree(root, ignore_errors=True)
@@ -420,11 +635,12 @@ def run(*, evidence_path: str | None = None) -> dict:
         if evidence_path:
             evidence_dir = os.path.dirname(os.path.abspath(evidence_path))
             os.makedirs(evidence_dir, exist_ok=True)
-            archived_log = os.path.join(evidence_dir,
-                                        f"sender-{time.strftime('%Y-%m-%d')}.jsonl")
+            archived_log = os.path.join(evidence_dir, f"sender-{time.strftime('%Y-%m-%d')}.jsonl")
             log.close()
-            with open(log_path, "r", encoding="utf-8") as source, \
-                    open(archived_log, "a", encoding="utf-8") as target:
+            with (
+                open(log_path, "r", encoding="utf-8") as source,
+                open(archived_log, "a", encoding="utf-8") as target,
+            ):
                 shutil.copyfileobj(source, target)
         result = {
             "suite": "sender offline self-test (brief G)",
@@ -436,8 +652,13 @@ def run(*, evidence_path: str | None = None) -> dict:
             "no_reload": {"hostile_controller": hostile, "trim_controller": trim},
             "boot_cleanup": cleanup,
             "log": archived_log,
-            "ok": bool(matrix.get("ok") and hostile.get("ok") and trim.get("ok")
-                       and trim["rate_commands_after_start"] > 0 and cleanup.get("ok")),
+            "ok": bool(
+                matrix.get("ok")
+                and hostile.get("ok")
+                and trim.get("ok")
+                and trim["rate_commands_after_start"] > 0
+                and cleanup.get("ok")
+            ),
         }
         if evidence_path:
             with open(evidence_path, "w", encoding="utf-8") as handle:
@@ -456,8 +677,11 @@ def main(argv: list[str] | None = None) -> int:
     import argparse
 
     parser = argparse.ArgumentParser(prog="sender.selftest")
-    parser.add_argument("--evidence", default=None,
-                        help="write the JSON result here (e.g. evidence/40-sender-selftest.json)")
+    parser.add_argument(
+        "--evidence",
+        default=None,
+        help="write the JSON result here (e.g. evidence/40-sender-selftest.json)",
+    )
     args = parser.parse_args(argv)
     result = run(evidence_path=args.evidence)
     print(json.dumps(result, indent=2, ensure_ascii=False))

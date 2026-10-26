@@ -18,9 +18,10 @@ for p in (LIB, HERE):
     if p not in sys.path:
         sys.path.insert(0, p)
 
-import sim_v020 as S                                  # noqa: E402
-from v020 import contracts as C                       # noqa: E402
-from v020 import sync                                 # noqa: E402
+import sim_v020 as S  # noqa: E402
+
+from v020 import contracts as C  # noqa: E402
+from v020 import sync  # noqa: E402
 
 
 def case(name: str, **overrides) -> dict:
@@ -33,9 +34,10 @@ class TestNominalCases(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.results = {name: case(name) for name in
-                       ("cold_start", "drift_only", "seek", "pause_resume", "stale_reads",
-                        "wrong_lead")}
+        cls.results = {
+            name: case(name)
+            for name in ("cold_start", "drift_only", "seek", "pause_resume", "stale_reads", "wrong_lead")
+        }
 
     def test_each_case_passes_its_criteria(self):
         for name, res in self.results.items():
@@ -67,16 +69,15 @@ class TestNominalCases(unittest.TestCase):
 
     def test_ten_minute_session_needs_no_transport_command(self):
         res = self.results["cold_start"]
-        self.assertGreaterEqual(res["steady_samples"], 2000)      # 10 min at 4 Hz
+        self.assertGreaterEqual(res["steady_samples"], 2000)  # 10 min at 4 Hz
         # the whole session: the start event, its single re-landing, then trims only
-        self.assertLessEqual(set(res["commands"]),
-                             {sync.CMD_GROUP_PLAY, C.MSG_PLAY_AT, C.MSG_RATE})
+        self.assertLessEqual(set(res["commands"]), {sync.CMD_GROUP_PLAY, C.MSG_PLAY_AT, C.MSG_RATE})
         self.assertEqual(res["commands"].get(sync.CMD_GROUP_PLAY), 1)
         self.assertLessEqual(res["commands"].get(C.MSG_PLAY_AT, 0), 2)
 
     def test_every_read_the_law_saw_was_steady_enough_to_judge(self):
         res = self.results["cold_start"]
-        self.assertGreaterEqual(res["window_medians_ms"]["n"], 100)   # 600 s / 5 s ≈ 120
+        self.assertGreaterEqual(res["window_medians_ms"]["n"], 100)  # 600 s / 5 s ≈ 120
         self.assertLessEqual(res["window_medians_ms"]["max_abs"], 15.0)
 
 
@@ -95,7 +96,7 @@ class TestDriftOnly(unittest.TestCase):
     def test_drift_is_really_in_the_run(self):
         # −12.4 ms/10 min over a 15 min session: ~19 ms of drift, and it must not be visible
         self.assertLessEqual(self.res["window_medians_ms"]["max_abs"], S.TARGET_P95_MS)
-        self.assertGreaterEqual(self.res["window_medians_ms"]["n"], 170)   # 900 s / 5 s
+        self.assertGreaterEqual(self.res["window_medians_ms"]["n"], 170)  # 900 s / 5 s
 
 
 class TestLandingPolicy(unittest.TestCase):
@@ -161,8 +162,14 @@ class TestStaleReadsDoNotCauseAReload(unittest.TestCase):
         res = case("stale_reads")
         # exactly one group_play, the start event's; nothing else ever touches the group
         self.assertEqual(res["commands"].get(sync.CMD_GROUP_PLAY), 1)
-        for kind in (sync.CMD_GROUP_PAUSE, sync.CMD_GROUP_SEEK, sync.CMD_GROUP_STOP,
-                     C.MSG_PAUSE, C.MSG_SEEK, C.MSG_LOAD):
+        for kind in (
+            sync.CMD_GROUP_PAUSE,
+            sync.CMD_GROUP_SEEK,
+            sync.CMD_GROUP_STOP,
+            C.MSG_PAUSE,
+            C.MSG_SEEK,
+            C.MSG_LOAD,
+        ):
             self.assertNotIn(kind, res["commands"], kind)
         self.assertEqual(set(res["after_steady"]), {C.MSG_RATE})
         self.assertEqual(res["verdict"]["verdict"], "PASS")

@@ -29,6 +29,7 @@ fake fleet, and four deliberately broken variants (a restore that misses a level
 playing, our receiver left running, a restore that changes the TV's volume), exiting non-zero if
 any of them passes.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -50,9 +51,12 @@ IDLE_APPS = (None, "", "Backdrop", "Idle")
 
 def call(url: str, body: dict | None = None, timeout: float = 15.0) -> dict:
     data = None if body is None else json.dumps(body).encode()
-    req = urllib.request.Request(url, data=data,
-                                 headers={"Content-Type": "application/json"} if data else {},
-                                 method="POST" if data else "GET")
+    req = urllib.request.Request(
+        url,
+        data=data,
+        headers={"Content-Type": "application/json"} if data else {},
+        method="POST" if data else "GET",
+    )
     try:
         with urllib.request.urlopen(req, timeout=timeout) as r:
             return json.loads(r.read().decode() or "{}")
@@ -67,6 +71,7 @@ def call(url: str, body: dict | None = None, timeout: float = 15.0) -> dict:
 
 # --- fleets: the same interface over the LAN and over a fake --------------------------------
 
+
 class LanFleet:
     """Every device call this tool makes: read-only GET_STATUS, plus the rollback actions."""
 
@@ -75,6 +80,7 @@ class LanFleet:
         import groupguard
         from castv2 import CastLink, receiver_app
         from silence import GROUPS, KITCHEN, TV
+
         self.CastLink, self.receiver_app = CastLink, receiver_app
         self.groupguard = groupguard
         self.devices = dict(KITCHEN)
@@ -91,11 +97,13 @@ class LanFleet:
                 link.connect_platform()
                 st = link.receiver_status()
                 v = st.get("volume") or {}
-                out[name] = {"level": round(float(v.get("level") or 0.0), 4),
-                             "muted": bool(v.get("muted")),
-                             "app_id": self.receiver_app(st)[0],
-                             "app_name": self.receiver_app(st)[1]}
-            except Exception as exc:                # noqa: BLE001
+                out[name] = {
+                    "level": round(float(v.get("level") or 0.0), 4),
+                    "muted": bool(v.get("muted")),
+                    "app_id": self.receiver_app(st)[0],
+                    "app_name": self.receiver_app(st)[1],
+                }
+            except Exception as exc:  # noqa: BLE001
                 out[name] = {"error": f"{type(exc).__name__}"}
             finally:
                 link.close()
@@ -105,9 +113,11 @@ class LanFleet:
             link = self.CastLink(*groups["Cuisine"])
             try:
                 link.connect_platform()
-                out["group Cuisine"] = {"app_id": self.receiver_app(link.receiver_status())[0],
-                                        "app_name": self.receiver_app(link.receiver_status())[1]}
-            except Exception as exc:                # noqa: BLE001
+                out["group Cuisine"] = {
+                    "app_id": self.receiver_app(link.receiver_status())[0],
+                    "app_name": self.receiver_app(link.receiver_status())[1],
+                }
+            except Exception as exc:  # noqa: BLE001
                 out["group Cuisine"] = {"error": f"{type(exc).__name__}"}
             finally:
                 link.close()
@@ -117,10 +127,10 @@ class LanFleet:
     def _chromecast_app(self) -> dict:
         try:
             from castv2 import probe_endpoint
+
             r = probe_endpoint(CHROMECAST)
-            return {"app_id": r.get("app_id"), "app_name": r.get("app_name"),
-                    "error": r.get("error")}
-        except Exception as exc:                    # noqa: BLE001
+            return {"app_id": r.get("app_id"), "app_name": r.get("app_name"), "error": r.get("error")}
+        except Exception as exc:  # noqa: BLE001
             return {"error": f"{type(exc).__name__}"}
 
     # -- actions -----------------------------------------------------------------------------
@@ -131,18 +141,29 @@ class LanFleet:
         return call(self.url.rstrip("/") + "/api/control", {"action": "stop"}, timeout=30)
 
     def emergency(self) -> dict:
-        r = subprocess.run([PY, os.path.join(ROOT, "lib", "emergency.py")],
-                           capture_output=True, text=True, timeout=120, cwd=ROOT)
+        r = subprocess.run(
+            [PY, os.path.join(ROOT, "lib", "emergency.py")],
+            capture_output=True,
+            text=True,
+            timeout=120,
+            cwd=ROOT,
+        )
         return {"rc": r.returncode, "tail": (r.stdout + r.stderr).strip()[-400:]}
 
     def emergency_restore(self) -> dict:
-        r = subprocess.run([PY, os.path.join(ROOT, "lib", "emergency.py"), "--restore"],
-                           capture_output=True, text=True, timeout=120, cwd=ROOT)
+        r = subprocess.run(
+            [PY, os.path.join(ROOT, "lib", "emergency.py"), "--restore"],
+            capture_output=True,
+            text=True,
+            timeout=120,
+            cwd=ROOT,
+        )
         return {"rc": r.returncode, "tail": (r.stdout + r.stderr).strip()[-400:]}
 
     def stop_service(self) -> dict:
-        r = subprocess.run("sudo systemctl stop cast-sender", shell=True, capture_output=True,
-                           text=True, timeout=120)
+        r = subprocess.run(
+            "sudo systemctl stop cast-sender", shell=True, capture_output=True, text=True, timeout=120
+        )
         return {"rc": r.returncode, "tail": (r.stdout + r.stderr).strip()[-300:]}
 
     def stop_our_receiver(self) -> dict:
@@ -157,9 +178,8 @@ class LanFleet:
             link.stop_app(tr)
             time.sleep(1.0)
             after = self.receiver_app(link.receiver_status())
-            return {"stopped": after[0] != OUR_APP, "after": {"app_id": after[0],
-                                                              "app_name": after[1]}}
-        except Exception as exc:                    # noqa: BLE001
+            return {"stopped": after[0] != OUR_APP, "after": {"app_id": after[0], "app_name": after[1]}}
+        except Exception as exc:  # noqa: BLE001
             return {"stopped": False, "error": f"{type(exc).__name__}: {exc}"}
         finally:
             link.close()
@@ -175,9 +195,12 @@ class FakeFleet:
     def __init__(self, fault: str | None = None):
         self.fault = fault
         self.devices = {
-            "Cuisine Fenetre Vert": (0.05, False), "Cuisine Frigo Orange": (0.55, False),
-            "Cuisine Frigo Jaune": (0.55, False), "Cuisine Meuble Bleu": (0.0834, False),
-            "Cuisine Meuble Rose": (0.0834, False), "TV Salon": (0.40, False),
+            "Cuisine Fenetre Vert": (0.05, False),
+            "Cuisine Frigo Orange": (0.55, False),
+            "Cuisine Frigo Jaune": (0.55, False),
+            "Cuisine Meuble Bleu": (0.0834, False),
+            "Cuisine Meuble Rose": (0.0834, False),
+            "TV Salon": (0.40, False),
         }
         self.apps = {k: None for k in self.devices}
         self.apps["Cuisine Frigo Orange"] = "Default Media Receiver"
@@ -190,17 +213,28 @@ class FakeFleet:
     def snapshot(self) -> dict:
         out = {}
         for name, (level, muted) in self.devices.items():
-            out[name] = {"level": level, "muted": muted, "app_id": self.apps.get(name),
-                         "app_name": self.apps.get(name)}
-        out["group Cuisine"] = {"app_id": self.apps.get("group Cuisine"),
-                                "app_name": self.apps.get("group Cuisine")}
-        out["chromecast " + CHROMECAST] = {"app_id": self.apps["chromecast " + CHROMECAST],
-                                           "app_name": "VideoNetCaster"}
+            out[name] = {
+                "level": level,
+                "muted": muted,
+                "app_id": self.apps.get(name),
+                "app_name": self.apps.get(name),
+            }
+        out["group Cuisine"] = {
+            "app_id": self.apps.get("group Cuisine"),
+            "app_name": self.apps.get("group Cuisine"),
+        }
+        out["chromecast " + CHROMECAST] = {
+            "app_id": self.apps["chromecast " + CHROMECAST],
+            "app_name": "VideoNetCaster",
+        }
         return out
 
     def status(self) -> dict:
-        return {"state": self.state, "session_id": "s1" if self.state == "playing" else None,
-                "group_owner": "cast-sender"}
+        return {
+            "state": self.state,
+            "session_id": "s1" if self.state == "playing" else None,
+            "group_owner": "cast-sender",
+        }
 
     def control_stop(self) -> dict:
         self.calls.append("control_stop")
@@ -212,7 +246,7 @@ class FakeFleet:
         self.saved = {k: v for k, v in self.devices.items()}
         for k in self.devices:
             if k != "TV Salon":
-                self.devices[k] = (self.devices[k][0], True)     # mute only, never zero
+                self.devices[k] = (self.devices[k][0], True)  # mute only, never zero
         if self.fault != "group_left_playing":
             self.apps["group Cuisine"] = None
             for k in self.devices:
@@ -246,14 +280,17 @@ class FakeFleet:
 
 # --- the test -------------------------------------------------------------------------------
 
+
 def compare(before: dict, after: dict, keys) -> dict:
     """(level, muted) equality per device — the A27 rule, no tolerance."""
     diffs = {}
     for k in keys:
         b, a = before.get(k) or {}, after.get(k) or {}
         if (b.get("level"), b.get("muted")) != (a.get("level"), a.get("muted")):
-            diffs[k] = {"before": {"level": b.get("level"), "muted": b.get("muted")},
-                        "after": {"level": a.get("level"), "muted": a.get("muted")}}
+            diffs[k] = {
+                "before": {"level": b.get("level"), "muted": b.get("muted")},
+                "after": {"level": a.get("level"), "muted": a.get("muted")},
+            }
     return diffs
 
 
@@ -273,17 +310,24 @@ def silent_after(snapshot: dict) -> dict:
 
 
 def run_test(a, fleet) -> dict:
-    rep = {"tool": "rollback_v020", "when": time.strftime("%Y-%m-%d %H:%M:%S"),
-           "url": a.url, "method": "A27 / evidence/28: equality on (level, muted)"}
+    rep = {
+        "tool": "rollback_v020",
+        "when": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "url": a.url,
+        "method": "A27 / evidence/28: equality on (level, muted)",
+    }
     rep["before"] = fleet.snapshot()
     rep["service_before"] = fleet.status()
     if a.require_session and rep["service_before"].get("state") != "playing":
-        rep.update({"PASS": False,
-                    "verdict": f"REFUSED — no playing session to roll back "
-                               f"(state {rep['service_before'].get('state')})"})
+        rep.update(
+            {
+                "PASS": False,
+                "verdict": f"REFUSED — no playing session to roll back "
+                f"(state {rep['service_before'].get('state')})",
+            }
+        )
         return rep
-    keys = [k for k in rep["before"] if not k.startswith("chromecast ")
-            and k != "group Cuisine"]
+    keys = [k for k in rep["before"] if not k.startswith("chromecast ") and k != "group Cuisine"]
     rep["devices_compared"] = keys
     t0 = time.time()
     rep["level0"] = {"control_stop": fleet.control_stop()}
@@ -294,8 +338,9 @@ def run_test(a, fleet) -> dict:
     time.sleep(a.settle_s)
     rep["after_level0"] = fleet.snapshot()
     rep["playable_after_level0"] = silent_after(rep["after_level0"])
-    rep["receiver_stopped"] = (rep["after_level0"].get("chromecast " + CHROMECAST, {})
-                               .get("app_id") != OUR_APP)
+    rep["receiver_stopped"] = (
+        rep["after_level0"].get("chromecast " + CHROMECAST, {}).get("app_id") != OUR_APP
+    )
     rep["level1"] = {"restore": fleet.emergency_restore()}
     time.sleep(a.settle_s)
     rep["after"] = fleet.snapshot()
@@ -307,20 +352,26 @@ def run_test(a, fleet) -> dict:
     if not rep["receiver_stopped"]:
         reasons.append("our receiver app is still on the Chromecast after level 0")
     if rep["volume_diffs"]:
-        reasons.append(f"{len(rep['volume_diffs'])} device(s) changed by the rollback: "
-                       f"{sorted(rep['volume_diffs'])}")
+        reasons.append(
+            f"{len(rep['volume_diffs'])} device(s) changed by the rollback: "
+            f"{sorted(rep['volume_diffs'])}"
+        )
     if not rep["tv_untouched"]:
         reasons.append("the rollback changed the TV's volume (it must never be touched)")
     rep["reasons"] = reasons
     rep["PASS"] = not reasons
-    rep["verdict"] = ("PASS — silence in %ss, volumes identical before/after (including the "
-                      "receiver app on %s)" % (rep["level0_s"], CHROMECAST)
-                      if rep["PASS"] else "FAIL — " + "; ".join(reasons))
+    rep["verdict"] = (
+        "PASS — silence in %ss, volumes identical before/after (including the "
+        "receiver app on %s)" % (rep["level0_s"], CHROMECAST)
+        if rep["PASS"]
+        else "FAIL — " + "; ".join(reasons)
+    )
     return rep
 
 
 def assert_offline(tag: str) -> None:
     import socket
+
     real = socket.socket.connect
 
     def guarded(sock, address, *a, **kw):
@@ -343,51 +394,95 @@ def self_test(out_path: str) -> int:
     a = argparse.Namespace(url=DEFAULT_URL, settle_s=0.01, require_session=True)
     fake = FakeFleet()
     rep = run_test(a, fake)
-    case("healthy fleet: silence, volumes identical, receiver stopped, TV untouched",
-         rep["PASS"] and not rep["volume_diffs"] and rep["receiver_stopped"],
-         {k: rep.get(k) for k in ("PASS", "verdict", "level0_s", "volume_diffs",
-                                  "playable_after_level0", "receiver_stopped")})
-    case("the five speakers and the TV are the comparison set",
-         sorted(rep["devices_compared"]) == sorted(
-             ["Cuisine Fenetre Vert", "Cuisine Frigo Orange", "Cuisine Frigo Jaune",
-              "Cuisine Meuble Bleu", "Cuisine Meuble Rose", "TV Salon"]),
-         {"devices_compared": rep["devices_compared"]})
+    case(
+        "healthy fleet: silence, volumes identical, receiver stopped, TV untouched",
+        rep["PASS"] and not rep["volume_diffs"] and rep["receiver_stopped"],
+        {
+            k: rep.get(k)
+            for k in (
+                "PASS",
+                "verdict",
+                "level0_s",
+                "volume_diffs",
+                "playable_after_level0",
+                "receiver_stopped",
+            )
+        },
+    )
+    case(
+        "the five speakers and the TV are the comparison set",
+        sorted(rep["devices_compared"])
+        == sorted(
+            [
+                "Cuisine Fenetre Vert",
+                "Cuisine Frigo Orange",
+                "Cuisine Frigo Jaune",
+                "Cuisine Meuble Bleu",
+                "Cuisine Meuble Rose",
+                "TV Salon",
+            ]
+        ),
+        {"devices_compared": rep["devices_compared"]},
+    )
 
     for fault, note in [
-            ("restore_misses_level", "a restore that misses one speaker's level is caught"),
-            ("group_left_playing", "a group left playing after level 0 is caught"),
-            ("receiver_left_running", "a receiver left running on the Chromecast is caught"),
-            ("restore_touches_tv", "a restore that changes the TV's volume is caught")]:
+        ("restore_misses_level", "a restore that misses one speaker's level is caught"),
+        ("group_left_playing", "a group left playing after level 0 is caught"),
+        ("receiver_left_running", "a receiver left running on the Chromecast is caught"),
+        ("restore_touches_tv", "a restore that changes the TV's volume is caught"),
+    ]:
         f = FakeFleet(fault=fault)
         r = run_test(a, f)
-        case(note, (not r["PASS"]) and bool(r["reasons"]),
-             {k: r.get(k) for k in ("PASS", "verdict", "reasons", "volume_diffs",
-                                    "playable_after_level0", "receiver_stopped")})
+        case(
+            note,
+            (not r["PASS"]) and bool(r["reasons"]),
+            {
+                k: r.get(k)
+                for k in (
+                    "PASS",
+                    "verdict",
+                    "reasons",
+                    "volume_diffs",
+                    "playable_after_level0",
+                    "receiver_stopped",
+                )
+            },
+        )
 
     # a fleet where the speaker is already silenced at level 0 must still be judged: nothing plays
     f = FakeFleet()
     f.devices["Cuisine Meuble Rose"] = (0.0834, True)
     r = run_test(a, f)
-    case("a speaker muted before the test stays muted after the restore",
-         r["PASS"] and f.devices["Cuisine Meuble Rose"][1] is True,
-         {"device": f.devices["Cuisine Meuble Rose"], "PASS": r["PASS"]})
+    case(
+        "a speaker muted before the test stays muted after the restore",
+        r["PASS"] and f.devices["Cuisine Meuble Rose"][1] is True,
+        {"device": f.devices["Cuisine Meuble Rose"], "PASS": r["PASS"]},
+    )
 
     # no session -> refuse before any packet
     f = FakeFleet()
     f.state = "idle"
     r = run_test(argparse.Namespace(url=DEFAULT_URL, settle_s=0.01, require_session=True), f)
-    case("no playing session -> REFUSED before any action",
-         (not r["PASS"]) and r["verdict"].startswith("REFUSED") and f.calls == [],
-         {"verdict": r["verdict"], "calls": f.calls})
+    case(
+        "no playing session -> REFUSED before any action",
+        (not r["PASS"]) and r["verdict"].startswith("REFUSED") and f.calls == [],
+        {"verdict": r["verdict"], "calls": f.calls},
+    )
 
     ok_all = all(c["ok"] for c in cases)
-    res = {"tool": "rollback_v020", "self_test": True,
-           "when": time.strftime("%Y-%m-%d %H:%M:%S"), "offline": True,
-           "targets_touched": [],
-           "note": "an in-memory fleet only: no socket, no speaker, no TV, no Chromecast. The "
-                   "same compare()/silent_after() functions judge the LAN run.",
-           "cases": cases, "passed": sum(1 for c in cases if c["ok"]), "total": len(cases),
-           "result": "SELF-TEST PASS" if ok_all else "SELF-TEST FAIL"}
+    res = {
+        "tool": "rollback_v020",
+        "self_test": True,
+        "when": time.strftime("%Y-%m-%d %H:%M:%S"),
+        "offline": True,
+        "targets_touched": [],
+        "note": "an in-memory fleet only: no socket, no speaker, no TV, no Chromecast. The "
+        "same compare()/silent_after() functions judge the LAN run.",
+        "cases": cases,
+        "passed": sum(1 for c in cases if c["ok"]),
+        "total": len(cases),
+        "result": "SELF-TEST PASS" if ok_all else "SELF-TEST FAIL",
+    }
     if out_path:
         os.makedirs(os.path.dirname(os.path.abspath(out_path)), exist_ok=True)
         json.dump(res, open(out_path, "w"), indent=1, ensure_ascii=False)
@@ -399,28 +494,42 @@ def self_test(out_path: str) -> int:
 def preflight(url: str) -> dict:
     fleet = LanFleet(url)
     snap = fleet.snapshot()
-    return {"url": url,
-            "service": {k: v for k, v in call(url.rstrip("/") + "/api/status").items()
-                        if k in ("state", "session_id", "group_owner")},
-            "snapshot": snap,
-            "owner_precondition": ("root on CT 121 to stop the service and run lib/emergency.py; "
-                                   "an open audio window; permission to stop our receiver app on "
-                                   + CHROMECAST)}
+    return {
+        "url": url,
+        "service": {
+            k: v
+            for k, v in call(url.rstrip("/") + "/api/status").items()
+            if k in ("state", "session_id", "group_owner")
+        },
+        "snapshot": snap,
+        "owner_precondition": (
+            "root on CT 121 to stop the service and run lib/emergency.py; "
+            "an open audio window; permission to stop our receiver app on " + CHROMECAST
+        ),
+    }
 
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(
         description="v0.2 rollback levels 0/1 (A27 method, evidence/28).",
         epilog="Owner-side precondition" + __doc__.split("OWNER-SIDE PRECONDITION")[1],
-        formatter_class=argparse.RawDescriptionHelpFormatter)
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     ap.add_argument("--url", default=DEFAULT_URL)
     ap.add_argument("--settle-s", type=float, default=2.0)
-    ap.add_argument("--allow-no-session", dest="require_session", action="store_false",
-                    help="run even if nothing is playing (the gate wants a real session)")
+    ap.add_argument(
+        "--allow-no-session",
+        dest="require_session",
+        action="store_false",
+        help="run even if nothing is playing (the gate wants a real session)",
+    )
     ap.add_argument("--json", help="write the report here")
     ap.add_argument("--preflight", action="store_true", help="snapshot only; touch nothing")
-    ap.add_argument("--self-test", action="store_true",
-                    help="in-memory fleet + four broken variants; exits non-zero if one passes")
+    ap.add_argument(
+        "--self-test",
+        action="store_true",
+        help="in-memory fleet + four broken variants; exits non-zero if one passes",
+    )
     a = ap.parse_args(argv)
     if a.self_test:
         return self_test(a.json)
@@ -432,9 +541,24 @@ def main(argv=None) -> int:
         os.makedirs(os.path.dirname(os.path.abspath(a.json)), exist_ok=True)
         json.dump(rep, open(a.json, "w"), indent=1, ensure_ascii=False)
         print(f"  -> {a.json}")
-    print(json.dumps({k: rep.get(k) for k in ("PASS", "verdict", "level0_s", "volume_diffs",
-                                              "playable_after_level0", "receiver_stopped",
-                                              "reasons")}, indent=1, ensure_ascii=False))
+    print(
+        json.dumps(
+            {
+                k: rep.get(k)
+                for k in (
+                    "PASS",
+                    "verdict",
+                    "level0_s",
+                    "volume_diffs",
+                    "playable_after_level0",
+                    "receiver_stopped",
+                    "reasons",
+                )
+            },
+            indent=1,
+            ensure_ascii=False,
+        )
+    )
     return 0 if rep.get("PASS") else 1
 
 

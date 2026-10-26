@@ -32,7 +32,6 @@ only dropped when its last reader leaves). A sid that was never opened gets ``40
 from __future__ import annotations
 
 import http.client
-import os
 import re
 import secrets
 import socket
@@ -46,11 +45,11 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from .contracts import PATH_MEDIA_PREFIX, ResolvedMedia, Track
 
-CHUNK = 64 * 1024                  # bytes per write; one buffer per reader
-HEAD_BYTES = 256 * 1024            # first probe: ftyp+moov+sidx of a normal YouTube file
-HEAD_MAX = 4 * 1024 * 1024         # growth ceiling when moov/sidx is bigger
+CHUNK = 64 * 1024  # bytes per write; one buffer per reader
+HEAD_BYTES = 256 * 1024  # first probe: ftyp+moov+sidx of a normal YouTube file
+HEAD_MAX = 4 * 1024 * 1024  # growth ceiling when moov/sidx is bigger
 UPSTREAM_TIMEOUT = 20.0
-REFRESH_MIN_INTERVAL = 1.0         # two readers may hit 403 together; resolve once
+REFRESH_MIN_INTERVAL = 1.0  # two readers may hit 403 together; resolve once
 MAX_REFRESHES = 8
 MAX_SESSIONS = 8
 RSS_BUDGET_MB = 150.0
@@ -84,13 +83,13 @@ def box_list(buf: bytes, base: int = 0) -> list[tuple[str, int, int]]:
     boxes: list[tuple[str, int, int]] = []
     pos = 0
     while pos + 8 <= len(buf):
-        size = int.from_bytes(buf[pos:pos + 4], "big")
-        kind = buf[pos + 4:pos + 8].decode("latin-1")
+        size = int.from_bytes(buf[pos : pos + 4], "big")
+        kind = buf[pos + 4 : pos + 8].decode("latin-1")
         header = 8
         if size == 1:
             if pos + 16 > len(buf):
                 break
-            size = int.from_bytes(buf[pos + 8:pos + 16], "big")
+            size = int.from_bytes(buf[pos + 8 : pos + 16], "big")
             header = 16
         elif size == 0:
             size = len(buf) - pos
@@ -133,42 +132,48 @@ class Sidx:
 
 def parse_sidx(buf: bytes, offset: int, limit: int = 0) -> Sidx:
     """Parse the ``sidx`` box starting at ``offset`` inside ``buf`` (version 0 or 1)."""
-    if offset + 12 > len(buf) or buf[offset + 4:offset + 8] != b"sidx":
+    if offset + 12 > len(buf) or buf[offset + 4 : offset + 8] != b"sidx":
         raise ValueError("no sidx at that offset")
-    size = int.from_bytes(buf[offset:offset + 4], "big")
+    size = int.from_bytes(buf[offset : offset + 4], "big")
     if size == 1:
-        size = int.from_bytes(buf[offset + 8:offset + 16], "big")
+        size = int.from_bytes(buf[offset + 8 : offset + 16], "big")
     if limit and size > limit:
         raise ValueError(f"sidx box ({size} B) is larger than the probe ({limit} B)")
     if offset + size > len(buf):
         raise ValueError(f"sidx box ({size} B) is truncated at {len(buf)} B")
     version = buf[offset + 8]
     pos = offset + 12
-    pos += 4                                    # reference_ID
-    timescale = int.from_bytes(buf[pos:pos + 4], "big")
+    pos += 4  # reference_ID
+    timescale = int.from_bytes(buf[pos : pos + 4], "big")
     pos += 4
     if version == 0:
-        earliest = float(int.from_bytes(buf[pos:pos + 4], "big"))
-        first_offset = int.from_bytes(buf[pos + 4:pos + 8], "big")
+        earliest = float(int.from_bytes(buf[pos : pos + 4], "big"))
+        first_offset = int.from_bytes(buf[pos + 4 : pos + 8], "big")
         pos += 8
     else:
-        earliest = float(int.from_bytes(buf[pos:pos + 8], "big"))
-        first_offset = int.from_bytes(buf[pos + 8:pos + 16], "big")
+        earliest = float(int.from_bytes(buf[pos : pos + 8], "big"))
+        first_offset = int.from_bytes(buf[pos + 8 : pos + 16], "big")
         pos += 16
-    pos += 2                                    # reserved
-    count = int.from_bytes(buf[pos:pos + 2], "big")
+    pos += 2  # reserved
+    count = int.from_bytes(buf[pos : pos + 2], "big")
     pos += 2
     references = []
     for _ in range(count):
         if pos + 12 > offset + size:
             break
-        word = int.from_bytes(buf[pos:pos + 4], "big")
-        duration = int.from_bytes(buf[pos + 4:pos + 8], "big")
+        word = int.from_bytes(buf[pos : pos + 4], "big")
+        duration = int.from_bytes(buf[pos + 4 : pos + 8], "big")
         references.append((word & 0x7FFFFFFF, duration))
         pos += 12
         # reference_type (bit 31) is 0 = media, 1 = a nested sidx: YouTube never nests one here.
-    return Sidx(offset=offset, size=size, timescale=timescale, earliest=earliest,
-                first_offset=first_offset, references=tuple(references))
+    return Sidx(
+        offset=offset,
+        size=size,
+        timescale=timescale,
+        earliest=earliest,
+        first_offset=first_offset,
+        references=tuple(references),
+    )
 
 
 def segment_ranges(buf: bytes) -> dict[str, tuple[int, int] | None]:
@@ -205,7 +210,7 @@ def parse_range(header: str | None, total: int) -> tuple[int, int] | None:
     first, last = match.group(1), match.group(2)
     if not first and not last:
         raise ValueError("empty Range")
-    if not first:                                  # bytes=-N : the last N bytes
+    if not first:  # bytes=-N : the last N bytes
         length = int(last)
         if length <= 0:
             raise ValueError("zero-length suffix range")
@@ -290,11 +295,19 @@ class _Session:
 class MediaProxy:
     """Owns the ``/media/<sid>`` namespace and the byte-range plumbing behind it."""
 
-    def __init__(self, host: str, port: int, log=print, *, resolver=None,
-                 max_height: int = 1080, timeout: float = 30.0) -> None:
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        log=print,
+        *,
+        resolver=None,
+        max_height: int = 1080,
+        timeout: float = 30.0,
+    ) -> None:
         self.host, self.port, self.log = host, port, log
         self.sessions: dict[str, _Session] = {}
-        self.faults: dict = {}          # test hook: {"drop_upstream_after": bytes}
+        self.faults: dict = {}  # test hook: {"drop_upstream_after": bytes}
         self._revoked: dict[str, tuple[float, str]] = {}
         self._lock = threading.RLock()
         self._refreshes = 0
@@ -323,11 +336,15 @@ class MediaProxy:
                 self.log(f"media: too many sessions, closing {oldest.sid}")
                 self.close_session(oldest.sid)
             self.sessions[sid] = _Session(
-                sid=sid, media=resolved,
-                source_url=source_url or f"https://www.youtube.com/watch?v={resolved.video_id}")
-        self.log(f"media: open {sid} video_id={resolved.video_id} "
-                 f"dur={resolved.duration_s:.0f}s itags={resolved.video.itag}/{resolved.audio.itag} "
-                 f"expires_in={resolved.expires_at - time.time():.0f}s")
+                sid=sid,
+                media=resolved,
+                source_url=source_url or f"https://www.youtube.com/watch?v={resolved.video_id}",
+            )
+        self.log(
+            f"media: open {sid} video_id={resolved.video_id} "
+            f"dur={resolved.duration_s:.0f}s itags={resolved.video.itag}/{resolved.audio.itag} "
+            f"expires_in={resolved.expires_at - time.time():.0f}s"
+        )
         return sid
 
     def close_session(self, sid: str) -> None:
@@ -392,15 +409,18 @@ class MediaProxy:
         ]
         lines += self._adaptation_set(session, "video", 1, video)
         lines += self._adaptation_set(session, "audio", 2, audio)
-        lines += [' </Period>', '</MPD>', '']
+        lines += [" </Period>", "</MPD>", ""]
         return "\n".join(lines)
 
-    def _adaptation_set(self, session: _Session, which: str, index: int,
-                        state: _TrackState) -> list[str]:
+    def _adaptation_set(
+        self, session: _Session, which: str, index: int, state: _TrackState
+    ) -> list[str]:
         track = session.track(which)
-        head = (f'  <AdaptationSet id="{index}" contentType="{which}"'
-                f' mimeType="{track.content_type}" segmentAlignment="true"'
-                ' startWithSAP="1" subsegmentAlignment="true" subsegmentStartsWithSAP="1"')
+        head = (
+            f'  <AdaptationSet id="{index}" contentType="{which}"'
+            f' mimeType="{track.content_type}" segmentAlignment="true"'
+            ' startWithSAP="1" subsegmentAlignment="true" subsegmentStartsWithSAP="1"'
+        )
         if which == "video":
             if track.width:
                 head += f' maxWidth="{track.width}"'
@@ -419,19 +439,16 @@ class MediaProxy:
         bandwidth = _bandwidth(track, state, session.media.duration_s)
         if bandwidth:
             rep += f' bandwidth="{bandwidth}"'
-        body = [f'   <BaseURL>{"0" if which == "video" else "1"}</BaseURL>']
+        body = [f"   <BaseURL>{'0' if which == 'video' else '1'}</BaseURL>"]
         if state.index_range:
-            segment = [f'   <SegmentBase indexRange="{state.index_range[0]}-'
-                       f'{state.index_range[1]}">']
+            segment = [f'   <SegmentBase indexRange="{state.index_range[0]}-{state.index_range[1]}">']
         else:
             # No sidx: the whole file is one segment; seeking falls back to HTTP ranges.
-            segment = ['   <SegmentBase>']
+            segment = ["   <SegmentBase>"]
         if state.init_range:
-            segment.append(f'    <Initialization range="{state.init_range[0]}-'
-                           f'{state.init_range[1]}"/>')
-        segment.append('   </SegmentBase>')
-        return [head + ">", rep + ">"] + body + segment + \
-               ['  </Representation>', ' </AdaptationSet>']
+            segment.append(f'    <Initialization range="{state.init_range[0]}-{state.init_range[1]}"/>')
+        segment.append("   </SegmentBase>")
+        return [head + ">", rep + ">"] + body + segment + ["  </Representation>", " </AdaptationSet>"]
 
     def audio_url_for(self, sid: str) -> str:
         """``http://<host>:<port>/media/<sid>/audio.m4a`` for the group's DMR."""
@@ -456,13 +473,14 @@ class MediaProxy:
         with session.lock:
             now = time.monotonic()
             if session.refreshed_at and now - session.refreshed_at < REFRESH_MIN_INTERVAL:
-                return                       # another reader just did it
+                return  # another reader just did it
             if session.refreshes >= MAX_REFRESHES:
                 raise UpstreamError(f"{sid}: {session.refreshes} refreshes, giving up")
             old_itags = (session.media.video.itag, session.media.audio.itag)
             started = time.monotonic()
-            fresh = self._resolver(session.source_url, max_height=self._max_height,
-                                   timeout=self._timeout)
+            fresh = self._resolver(
+                session.source_url, max_height=self._max_height, timeout=self._timeout
+            )
             session.media = fresh
             session.refreshes += 1
             session.refreshed_at = now
@@ -475,9 +493,11 @@ class MediaProxy:
             self._refreshes += 1
             took = (time.monotonic() - started) * 1000.0
         trim_memory()
-        self.log(f"media: refresh {sid} reason={reason or '-'} itags={new_itags[0]}/"
-                 f"{new_itags[1]} took={took:.0f}ms expires_in="
-                 f"{fresh.expires_at - time.time():.0f}s")
+        self.log(
+            f"media: refresh {sid} reason={reason or '-'} itags={new_itags[0]}/"
+            f"{new_itags[1]} took={took:.0f}ms expires_in="
+            f"{fresh.expires_at - time.time():.0f}s"
+        )
 
     def stats(self) -> dict:
         """``{"sessions": int, "rss_mb": float, "refreshes": int}`` — the memory bound is 150 MB."""
@@ -500,8 +520,10 @@ class MediaProxy:
                 state.init_range = track.init_range
                 state.index_range = track.index_range
                 state.discovered = True
-                self.log(f"media: {session.sid} {which} ranges from the extractor "
-                         f"init={state.init_range} index={state.index_range}")
+                self.log(
+                    f"media: {session.sid} {which} ranges from the extractor "
+                    f"init={state.init_range} index={state.index_range}"
+                )
                 self._learn_total(session, which)
                 return state
             wanted = HEAD_BYTES
@@ -529,16 +551,20 @@ class MediaProxy:
                         state.sidx = None
                 if ranges["init"] and (ranges["index"] is None or state.sidx is not None):
                     state.discovered = True
-                    self.log(f"media: {session.sid} {which} discovered total={total} "
-                             f"init={state.init_range} index={state.index_range} "
-                             f"head={len(head)}B")
+                    self.log(
+                        f"media: {session.sid} {which} discovered total={total} "
+                        f"init={state.init_range} index={state.index_range} "
+                        f"head={len(head)}B"
+                    )
                     return state
                 # moov or sidx ran past the probe: grow it.
                 last_error = last_error or "boxes truncated"
                 wanted *= 2
             state.discovered = True
-            self.log(f"media: {session.sid} {which} incomplete discovery ({last_error}); "
-                     f"serving as a single segment")
+            self.log(
+                f"media: {session.sid} {which} incomplete discovery ({last_error}); "
+                f"serving as a single segment"
+            )
             return state
 
     def _learn_total(self, session: _Session, which: str) -> None:
@@ -575,8 +601,11 @@ class MediaProxy:
         return state.total
 
     def _open_upstream(self, url: str, start: int, end: int | None):
-        headers = {"Range": f"bytes={start}-{'' if end is None else end}",
-                   "User-Agent": _UA, "Accept-Encoding": "identity"}
+        headers = {
+            "Range": f"bytes={start}-{'' if end is None else end}",
+            "User-Agent": _UA,
+            "Accept-Encoding": "identity",
+        }
         request = urllib.request.Request(url, headers=headers)
         try:
             return urllib.request.urlopen(request, timeout=UPSTREAM_TIMEOUT)
@@ -605,7 +634,7 @@ class MediaProxy:
             handler.send_header("Content-Length", "0")
             handler.end_headers()
             return True
-        parts = [p for p in path[len(PATH_MEDIA_PREFIX):].split("/") if p]
+        parts = [p for p in path[len(PATH_MEDIA_PREFIX) :].split("/") if p]
         if len(parts) != 2:
             self._error(handler, 404, "expected /media/<sid>/<track>")
             return True
@@ -622,8 +651,14 @@ class MediaProxy:
                 if handler.command != "HEAD":
                     self._write(handler, body)
                 return True
-            which = {"audio.m4a": "audio", "1": "audio", "audio": "audio",
-                     "0": "video", "video": "video", "video.mp4": "video"}.get(leaf)
+            which = {
+                "audio.m4a": "audio",
+                "1": "audio",
+                "audio": "audio",
+                "0": "video",
+                "video": "video",
+                "video.mp4": "video",
+            }.get(leaf)
             if which is None:
                 self._error(handler, 404, f"unknown media leaf {leaf!r}")
                 return True
@@ -653,8 +688,9 @@ class MediaProxy:
                 wanted = parse_range(handler.headers.get("Range"), total)
             except ValueError as exc:
                 self.log(f"media: {sid} {which} 416: {exc}")
-                self._error(handler, 416, "range not satisfiable",
-                            extra={"Content-Range": f"bytes */{total}"})
+                self._error(
+                    handler, 416, "range not satisfiable", extra={"Content-Range": f"bytes */{total}"}
+                )
                 return
             start, end = wanted if wanted else (0, total - 1)
             length = end - start + 1
@@ -674,8 +710,9 @@ class MediaProxy:
         finally:
             self._leave(session)
 
-    def _relay(self, handler: BaseHTTPRequestHandler, session: _Session, which: str,
-               start: int, end: int) -> None:
+    def _relay(
+        self, handler: BaseHTTPRequestHandler, session: _Session, which: str, start: int, end: int
+    ) -> None:
         """Forward ``start..end`` and keep the client's response alive across source failures."""
         remaining = end - start + 1
         offset = start
@@ -720,16 +757,16 @@ class MediaProxy:
                         # dies mid-body, exactly what an expired token looks like to a reader.
                         self.log(f"media: {session.sid} {which} upstream dropped at {offset}")
                         break
-            except (socket.timeout, TimeoutError, ConnectionError,
-                    http.client.HTTPException):
+            except (socket.timeout, TimeoutError, ConnectionError, http.client.HTTPException):
                 self.log(f"media: {session.sid} {which} source read failed at {offset}")
             finally:
                 response.close()
             if remaining > 0:
                 attempts += 1
                 if attempts > 4:
-                    self.log(f"media: {session.sid} {which} TRUNCATED at {offset} "
-                             f"({remaining} B missing)")
+                    self.log(
+                        f"media: {session.sid} {which} TRUNCATED at {offset} ({remaining} B missing)"
+                    )
                     raise UpstreamError("source keeps failing")
 
     def _write(self, handler: BaseHTTPRequestHandler, chunk: bytes) -> bool:
@@ -741,12 +778,14 @@ class MediaProxy:
 
     def _send_common(self, handler: BaseHTTPRequestHandler) -> None:
         handler.send_header("Access-Control-Allow-Origin", "*")
-        handler.send_header("Access-Control-Expose-Headers",
-                            "Content-Length, Content-Range, Accept-Ranges")
+        handler.send_header(
+            "Access-Control-Expose-Headers", "Content-Length, Content-Range, Accept-Ranges"
+        )
         handler.send_header("Cache-Control", "no-store")
 
-    def _error(self, handler: BaseHTTPRequestHandler, code: int, message: str,
-               extra: dict | None = None) -> None:
+    def _error(
+        self, handler: BaseHTTPRequestHandler, code: int, message: str, extra: dict | None = None
+    ) -> None:
         if _sent(handler):
             # Headers and some bytes are already on the wire: a second response would be worse
             # than the truncation the client can see for itself.
@@ -793,9 +832,8 @@ class MediaProxy:
 
         self._httpd = ThreadingHTTPServer((self.host, self.port), _Handler)
         self._httpd.daemon_threads = True
-        self.port = self._httpd.server_address[1]      # honours port 0 (tests, probes)
-        self._thread = threading.Thread(target=self._httpd.serve_forever,
-                                        name="media-http", daemon=True)
+        self.port = self._httpd.server_address[1]  # honours port 0 (tests, probes)
+        self._thread = threading.Thread(target=self._httpd.serve_forever, name="media-http", daemon=True)
         self._thread.start()
         self.log(f"media: listening on http://{self.host}:{self.port}")
         return self
@@ -809,7 +847,7 @@ class MediaProxy:
 
 def _mark_sent(handler: BaseHTTPRequestHandler) -> None:
     try:
-        handler._nac_sent = True   # noqa: SLF001 - per-request marker, never read across threads
+        handler._nac_sent = True  # noqa: SLF001 - per-request marker, never read across threads
     except AttributeError:
         pass
 

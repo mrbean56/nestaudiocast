@@ -48,7 +48,7 @@ if LIB not in sys.path:
 from v020 import media_proxy as MP  # noqa: E402
 from v020.contracts import ResolvedMedia, Track  # noqa: E402
 from v020.media_proxy import MediaProxy, parse_sidx  # noqa: E402
-from v020.resolve import ResolveError, redact, resolve  # noqa: E402
+from v020.resolve import redact, resolve  # noqa: E402
 
 DEFAULT_HOST = "192.168.2.21"
 DEFAULT_PORT = 7641
@@ -57,8 +57,8 @@ DEFAULT_OUT = os.path.join(ROOT, "evidence")
 #: the three videos of the done-when list, and what each one is for
 VIDEOS = {
     "short": ("jNQXAC9IVRw", 1080),
-    "long": ("ai_gI0Jbr_E", 1080),        # 8630 s, Pink Floyd *Pulse*
-    "capped": ("dQw4w9WgXcQ", 720),       # 1080p exists, MAX_HEIGHT=720 must pick 720p
+    "long": ("ai_gI0Jbr_E", 1080),  # 8630 s, Pink Floyd *Pulse*
+    "capped": ("dQw4w9WgXcQ", 720),  # 1080p exists, MAX_HEIGHT=720 must pick 720p
 }
 LONG_ID, LONG_HEIGHT = VIDEOS["long"]
 SEEK_AT_S = 7200.0
@@ -124,12 +124,19 @@ def annotate(media: ResolvedMedia, seconds: float) -> dict:
         "title": media.title[:80],
         "duration_s": round(media.duration_s, 3),
         "resolve_s": round(seconds, 3),
-        "video": {"itag": media.video.itag, "codecs": media.video.codecs,
-                  "height": media.video.height, "width": media.video.width,
-                  "fps": media.video.fps,
-                  "host": redact(media.video.url).split("/")[2]},
-        "audio": {"itag": media.audio.itag, "codecs": media.audio.codecs,
-                  "host": redact(media.audio.url).split("/")[2]},
+        "video": {
+            "itag": media.video.itag,
+            "codecs": media.video.codecs,
+            "height": media.video.height,
+            "width": media.video.width,
+            "fps": media.video.fps,
+            "host": redact(media.video.url).split("/")[2],
+        },
+        "audio": {
+            "itag": media.audio.itag,
+            "codecs": media.audio.codecs,
+            "host": redact(media.audio.url).split("/")[2],
+        },
         "expires_in_s": round(media.expires_at - time.time(), 1),
         "init_range": None if media.video.init_range is None else list(media.video.init_range),
         "index_range": None if media.video.index_range is None else list(media.video.index_range),
@@ -138,8 +145,7 @@ def annotate(media: ResolvedMedia, seconds: float) -> dict:
 
 def timed_resolve(video_id: str, max_height: int) -> tuple[ResolvedMedia, float]:
     started = time.monotonic()
-    media = resolve(f"https://www.youtube.com/watch?v={video_id}", max_height=max_height,
-                    timeout=30.0)
+    media = resolve(f"https://www.youtube.com/watch?v={video_id}", max_height=max_height, timeout=30.0)
     return media, time.monotonic() - started
 
 
@@ -165,9 +171,13 @@ def fetch_range(url: str, start: int, end: int, timeout: float = 60.0) -> tuple[
 def run(cmd: list[str], timeout: float = 120.0) -> dict:
     started = time.monotonic()
     proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
-    return {"cmd": [os.path.basename(cmd[0])] + cmd[1:], "rc": proc.returncode,
-            "seconds": round(time.monotonic() - started, 2),
-            "stdout": proc.stdout[-8000:], "stderr": proc.stderr[-4000:]}
+    return {
+        "cmd": [os.path.basename(cmd[0])] + cmd[1:],
+        "rc": proc.returncode,
+        "seconds": round(time.monotonic() - started, 2),
+        "stdout": proc.stdout[-8000:],
+        "stderr": proc.stderr[-4000:],
+    }
 
 
 def start_proxy(args) -> MediaProxy:
@@ -191,11 +201,17 @@ def cmd_resolve(args) -> dict:
             entry["tallest_avc1"] = tallest
             entry["ok"] = bool(entry["ok"] and tallest and tallest > max_height)
         results.append(entry)
-        log(f"resolve {label}: {video_id} {seconds:.2f}s "
-            f"v={media.video.itag}@{media.video.height}p a={media.audio.itag}")
-    payload = {"what": "three real videos resolved on CT 121 (no download)", **env_facts(),
-               "budget_s": 5.0, "videos": results,
-               "ok": all(entry["ok"] for entry in results)}
+        log(
+            f"resolve {label}: {video_id} {seconds:.2f}s "
+            f"v={media.video.itag}@{media.video.height}p a={media.audio.itag}"
+        )
+    payload = {
+        "what": "three real videos resolved on CT 121 (no download)",
+        **env_facts(),
+        "budget_s": 5.0,
+        "videos": results,
+        "ok": all(entry["ok"] for entry in results),
+    }
     write_json(args.out, "40-resolve.json", payload)
     return payload
 
@@ -206,14 +222,16 @@ def _tallest_avc1(video_id: str) -> int | None:
         import yt_dlp
 
         with yt_dlp.YoutubeDL({"quiet": True, "no_warnings": True, "noplaylist": True}) as ydl:
-            info = ydl.extract_info(f"https://www.youtube.com/watch?v={video_id}",
-                                    download=False)
+            info = ydl.extract_info(f"https://www.youtube.com/watch?v={video_id}", download=False)
     except Exception:  # noqa: BLE001 - the measurement must not die on a second call
         return None
-    heights = [f.get("height") or 0 for f in (info.get("formats") or [])
-               if str(f.get("vcodec") or "").startswith("avc1")
-               and str(f.get("protocol") or "") in ("https", "http")
-               and not f.get("manifest_url")]
+    heights = [
+        f.get("height") or 0
+        for f in (info.get("formats") or [])
+        if str(f.get("vcodec") or "").startswith("avc1")
+        and str(f.get("protocol") or "") in ("https", "http")
+        and not f.get("manifest_url")
+    ]
     return max(heights) if heights else None
 
 
@@ -225,38 +243,61 @@ def cmd_mpd(args) -> dict:
         manifest = proxy.manifest_url_for(sid)
         mpd_text = proxy.mpd_for(sid)
         session = proxy.sessions[sid]
-        probe = run([FFPROBE, "-v", "error", "-print_format", "json", "-show_format",
-                     "-show_streams", manifest])
+        probe = run(
+            [FFPROBE, "-v", "error", "-print_format", "json", "-show_format", "-show_streams", manifest]
+        )
         streams = []
         try:
             parsed = json.loads(probe["stdout"] or "{}")
             for stream in parsed.get("streams", []):
-                streams.append({k: stream.get(k) for k in
-                                ("index", "codec_type", "codec_name", "codec_tag_string",
-                                 "width", "height", "channels", "sample_rate", "duration")
-                                if stream.get(k) is not None})
+                streams.append(
+                    {
+                        k: stream.get(k)
+                        for k in (
+                            "index",
+                            "codec_type",
+                            "codec_name",
+                            "codec_tag_string",
+                            "width",
+                            "height",
+                            "channels",
+                            "sample_rate",
+                            "duration",
+                        )
+                        if stream.get(k) is not None
+                    }
+                )
             duration = (parsed.get("format") or {}).get("duration")
         except json.JSONDecodeError:
             duration = None
         listing = run([FFPROBE, "-hide_banner", "-i", manifest])
         payload = {
             "what": "ffprobe and ffmpeg read the synthesised MPD through the proxy",
-            **env_facts(), "video_id": media.video_id, "resolve_s": round(seconds, 3),
+            **env_facts(),
+            "video_id": media.video_id,
+            "resolve_s": round(seconds, 3),
             "manifest_url": manifest,
             "manifest": mpd_text,
-            "sizes": {"video_total": session.video.total, "audio_total": session.audio.total,
-                      "video_init": session.video.init_range,
-                      "video_index": session.video.index_range,
-                      "audio_init": session.audio.init_range,
-                      "audio_index": session.audio.index_range},
+            "sizes": {
+                "video_total": session.video.total,
+                "audio_total": session.audio.total,
+                "video_init": session.video.init_range,
+                "video_index": session.video.index_range,
+                "audio_init": session.audio.init_range,
+                "audio_index": session.audio.index_range,
+            },
             "ffprobe": {**probe, "json": None},
-            "streams": streams, "format_duration_s": duration,
+            "streams": streams,
+            "format_duration_s": duration,
             "ffprobe_listing": listing,
         }
         codecs = {s.get("codec_type"): s.get("codec_name") for s in streams}
-        payload["ok"] = (probe["rc"] == 0 and codecs.get("video") == "h264"
-                         and codecs.get("audio") == "aac"
-                         and abs(float(duration or 0) - media.duration_s) < 1.0)
+        payload["ok"] = (
+            probe["rc"] == 0
+            and codecs.get("video") == "h264"
+            and codecs.get("audio") == "aac"
+            and abs(float(duration or 0) - media.duration_s) < 1.0
+        )
         write_json(args.out, "40-mpd.json", payload)
         log(f"mpd: ffprobe streams={codecs} duration={duration} rc={probe['rc']}")
         return payload
@@ -269,7 +310,7 @@ def cmd_seek(args) -> dict:
     try:
         media, _ = timed_resolve(LONG_ID, LONG_HEIGHT)
         sid = proxy.open_session(media)
-        proxy.mpd_for(sid)                       # discovery: init/index ranges + size
+        proxy.mpd_for(sid)  # discovery: init/index ranges + size
         session = proxy.sessions[sid]
         head, total = proxy._read_head(session, "video", 512 * 1024)
         index = session.video.index_range
@@ -277,8 +318,7 @@ def cmd_seek(args) -> dict:
             raise SystemExit("no sidx: the seek measurement needs a fragmented source")
         sidx = parse_sidx(head, index[0], limit=len(head))
         start, end, media_start = sidx.range_at(SEEK_AT_S)
-        log(f"seek: t={SEEK_AT_S}s -> bytes {start}-{end} (media {media_start:.1f}s, "
-            f"total {total})")
+        log(f"seek: t={SEEK_AT_S}s -> bytes {start}-{end} (media {media_start:.1f}s, total {total})")
 
         source_bytes, source_sha = fetch_range(media.video.url, start, end)
         track_url = f"http://{args.host}:{args.port}/media/{sid}/0"
@@ -291,37 +331,46 @@ def cmd_seek(args) -> dict:
         track_seek = _probe_seek(track_url, SEEK_AT_S, timeout=60.0)
         dash_seek = _probe_seek(proxy.manifest_url_for(sid), SEEK_AT_S, timeout=25.0)
         dash_ss = _dash_ffmpeg_ss(proxy.manifest_url_for(sid), SEEK_AT_S)
-        track_ok = (track_seek.get("first_pts_s") is not None
-                    and abs(track_seek["first_pts_s"] - SEEK_AT_S) < 10.0)
+        track_ok = (
+            track_seek.get("first_pts_s") is not None
+            and abs(track_seek["first_pts_s"] - SEEK_AT_S) < 10.0
+        )
 
         payload = {
             "what": "a seek to 7200 s returns the source's own bytes",
-            **env_facts(), "video_id": media.video_id,
-            "at_s": SEEK_AT_S, "sidx_timescale": sidx.timescale,
+            **env_facts(),
+            "video_id": media.video_id,
+            "at_s": SEEK_AT_S,
+            "sidx_timescale": sidx.timescale,
             "subsegments": len(sidx.references),
-            "byte_range": [start, end], "media_seconds_of_that_range": media_start,
+            "byte_range": [start, end],
+            "media_seconds_of_that_range": media_start,
             "source": {"bytes": source_bytes, "sha256": source_sha},
             "proxied": {"bytes": proxy_bytes, "sha256": proxy_sha},
             "direct_fragment_first_pts_s": direct_pts,
             "seek_via_track_url": track_seek,
             "seek_via_mpd_ffprobe": dash_seek,
             "seek_via_mpd_ffmpeg_ss": dash_ss,
-            "ok": (source_bytes == proxy_bytes == end - start + 1
-                   and source_sha == proxy_sha
-                   and direct_pts is not None and abs(direct_pts - SEEK_AT_S) < 10.0
-                   and track_ok),
+            "ok": (
+                source_bytes == proxy_bytes == end - start + 1
+                and source_sha == proxy_sha
+                and direct_pts is not None
+                and abs(direct_pts - SEEK_AT_S) < 10.0
+                and track_ok
+            ),
         }
         write_json(args.out, "40-seek-7200.json", payload)
-        log(f"seek: bytes {proxy_bytes} sha match={source_sha == proxy_sha} "
+        log(
+            f"seek: bytes {proxy_bytes} sha match={source_sha == proxy_sha} "
             f"fragment_pts={direct_pts} track_seek_pts={track_seek.get('first_pts_s')} "
-            f"mpd_seek_pts={dash_seek.get('first_pts_s')}")
+            f"mpd_seek_pts={dash_seek.get('first_pts_s')}"
+        )
         return payload
     finally:
         proxy.stop()
 
 
-def _fragment_pts(head: bytes, index: tuple[int, int], url: str,
-                  start: int, end: int) -> float | None:
+def _fragment_pts(head: bytes, index: tuple[int, int], url: str, start: int, end: int) -> float | None:
     """Fetch the fragment straight from the source, wrap it with the init segment, probe it.
 
     No token ever reaches an argv: the file on disk is the only thing ffprobe sees.
@@ -335,10 +384,24 @@ def _fragment_pts(head: bytes, index: tuple[int, int], url: str,
         with http_get(url, {"Range": f"bytes={start}-{end}", "Accept-Encoding": "identity"}) as r:
             fragment = r.read()
         with open(mine, "wb") as handle:
-            handle.write(head[:init_end + 1])
+            handle.write(head[: init_end + 1])
             handle.write(fragment)
-        result = run([FFPROBE, "-v", "error", "-select_streams", "v:0", "-show_entries",
-                      "frame=pts_time", "-of", "csv=p=0", "-read_intervals", "%+#2", mine])
+        result = run(
+            [
+                FFPROBE,
+                "-v",
+                "error",
+                "-select_streams",
+                "v:0",
+                "-show_entries",
+                "frame=pts_time",
+                "-of",
+                "csv=p=0",
+                "-read_intervals",
+                "%+#2",
+                mine,
+            ]
+        )
         return _first_pts(result["stdout"])
     finally:
         shutil.rmtree(workdir, ignore_errors=True)
@@ -348,18 +411,37 @@ def _probe_seek(url: str, at: float, timeout: float = 60.0) -> dict:
     """``ffprobe -read_intervals at%+#2`` and the first presentation time it reports."""
     if not shutil.which(FFPROBE):
         return {"first_pts_s": None, "error": "no ffprobe"}
-    cmd = [FFPROBE, "-v", "warning", "-select_streams", "v:0", "-show_entries",
-           "frame=pts_time", "-of", "csv=p=0", "-read_intervals", f"{at:.0f}%+#2", url]
+    cmd = [
+        FFPROBE,
+        "-v",
+        "warning",
+        "-select_streams",
+        "v:0",
+        "-show_entries",
+        "frame=pts_time",
+        "-of",
+        "csv=p=0",
+        "-read_intervals",
+        f"{at:.0f}%+#2",
+        url,
+    ]
     try:
         result = run(cmd, timeout=timeout)
     except subprocess.TimeoutExpired:
-        return {"cmd": [os.path.basename(cmd[0])] + cmd[1:], "timeout_s": timeout,
-                "first_pts_s": None,
-                "note": "no answer within the budget: the demuxer reads from 0 instead of "
-                        "seeking to the interval"}
-    return {"cmd": result["cmd"], "rc": result["rc"], "seconds": result["seconds"],
-            "first_pts_s": _first_pts(result["stdout"]),
-            "stderr": result["stderr"][-800:]}
+        return {
+            "cmd": [os.path.basename(cmd[0])] + cmd[1:],
+            "timeout_s": timeout,
+            "first_pts_s": None,
+            "note": "no answer within the budget: the demuxer reads from 0 instead of "
+            "seeking to the interval",
+        }
+    return {
+        "cmd": result["cmd"],
+        "rc": result["rc"],
+        "seconds": result["seconds"],
+        "first_pts_s": _first_pts(result["stdout"]),
+        "stderr": result["stderr"][-800:],
+    }
 
 
 def _dash_ffmpeg_ss(manifest: str, at: float) -> dict:
@@ -369,21 +451,43 @@ def _dash_ffmpeg_ss(manifest: str, at: float) -> dict:
         return {"error": "no ffmpeg"}
     workdir = tempfile.mkdtemp(prefix="nacmedia-dash-")
     target = os.path.join(workdir, "seek.mp4")
-    cmd = [ffmpeg_bin(), "-hide_banner", "-v", "warning", "-ss", f"{at:.0f}", "-copyts",
-           "-i", manifest, "-t", "2", "-c", "copy", "-y", target]
+    cmd = [
+        ffmpeg_bin(),
+        "-hide_banner",
+        "-v",
+        "warning",
+        "-ss",
+        f"{at:.0f}",
+        "-copyts",
+        "-i",
+        manifest,
+        "-t",
+        "2",
+        "-c",
+        "copy",
+        "-y",
+        target,
+    ]
     try:
         result = run(cmd, timeout=30.0)
     except subprocess.TimeoutExpired:
-        return {"timeout_s": 30.0, "stderr": "", "requested_offset": None,
-                "note": "ffmpeg kept reading from the start instead of seeking"}
+        return {
+            "timeout_s": 30.0,
+            "stderr": "",
+            "requested_offset": None,
+            "note": "ffmpeg kept reading from the start instead of seeking",
+        }
     finally:
         shutil.rmtree(workdir, ignore_errors=True)
     stderr = result["stderr"] or ""
     offset = re.search(r"root atom offset 0x([0-9a-f]+)", stderr)
-    return {"cmd": result["cmd"], "rc": result["rc"],
-            "requested_offset": int(offset.group(1), 16) if offset else None,
-            "seek_refused": "could not seek to position" in stderr,
-            "stderr": stderr[-800:]}
+    return {
+        "cmd": result["cmd"],
+        "rc": result["rc"],
+        "requested_offset": int(offset.group(1), 16) if offset else None,
+        "seek_refused": "could not seek to position" in stderr,
+        "stderr": stderr[-800:],
+    }
 
 
 def _first_pts(stdout: str) -> float | None:
@@ -413,9 +517,13 @@ def cmd_rss(args) -> dict:
         samples = []
         started = time.monotonic()
         while any(child.poll() is None for child in children):
-            samples.append({"t": round(time.monotonic() - started, 2),
-                            "rss_mb": proxy.stats()["rss_mb"],
-                            "ps_rss_mb": _ps_rss_mb(os.getpid())})
+            samples.append(
+                {
+                    "t": round(time.monotonic() - started, 2),
+                    "rss_mb": proxy.stats()["rss_mb"],
+                    "ps_rss_mb": _ps_rss_mb(os.getpid()),
+                }
+            )
             time.sleep(0.1)
             if time.monotonic() - started > 120:
                 break
@@ -424,14 +532,21 @@ def cmd_rss(args) -> dict:
         peak_ps = max((s["ps_rss_mb"] or 0.0 for s in samples), default=0.0)
         payload = {
             "what": "RSS with two concurrent readers (stats() + ps), budget 150 MB",
-            **env_facts(), "video_id": media.video_id, "sid": sid,
-            "readers": results, "span_bytes_each": span,
-            "samples": samples[::max(1, len(samples) // 20)],
-            "peak_stats_rss_mb": peak, "peak_ps_rss_mb": peak_ps,
+            **env_facts(),
+            "video_id": media.video_id,
+            "sid": sid,
+            "readers": results,
+            "span_bytes_each": span,
+            "samples": samples[:: max(1, len(samples) // 20)],
+            "peak_stats_rss_mb": peak,
+            "peak_ps_rss_mb": peak_ps,
             "proxy_stats_final": proxy.stats(),
             "budget_mb": MP.RSS_BUDGET_MB,
-            "ok": bool(all(r.get("ok") for r in results) and peak < MP.RSS_BUDGET_MB
-                       and peak_ps < MP.RSS_BUDGET_MB),
+            "ok": bool(
+                all(r.get("ok") for r in results)
+                and peak < MP.RSS_BUDGET_MB
+                and peak_ps < MP.RSS_BUDGET_MB
+            ),
         }
         write_json(args.out, "40-rss.json", payload)
         log(f"rss: peak stats={peak} MB ps={peak_ps} MB readers={[r.get('bytes') for r in results]}")
@@ -446,14 +561,31 @@ def _ps_rss_mb(pid: int) -> float | None:
     return round(int(text) / 1024.0, 1) if text.isdigit() else None
 
 
-def _spawn_reader(args, sid: str, leaf: str, start: int, count: int, *, chunk: int,
-                  delay: float) -> subprocess.Popen:
-    cmd = [sys.executable, os.path.abspath(__file__), "reader",
-           "--host", args.host, "--port", str(args.port), "--sid", sid, "--leaf", leaf,
-           "--start", str(start), "--bytes", str(count), "--chunk", str(chunk),
-           "--delay", str(delay)]
-    return subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
-                            bufsize=1)
+def _spawn_reader(
+    args, sid: str, leaf: str, start: int, count: int, *, chunk: int, delay: float
+) -> subprocess.Popen:
+    cmd = [
+        sys.executable,
+        os.path.abspath(__file__),
+        "reader",
+        "--host",
+        args.host,
+        "--port",
+        str(args.port),
+        "--sid",
+        sid,
+        "--leaf",
+        leaf,
+        "--start",
+        str(start),
+        "--bytes",
+        str(count),
+        "--chunk",
+        str(chunk),
+        "--delay",
+        str(delay),
+    ]
+    return subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1)
 
 
 def _reader_result(child: subprocess.Popen, watcher=None) -> dict:
@@ -480,8 +612,9 @@ def _reader_result(child: subprocess.Popen, watcher=None) -> dict:
     if err.strip():
         result["stderr"] = err[-600:]
     result["rc"] = child.returncode
-    result["ok"] = bool(result.get("bytes") == result.get("declared")
-                        and result.get("rc") == 0 and result.get("auth"))
+    result["ok"] = bool(
+        result.get("bytes") == result.get("declared") and result.get("rc") == 0 and result.get("auth")
+    )
     return result
 
 
@@ -525,21 +658,32 @@ def cmd_expiry(args) -> dict:
         source_bytes, source_sha = fetch_range(fresh.video.url, 0, span - 1)
         payload = {
             "what": "a forced token expiry in the middle of a body, recovered in the same response",
-            **env_facts(), "video_id": media.video_id, "sid": sid,
-            "reader": result, "expected_bytes": span,
+            **env_facts(),
+            "video_id": media.video_id,
+            "sid": sid,
+            "reader": result,
+            "expected_bytes": span,
             "stale_token_at_reader_bytes": expired_at.get("bytes"),
-            "fault_injection": ("proxy.faults['drop_upstream_after']=12 MiB: the source "
-                                "connection is closed mid-body, because an already-authorised "
-                                "download does not die of its own expired token"),
+            "fault_injection": (
+                "proxy.faults['drop_upstream_after']=12 MiB: the source "
+                "connection is closed mid-body, because an already-authorised "
+                "download does not die of its own expired token"
+            ),
             "source": {"bytes": source_bytes, "sha256": source_sha},
             "refreshes": session.refreshes,
             "proxy_stats": proxy.stats(),
-            "ok": bool(result.get("ok") and result.get("bytes") == span
-                       and result.get("sha256") == source_sha and session.refreshes >= 1),
+            "ok": bool(
+                result.get("ok")
+                and result.get("bytes") == span
+                and result.get("sha256") == source_sha
+                and session.refreshes >= 1
+            ),
         }
         write_json(args.out, "40-expiry.json", payload)
-        log(f"expiry: bytes={result.get('bytes')} sha_match="
-            f"{result.get('sha256') == source_sha} refreshes={session.refreshes}")
+        log(
+            f"expiry: bytes={result.get('bytes')} sha_match="
+            f"{result.get('sha256') == source_sha} refreshes={session.refreshes}"
+        )
         return payload
     finally:
         proxy.stop()
@@ -559,18 +703,25 @@ def _stale(media: ResolvedMedia) -> ResolvedMedia:
     return dataclass_replace(
         media,
         video=Track(**{**media.video.__dict__, "url": rewrite(media.video.url)}),
-        audio=Track(**{**media.audio.__dict__, "url": rewrite(media.audio.url)}))
+        audio=Track(**{**media.audio.__dict__, "url": rewrite(media.audio.url)}),
+    )
 
 
 def _classify(text: str, own: str) -> dict:
     """Every URL in ``text``, split into ours and the source's; plus token parameter names."""
     urls = re.findall(r"https?://[^\s\"\'\\)]+", text)
-    source = [u for u in urls if "googlevideo" in u or "youtube.com/watch" in u
-              or "manifest.googlevideo" in u]
+    source = [
+        u for u in urls if "googlevideo" in u or "youtube.com/watch" in u or "manifest.googlevideo" in u
+    ]
     ours = [u for u in urls if u not in source and (own in u or "127.0.0.1" in u)]
     other = [u for u in urls if u not in source and u not in ours]
-    return {"urls": len(urls), "own": len(ours), "source": source, "other": other,
-            "token_params": [p for p in TOKEN_PATTERNS if p in text]}
+    return {
+        "urls": len(urls),
+        "own": len(ours),
+        "source": source,
+        "other": other,
+        "token_params": [p for p in TOKEN_PATTERNS if p in text],
+    }
 
 
 def cmd_scan(args) -> dict:
@@ -580,10 +731,12 @@ def cmd_scan(args) -> dict:
     clean verdict would only mean the predicate is broken (A33).
     """
     own = f"{args.host}:{args.port}"
-    control = _classify('{"u": "https://rr1---sn-x.googlevideo.com/videoplayback?expire=1&sig=S"}',
-                        own)
-    control_ok = (len(control["source"]) == 1 and "sig=" in control["token_params"]
-                  and "expire=" in control["token_params"])
+    control = _classify('{"u": "https://rr1---sn-x.googlevideo.com/videoplayback?expire=1&sig=S"}', own)
+    control_ok = (
+        len(control["source"]) == 1
+        and "sig=" in control["token_params"]
+        and "expire=" in control["token_params"]
+    )
     report = []
     ok = control_ok
     for name in sorted(os.listdir(args.out)):
@@ -593,27 +746,38 @@ def cmd_scan(args) -> dict:
         if not os.path.isfile(path):
             continue
         found = _classify(open(path, encoding="utf-8", errors="replace").read(), own)
-        entry = {"file": name, "urls": found["urls"], "own": found["own"],
-                 "source": [u[:48] for u in found["source"]][:5],
-                 "other": [u[:48] for u in found["other"]][:5],
-                 "token_params": found["token_params"]}
+        entry = {
+            "file": name,
+            "urls": found["urls"],
+            "own": found["own"],
+            "source": [u[:48] for u in found["source"]][:5],
+            "other": [u[:48] for u in found["other"]][:5],
+            "token_params": found["token_params"],
+        }
         report.append(entry)
         ok = ok and not found["source"] and not found["token_params"] and not found["other"]
-    lines = ["# token scan of evidence/40-* — task B", f"# when: {stamp()}",
-             f"# host: {socket.gethostname()}  own URLs = http://{own}/media/...",
-             f"# scanner self-test (must flag a synthetic token): "
-             f"{'PASS' if control_ok else 'FAIL'}", ""]
+    lines = [
+        "# token scan of evidence/40-* — task B",
+        f"# when: {stamp()}",
+        f"# host: {socket.gethostname()}  own URLs = http://{own}/media/...",
+        f"# scanner self-test (must flag a synthetic token): {'PASS' if control_ok else 'FAIL'}",
+        "",
+    ]
     for entry in report:
-        lines.append(f"{entry['file']}: urls={entry['urls']} own={entry['own']} "
-                     f"source={entry['source']} other={entry['other']} "
-                     f"token_params={entry['token_params']}")
+        lines.append(
+            f"{entry['file']}: urls={entry['urls']} own={entry['own']} "
+            f"source={entry['source']} other={entry['other']} "
+            f"token_params={entry['token_params']}"
+        )
     lines += ["", f"VERDICT: {'clean' if ok else 'TOKEN LEAK OR BROKEN SCANNER'}"]
     path = os.path.join(args.out, "40-token-scan.txt")
     os.makedirs(args.out, exist_ok=True)
     with open(path, "w", encoding="utf-8") as handle:
         handle.write("\n".join(lines) + "\n")
-    log(f"scan: {'clean' if ok else 'LEAK'} ({len(report)} files, self-test "
-        f"{'PASS' if control_ok else 'FAIL'}) -> {path}")
+    log(
+        f"scan: {'clean' if ok else 'LEAK'} ({len(report)} files, self-test "
+        f"{'PASS' if control_ok else 'FAIL'}) -> {path}"
+    )
     return {"ok": ok, "self_test": control_ok, "files": report}
 
 
@@ -643,17 +807,32 @@ def cmd_reader(args) -> int:
                     time.sleep(args.delay)
     except urllib.error.HTTPError as exc:
         auth = False
-        print(f"progress 0", flush=True)
-        print(json.dumps({"error": f"HTTP {exc.code}", "bytes": 0, "declared": 0,
-                          "sha256": "", "auth": False}), flush=True)
+        print("progress 0", flush=True)
+        print(
+            json.dumps(
+                {"error": f"HTTP {exc.code}", "bytes": 0, "declared": 0, "sha256": "", "auth": False}
+            ),
+            flush=True,
+        )
         return 1
     except Exception as exc:  # noqa: BLE001 - a child reports, it does not raise
-        print(json.dumps({"error": f"{type(exc).__name__}: {exc}", "bytes": count,
-                          "declared": declared, "sha256": digest.hexdigest(), "auth": auth}),
-              flush=True)
+        print(
+            json.dumps(
+                {
+                    "error": f"{type(exc).__name__}: {exc}",
+                    "bytes": count,
+                    "declared": declared,
+                    "sha256": digest.hexdigest(),
+                    "auth": auth,
+                }
+            ),
+            flush=True,
+        )
         return 1
-    print(json.dumps({"bytes": count, "declared": declared, "sha256": digest.hexdigest(),
-                      "auth": auth}), flush=True)
+    print(
+        json.dumps({"bytes": count, "declared": declared, "sha256": digest.hexdigest(), "auth": auth}),
+        flush=True,
+    )
     return 0
 
 
@@ -663,13 +842,27 @@ def cmd_all(args) -> dict:
     summary = {"what": "task B done-when, in order", **env_facts(), "steps": {}}
     for name in ("resolve", "mpd", "seek", "rss", "expiry"):
         log(f"=== {name} ===")
-        cmd = [sys.executable, os.path.abspath(__file__), name, "--host", args.host,
-               "--port", str(args.port), "--out", args.out, "--ffprobe", FFPROBE]
+        cmd = [
+            sys.executable,
+            os.path.abspath(__file__),
+            name,
+            "--host",
+            args.host,
+            "--port",
+            str(args.port),
+            "--out",
+            args.out,
+            "--ffprobe",
+            FFPROBE,
+        ]
         try:
             result = run(cmd, timeout=900.0)
-            summary["steps"][name] = {"ok": result["rc"] == 0, "rc": result["rc"],
-                                      "seconds": result["seconds"],
-                                      "tail": result["stdout"][-1200:]}
+            summary["steps"][name] = {
+                "ok": result["rc"] == 0,
+                "rc": result["rc"],
+                "seconds": result["seconds"],
+                "tail": result["stdout"][-1200:],
+            }
         except subprocess.TimeoutExpired:
             summary["steps"][name] = {"ok": False, "error": "timed out after 900 s"}
     scan = cmd_scan(args)
@@ -682,8 +875,9 @@ def cmd_all(args) -> dict:
 def main(argv: list[str] | None = None) -> int:
     global FFPROBE
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=["all", "resolve", "mpd", "seek", "rss", "expiry",
-                                            "scan", "reader"])
+    parser.add_argument(
+        "command", choices=["all", "resolve", "mpd", "seek", "rss", "expiry", "scan", "reader"]
+    )
     parser.add_argument("--host", default=DEFAULT_HOST)
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
     parser.add_argument("--out", default=DEFAULT_OUT)
@@ -700,8 +894,15 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "reader":
         return cmd_reader(args)
 
-    commands = {"all": cmd_all, "resolve": cmd_resolve, "mpd": cmd_mpd, "seek": cmd_seek,
-                "rss": cmd_rss, "expiry": cmd_expiry, "scan": cmd_scan}
+    commands = {
+        "all": cmd_all,
+        "resolve": cmd_resolve,
+        "mpd": cmd_mpd,
+        "seek": cmd_seek,
+        "rss": cmd_rss,
+        "expiry": cmd_expiry,
+        "scan": cmd_scan,
+    }
     payload = commands[args.command](args)
     if args.command != "all":
         print(json.dumps({k: v for k, v in payload.items() if k != "manifest"}, indent=1)[:3000])
