@@ -7,6 +7,6 @@ cd "$(dirname "$0")/../.."
 PY=.venv/bin/python
 [ -x "$PY" ] || PY=python3
 if [ -n "$1" ]; then
-  exec $PY -m unittest -v "discover" -s tests/v020 -p "$1.py"
+  exec $PY -m unittest discover -s tests/v020 -p "$1.py" -v
 fi
 exec $PY -m unittest discover -s tests/v020 -v

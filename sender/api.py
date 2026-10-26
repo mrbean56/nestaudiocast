@@ -294,9 +294,16 @@ class _Handler(BaseHTTPRequestHandler):
             return
         serve = getattr(proxy, "serve_http", None)
         if serve is None:
+            # Task B's proxy serves by mounting itself on the request handler (it can stream a
+            # body straight from the upstream socket, which a tuple-returning hook cannot).
+            # Contracts §10.4 allows either; `handle` wins when it exists.
+            handle = getattr(proxy, "handle", None)
+            if handle is not None and handle(self):
+                return
+            if handle is not None:
+                raise ApiError(404, "not_found", f"{path} is not served by the media proxy")
             raise ApiError(501, "media_stream_unavailable",
-                           "MediaProxy has no HTTP byte endpoint in contracts §4/§5; proposed "
-                           "amendment: serve_http(method, path, headers) -> (status, headers, body)")
+                           "the media proxy has no byte endpoint (contracts §4/§5, §10.4)")
         try:
             status, headers, body = serve(method, path, dict(self.headers.items()))
         except KeyError:
