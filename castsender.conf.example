@@ -1,0 +1,42 @@
+# cast-sender configuration — copy to /etc/castsender.conf
+#
+# This is the exact key list of docs/v020-contracts.md §6: "Nothing else may be added without
+# approval". The service refuses to start on an unknown key, so a typo cannot be silently
+# ignored. Values below are the defaults; either mode (live or offline) reads the same file.
+#
+# The live service also needs the checkout at /opt/castrelay and a venv at /opt/castrelay/.venv.
+
+# The living-room Chromecast that runs our own receiver (unpublished, "Ready for Testing").
+CHROMECAST=192.168.2.80
+
+# Registered in the Cast console. Changing it costs a 15 min propagation.
+APP_ID=28028CD2
+
+# The kitchen group, resolved by mDNS at every start. Speakers only: lib/groupguard.py refuses
+# anything else, because every other group on this LAN contains the TV.
+GROUP=Cuisine
+
+# One HTTP server for /receiver.html, /api/*, /media/* and /.
+HTTP_BIND=192.168.2.21
+HTTP_PORT=7640
+
+# Acoustic calibration = OBS_0, measured with notes/measurement-protocol.md §1 and the receiver
+# playing instead of the TV. 0.0 until that measurement exists: it is a knob, not a constant.
+DELTA_V2=0.0
+
+# |rate - 1| ceiling for a trim. Rate changes are inaudible in pitch only up to about 2 %.
+RATE_MAX=0.002
+
+# Best avc1 whose height is <= this. Anything the Chromecast refuses is a finding, not a reason
+# to go around it.
+MAX_HEIGHT=1080
+
+# Quiet hours: the window in which audible playback MAY start. Outside it QUIET_POLICY applies.
+# Empty QUIET_START and QUIET_END = disabled. Both or neither. A window that wraps midnight is
+# written 22:00 … 06:00.
+QUIET_START=
+QUIET_END=
+
+# refuse = the share answers quiet_refused and nothing plays.
+# video_only = the video plays, the group is never loaded.
+QUIET_POLICY=refuse

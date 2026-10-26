@@ -1,0 +1,48 @@
+# cast-sender — the v0.2.0 owner app (contracts §5, §6, §8).
+#
+# Copy to /etc/systemd/system/cast-sender.service on CT 121, with /etc/castsender.conf
+# (see castsender.conf.example) and the checkout in /opt/castrelay.
+#
+# NOT INSTALLED, NOT ENABLED (brief G, "explicitly NOT tonight"). The v0.1 relay keeps running:
+# this unit only takes the Cuisine group while state/group.owner says it owns it.
+#
+# The ExecStopPost line is the rollback hook of §8: it stops the sessions *this* service
+# recorded and undoes the mutes it set, and it touches nothing else. It needs the same
+# /etc/castsender.conf, because it has to reach the same group and the same Chromecast.
+
+[Unit]
+Description=cast-sender — v0.2 owner app (Cast sender, LAN only)
+Documentation=file:/opt/castrelay/docs/v020-contracts.md
+After=network-online.target
+Wants=network-online.target
+# cast-relay (v0.1, :8099) is deliberately not listed: it must keep running on its own.
+
+[Service]
+Type=simple
+# The account that owns /opt/castrelay. The v0.1 unit runs as root; this one is written for a
+# dedicated account, so uncomment after creating it and chowning /opt/castrelay/{state,evidence}.
+#User=castrelay
+#Group=castrelay
+WorkingDirectory=/opt/castrelay
+EnvironmentFile=/etc/castsender.conf
+# Offline by default nowhere: the unit is the live mode. SENDER_OFFLINE=1 in the environment
+# file is how a bench run keeps every seam on the fakes.
+ExecStart=/opt/castrelay/.venv/bin/python -m sender.service
+# §8: same cleanup as lib/emergency.py for the group, plus stopping our receiver app.
+ExecStopPost=/opt/castrelay/.venv/bin/python -m sender.service --cleanup
+Restart=on-failure
+RestartSec=3
+KillSignal=SIGTERM
+TimeoutStopSec=20
+# The service writes exactly two places: the lock/session record and the JSONL evidence.
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/opt/castrelay/state /opt/castrelay/evidence
+# The Chromecast is on the LAN; nothing here needs the WAN.
+IPAddressAllow=192.168.2.0/24
+IPAddressDeny=any
+
+[Install]
+WantedBy=multi-user.target
