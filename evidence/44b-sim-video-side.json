@@ -1,0 +1,453 @@
+{
+  "task": "F \u2014 the control law, proved in simulation",
+  "command": "tests/v020/sim_v020.py --case video_start_40 --case video_start_80 --case video_noise_10 --case group_landing_80 --case video_realistic --json evidence/44b-sim-video-side.json",
+  "generated_at": "2026-10-26T00:59:52-0400",
+  "host": "opencode",
+  "python": "3.13.5",
+  "sources": {
+    "group drift -12.4\u00b11.0 ms/10min": "evidence/17-rate-gain-and-drift.json",
+    "group read \u03c3 10.2 ms, stale outliers \u00b195\u2026162 ms": "evidence/17, notes/00-labo A15",
+    "PAUSE\u2192SEEK\u2192PLAY landing \u03c3 30 ms, LOAD \u03c3 202 ms": "evidence/27-actuator-repeatability.json",
+    "perceptual budget 150 ms": "notes/ACCEPTANCE.md \u00a74",
+    "rate gain / stall / start dispersion": "unmeasured here: task C, defaults 1.0 / 0 / 0"
+  },
+  "cases": {
+    "video_start_40": {
+      "duration_s": 600.0,
+      "steady_samples": 2107,
+      "steady_from_s": 33.5,
+      "window_medians_ms": {
+        "n": 114,
+        "p50": 0.6885,
+        "p95": 3.0084999999999997,
+        "max_abs": 5.72,
+        "mean_signed": -0.03
+      },
+      "window_medians_estimate_ms": {
+        "n": 114,
+        "p50": 1.49,
+        "p95": 4.88,
+        "max_abs": 6.7
+      },
+      "raw_p95_abs_ms": 2.98,
+      "raw_max_abs_ms": 5.73,
+      "read_p95_abs_ms": 20.594,
+      "read_max_abs_ms": 150.15,
+      "estimate_p95_abs_ms": 4.88,
+      "convergence_s": {
+        "0.0": 4.0
+      },
+      "convergence_max_s": 4.0,
+      "rate": {
+        "n": 20,
+        "max_abs_u": 0.00025,
+        "max_abs_u_steady": 0.000363,
+        "max_abs_u_settled": 0.000363,
+        "distinct": 10,
+        "rate_max": 0.002
+      },
+      "commands": {
+        "group_play": 1,
+        "play_at": 2,
+        "rate": 20
+      },
+      "after_steady": {
+        "rate": 20
+      },
+      "relandings": 1,
+      "relanding_refused": 0,
+      "rejected_reads": 6,
+      "first_landing_error_ms": 48.62,
+      "after_relanding_error_ms": 6.31,
+      "clock_residual_ms": 0.21,
+      "params": {
+        "duration_s": 600.0,
+        "tick_s": 0.25,
+        "seed": 20261025,
+        "repeats": 1,
+        "delta_v2": 0.265,
+        "drift_ms_10min": -12.4,
+        "group_noise_ms": 10.2,
+        "outlier_rate": 0.005,
+        "outlier_ms": 150.0,
+        "landing_mode": "park",
+        "landing_sigma_ms": 30.0,
+        "landing_mean_ms": -43.6,
+        "load_sigma_ms": 202.0,
+        "load_mean_ms": -314.7,
+        "lead_error_ms": 0.0,
+        "true_offset_ms": 1234.5,
+        "rtt_max_ms": 40.0,
+        "clock_pings": 8,
+        "clock_residual_ms": null,
+        "rate_gain": 1.0,
+        "rate_stall_ms": 0.0,
+        "start_dispersion_ms": 40.0,
+        "video_noise_ms": 0.0,
+        "stale_rate": 0.0
+      },
+      "note": "play_at lands with a 40 ms spread: re-landing + trims absorb it",
+      "verdict": {
+        "expected": "pass",
+        "ok": true,
+        "checks": {
+          "steady_p95_le_10ms": true,
+          "no_load_seek_after_steady": true,
+          "no_play_at_after_steady": true,
+          "convergence_le_10s": true
+        },
+        "verdict": "PASS"
+      }
+    },
+    "video_start_80": {
+      "duration_s": 600.0,
+      "steady_samples": 1979,
+      "steady_from_s": 33.5,
+      "window_medians_ms": {
+        "n": 113,
+        "p50": 2.3975,
+        "p95": 4.146,
+        "max_abs": 8.56,
+        "mean_signed": 1.94
+      },
+      "window_medians_estimate_ms": {
+        "n": 113,
+        "p50": 1.89,
+        "p95": 5.74,
+        "max_abs": 11.12
+      },
+      "raw_p95_abs_ms": 4.405,
+      "raw_max_abs_ms": 9.48,
+      "read_p95_abs_ms": 21.288,
+      "read_max_abs_ms": 142.59,
+      "estimate_p95_abs_ms": 7.15,
+      "convergence_s": {
+        "0.0": 4.0
+      },
+      "convergence_max_s": 4.0,
+      "rate": {
+        "n": 36,
+        "max_abs_u": 0.000494,
+        "max_abs_u_steady": 0.000614,
+        "max_abs_u_settled": 0.000285,
+        "distinct": 13,
+        "rate_max": 0.002
+      },
+      "commands": {
+        "group_play": 1,
+        "play_at": 2,
+        "rate": 36
+      },
+      "after_steady": {
+        "rate": 36
+      },
+      "relandings": 1,
+      "relanding_refused": 0,
+      "rejected_reads": 6,
+      "first_landing_error_ms": 120.61,
+      "after_relanding_error_ms": -8.89,
+      "clock_residual_ms": 2.21,
+      "params": {
+        "duration_s": 600.0,
+        "tick_s": 0.25,
+        "seed": 20261025,
+        "repeats": 1,
+        "delta_v2": 0.265,
+        "drift_ms_10min": -12.4,
+        "group_noise_ms": 10.2,
+        "outlier_rate": 0.005,
+        "outlier_ms": 150.0,
+        "landing_mode": "park",
+        "landing_sigma_ms": 30.0,
+        "landing_mean_ms": -43.6,
+        "load_sigma_ms": 202.0,
+        "load_mean_ms": -314.7,
+        "lead_error_ms": 0.0,
+        "true_offset_ms": 1234.5,
+        "rtt_max_ms": 40.0,
+        "clock_pings": 8,
+        "clock_residual_ms": null,
+        "rate_gain": 1.0,
+        "rate_stall_ms": 0.0,
+        "start_dispersion_ms": 80.0,
+        "video_noise_ms": 0.0,
+        "stale_rate": 0.0
+      },
+      "note": "play_at lands with an 80 ms spread: re-landing + trims absorb it",
+      "verdict": {
+        "expected": "pass",
+        "ok": true,
+        "checks": {
+          "steady_p95_le_10ms": true,
+          "no_load_seek_after_steady": true,
+          "no_play_at_after_steady": true,
+          "convergence_le_10s": true
+        },
+        "verdict": "PASS"
+      }
+    },
+    "video_noise_10": {
+      "duration_s": 600.0,
+      "steady_samples": 1969,
+      "steady_from_s": 30.0,
+      "window_medians_ms": {
+        "n": 114,
+        "p50": 1.3405,
+        "p95": 2.9785,
+        "max_abs": 10.77,
+        "mean_signed": 1.5
+      },
+      "window_medians_estimate_ms": {
+        "n": 114,
+        "p50": 2.205,
+        "p95": 6.3,
+        "max_abs": 11.41
+      },
+      "raw_p95_abs_ms": 3.076,
+      "raw_max_abs_ms": 11.62,
+      "read_p95_abs_ms": 29.019,
+      "read_max_abs_ms": 185.44,
+      "estimate_p95_abs_ms": 7.84,
+      "convergence_s": {
+        "0.0": 36.0
+      },
+      "convergence_max_s": 36.0,
+      "rate": {
+        "n": 39,
+        "max_abs_u": 0.000503,
+        "max_abs_u_steady": 0.000531,
+        "max_abs_u_settled": 0.000439,
+        "distinct": 19,
+        "rate_max": 0.002
+      },
+      "commands": {
+        "group_play": 1,
+        "play_at": 1,
+        "rate": 39
+      },
+      "after_steady": {
+        "rate": 39
+      },
+      "relandings": 0,
+      "relanding_refused": 1,
+      "rejected_reads": 10,
+      "first_landing_error_ms": 12.22,
+      "after_relanding_error_ms": null,
+      "clock_residual_ms": 1.82,
+      "params": {
+        "duration_s": 600.0,
+        "tick_s": 0.25,
+        "seed": 20261025,
+        "repeats": 1,
+        "delta_v2": 0.265,
+        "drift_ms_10min": -12.4,
+        "group_noise_ms": 10.2,
+        "outlier_rate": 0.005,
+        "outlier_ms": 150.0,
+        "landing_mode": "park",
+        "landing_sigma_ms": 30.0,
+        "landing_mean_ms": -43.6,
+        "load_sigma_ms": 202.0,
+        "load_mean_ms": -314.7,
+        "lead_error_ms": 0.0,
+        "true_offset_ms": 1234.5,
+        "rtt_max_ms": 40.0,
+        "clock_pings": 8,
+        "clock_residual_ms": null,
+        "rate_gain": 1.0,
+        "rate_stall_ms": 0.0,
+        "start_dispersion_ms": 0.0,
+        "video_noise_ms": 10.0,
+        "stale_rate": 0.0
+      },
+      "note": "OPEN FINDING: 10 ms noise on the receiver's playhead reads; steady p95 holds but the law chases the noise and takes ~36 s to converge (criterion 10 s). Fix once task C measures the real read noise (filter the video side like the group's)",
+      "verdict": {
+        "expected": "fail",
+        "ok": false,
+        "checks": {
+          "steady_p95_le_10ms": true,
+          "no_load_seek_after_steady": true,
+          "no_play_at_after_steady": true,
+          "convergence_le_10s": false
+        },
+        "verdict": "FAIL (expected)"
+      }
+    },
+    "group_landing_80": {
+      "duration_s": 600.0,
+      "steady_samples": 2123,
+      "steady_from_s": 33.5,
+      "window_medians_ms": {
+        "n": 114,
+        "p50": 0.5575000000000001,
+        "p95": 1.3655,
+        "max_abs": 1.55,
+        "mean_signed": 0.25
+      },
+      "window_medians_estimate_ms": {
+        "n": 114,
+        "p50": 1.34,
+        "p95": 4.35,
+        "max_abs": 5.87
+      },
+      "raw_p95_abs_ms": 1.35,
+      "raw_max_abs_ms": 1.62,
+      "read_p95_abs_ms": 20.905,
+      "read_max_abs_ms": 161.52,
+      "estimate_p95_abs_ms": 4.38,
+      "convergence_s": {
+        "0.0": 4.0
+      },
+      "convergence_max_s": 4.0,
+      "rate": {
+        "n": 18,
+        "max_abs_u": 0.000235,
+        "max_abs_u_steady": 0.000294,
+        "max_abs_u_settled": 0.000294,
+        "distinct": 10,
+        "rate_max": 0.002
+      },
+      "commands": {
+        "group_play": 1,
+        "play_at": 2,
+        "rate": 18
+      },
+      "after_steady": {
+        "rate": 18
+      },
+      "relandings": 1,
+      "relanding_refused": 0,
+      "rejected_reads": 12,
+      "first_landing_error_ms": 59.61,
+      "after_relanding_error_ms": 0.59,
+      "clock_residual_ms": 1.24,
+      "params": {
+        "duration_s": 600.0,
+        "tick_s": 0.25,
+        "seed": 20261025,
+        "repeats": 1,
+        "delta_v2": 0.265,
+        "drift_ms_10min": -12.4,
+        "group_noise_ms": 10.2,
+        "outlier_rate": 0.005,
+        "outlier_ms": 150.0,
+        "landing_mode": "park",
+        "landing_sigma_ms": 80.0,
+        "landing_mean_ms": -43.6,
+        "load_sigma_ms": 202.0,
+        "load_mean_ms": -314.7,
+        "lead_error_ms": 0.0,
+        "true_offset_ms": 1234.5,
+        "rtt_max_ms": 40.0,
+        "clock_pings": 8,
+        "clock_residual_ms": null,
+        "rate_gain": 1.0,
+        "rate_stall_ms": 0.0,
+        "start_dispersion_ms": 0.0,
+        "video_noise_ms": 0.0,
+        "stale_rate": 0.0
+      },
+      "note": "the group lands with the real-use spread (A25 ~\u00b180 ms), not the bench \u03c3 30",
+      "verdict": {
+        "expected": "pass",
+        "ok": true,
+        "checks": {
+          "steady_p95_le_10ms": true,
+          "no_load_seek_after_steady": true,
+          "no_play_at_after_steady": true,
+          "convergence_le_10s": true
+        },
+        "verdict": "PASS"
+      }
+    },
+    "video_realistic": {
+      "duration_s": 600.0,
+      "steady_samples": 1805,
+      "steady_from_s": 33.5,
+      "window_medians_ms": {
+        "n": 107,
+        "p50": 1.3439999999999999,
+        "p95": 4.1775,
+        "max_abs": 11.96,
+        "mean_signed": -0.9
+      },
+      "window_medians_estimate_ms": {
+        "n": 107,
+        "p50": 2.49,
+        "p95": 7.22,
+        "max_abs": 14.17
+      },
+      "raw_p95_abs_ms": 4.169,
+      "raw_max_abs_ms": 12.87,
+      "read_p95_abs_ms": 28.051,
+      "read_max_abs_ms": 154.49,
+      "estimate_p95_abs_ms": 8.58,
+      "convergence_s": {
+        "0.0": 44.0,
+        "120.0": 4.0
+      },
+      "convergence_max_s": 44.0,
+      "rate": {
+        "n": 41,
+        "max_abs_u": 0.000576,
+        "max_abs_u_steady": 0.000726,
+        "max_abs_u_settled": 0.000452,
+        "distinct": 19,
+        "rate_max": 0.002
+      },
+      "commands": {
+        "group_play": 2,
+        "play_at": 4,
+        "rate": 41,
+        "group_seek": 1
+      },
+      "after_steady": {
+        "rate": 41
+      },
+      "relandings": 2,
+      "relanding_refused": 0,
+      "rejected_reads": 17,
+      "first_landing_error_ms": 104.93,
+      "after_relanding_error_ms": -12.29,
+      "clock_residual_ms": 0.25,
+      "params": {
+        "duration_s": 600.0,
+        "tick_s": 0.25,
+        "seed": 20261025,
+        "repeats": 1,
+        "delta_v2": 0.265,
+        "drift_ms_10min": -12.4,
+        "group_noise_ms": 10.2,
+        "outlier_rate": 0.005,
+        "outlier_ms": 150.0,
+        "landing_mode": "park",
+        "landing_sigma_ms": 80.0,
+        "landing_mean_ms": -43.6,
+        "load_sigma_ms": 202.0,
+        "load_mean_ms": -314.7,
+        "lead_error_ms": 0.0,
+        "true_offset_ms": 1234.5,
+        "rtt_max_ms": 40.0,
+        "clock_pings": 8,
+        "clock_residual_ms": null,
+        "rate_gain": 1.0,
+        "rate_stall_ms": 0.0,
+        "start_dispersion_ms": 40.0,
+        "video_noise_ms": 10.0,
+        "stale_rate": 0.0
+      },
+      "note": "OPEN FINDING: start spread 40 + read noise 10 + group landing 80 + a seek; fails on convergence only (~44 s), never reloads while steady",
+      "verdict": {
+        "expected": "fail",
+        "ok": false,
+        "checks": {
+          "steady_p95_le_10ms": true,
+          "no_load_seek_after_steady": true,
+          "no_play_at_after_steady": true,
+          "convergence_le_10s": false
+        },
+        "verdict": "FAIL (expected)"
+      }
+    }
+  }
+}

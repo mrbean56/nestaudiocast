@@ -224,7 +224,8 @@ class Recv:
                 self.replies.append(p)
         return out
 
-    def wait(self, msg_type: str, timeout: float = 10.0, since: float | None = None) -> dict | None:
+    def wait(self, msg_type: str, timeout: float = 10.0) -> dict | None:
+        """Pump until a message of ``msg_type`` arrives; None after ``timeout`` seconds."""
         deadline = time.time() + timeout
         while time.time() < deadline:
             for m in self.pump(0.05):

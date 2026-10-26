@@ -632,10 +632,27 @@ CASES: dict[str, dict] = {
     "rate_dead": dict(duration_s=600.0, rate_gain=0.0),
     # a lead that is wrong by 200 ms: the single re-landing must absorb it, the session holds
     "wrong_lead": dict(duration_s=300.0, lead_error_ms=200.0),
+    # --- the video side is not perfect (review 2026-10-26): every case above assumes it is.
+    # Each one changes ONE parameter from cold_start, so a failure has a single cause.
+    # play_at lands with a spread, gain as measured (41b: ~1.0)
+    "video_start_40": dict(duration_s=600.0, start_dispersion_ms=40.0),
+    "video_start_80": dict(duration_s=600.0, start_dispersion_ms=80.0),
+    # the receiver's own playhead reads carry noise
+    "video_noise_10": dict(duration_s=600.0, video_noise_ms=10.0),
+    # the group lands as scattered as in real use (A25 run3: ~±80 ms), not as on the bench (σ 30)
+    "group_landing_80": dict(duration_s=600.0, landing_sigma_ms=80.0),
+    # all three at once, plus a seek: the realistic-bad case
+    "video_realistic": dict(
+        duration_s=600.0,
+        events=[(120.0, "seek:300")],
+        start_dispersion_ms=40.0,
+        video_noise_ms=10.0,
+        landing_sigma_ms=80.0,
+    ),
 }
 
 #: cases whose *failure* is the deliverable (the sim must report it, not hide it)
-EXPECT_FAIL = {"pessimistic", "clock_residual"}
+EXPECT_FAIL = {"pessimistic", "clock_residual", "video_noise_10", "video_realistic"}
 
 #: what each case is worth, in one line, next to its numbers in the evidence file
 NOTES = {
@@ -650,6 +667,18 @@ NOTES = {
     "pessimistic": "rate gain 0.5 + 40 ms start dispersion: must fail, with its number",
     "rate_dead": "rate gain 0 (v0.1's finding on our own receiver): the margin without a trim",
     "wrong_lead": "a lead learned 200 ms wrong: the single re-landing absorbs it",
+    "video_start_40": "play_at lands with a 40 ms spread: re-landing + trims absorb it",
+    "video_start_80": "play_at lands with an 80 ms spread: re-landing + trims absorb it",
+    "video_noise_10": (
+        "OPEN FINDING: 10 ms noise on the receiver's playhead reads; steady p95 holds but the law "
+        "chases the noise and takes ~36 s to converge (criterion 10 s). Fix once task C measures "
+        "the real read noise (filter the video side like the group's)"
+    ),
+    "group_landing_80": "the group lands with the real-use spread (A25 ~±80 ms), not the bench σ 30",
+    "video_realistic": (
+        "OPEN FINDING: start spread 40 + read noise 10 + group landing 80 + a seek; fails on "
+        "convergence only (~44 s), never reloads while steady"
+    ),
 }
 
 

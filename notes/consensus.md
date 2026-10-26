@@ -225,3 +225,38 @@ qu'aucune boucle ne voit (consensus §5.6, toujours vrai).
 
 Rien de tout cela n'est affirmé. Chaque tâche doit rapporter « non vérifié, parce que… » plutôt
 qu'un chiffre inventé.
+
+### 8.5 Désaccords ouverts après la 2ᵉ relecture (2026-10-26)
+
+Relecture faite sur les fichiers, pas sur les rapports. Rien ici n'est tranché : chaque point dit
+ce qui le trancherait.
+
+1. **L'erreur d'horloge récepteur ↔ groupe est-elle absorbée par la calibration ?** L'amendement
+   §10.10 des contrats l'affirmait : un biais **constant** est absorbé par `DELTA_V2`. C'est vrai
+   pour un biais constant d'une session à l'autre ; mais l'estimateur (tâche D) **ré-estime**
+   l'horloge à chaque session, et la part aléatoire de son erreur change donc à chaque fois. Le cas
+   de simulation `clock_residual` (12 ms → p95 12,7 ms, convergence 271 s) n'est pas « un scénario
+   de re-calibration » : c'est la borne si l'erreur par session atteint 12 ms. Le fake donne
+   0,5 ms ; **le vrai chiffre se mesure en C (d)** sur l'appareil. Tant qu'il n'existe pas, §10.10
+   est une hypothèse.
+2. **Le départ côté groupe : 44 ms (banc) ou ±80 ms (usage réel) ?** §10.3 prend la moyenne du
+   banc muet (`evidence/27`, σ 30 ms). En usage réel v0.1 a mesuré ~±80 ms (A25). Simulé depuis
+   (`evidence/44b-sim-video-side.json`, `group_landing_80`) : **PASS**, p95 1,4 ms — la vidéo
+   se cale sur la position mesurée du groupe, donc la dispersion du groupe est absorbée. Reste non
+   prouvé sur le matériel.
+3. **Le bruit de lecture de la tête vidéo n'est pas filtré.** Tous les cas qui passaient
+   supposaient un côté vidéo parfait. Nouveaux cas (même fichier) : dispersion de `play_at` 40 et
+   80 ms → **PASS** (3,0 et 4,1 ms) ; **bruit de lecture 10 ms → FAIL sur la convergence (36 s
+   pour 10 s exigées)**, l'erreur en régime tenant pourtant (p95 3,0 ms) : la loi poursuit le
+   bruit (39 ajustements de cadence). Combiné réaliste (40 + 10 + 80 + un seek) : FAIL, convergence
+   44 s, aucun rechargement. Correction probable : filtrer la tête vidéo comme celle du groupe
+   (médiane), **à décider quand C aura mesuré le vrai bruit** — le lecteur de la plateforme montre
+   jusqu'à 148-168 ms d'écart (`evidence/41b`, `residual_max_ms`), notre page lit `currentTime`
+   directement et devrait faire mieux : non mesuré.
+4. **La garde réseau des tests ne couvre pas les sous-processus** (`docs/dev.md`). Un test qui lance
+   un script (`test_group.py` → `tools/group_probe_v020.py --run`) compte sur les refus du script
+   lui-même. Ces refus sont testés ; ils ne sont pas imposés par le lanceur.
+5. **Nommage des heures calmes.** `QUIET_START..QUIET_END` est, selon §7, la fenêtre où le son
+   **peut** démarrer — l'inverse de ce que le nom suggère. Renommer ou inverser : décision du
+   propriétaire, à prendre avant d'y mettre une valeur.
+

@@ -193,3 +193,23 @@ class TestDeterminism(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestImperfectVideoSide(unittest.TestCase):
+    """Review 2026-10-26: the cases above assume a perfect video side. These do not."""
+
+    def test_start_spread_and_group_scatter_are_absorbed(self):
+        for name in ("video_start_40", "video_start_80", "group_landing_80"):
+            with self.subTest(case=name):
+                res = case(name)
+                self.assertEqual(res["verdict"]["verdict"], "PASS", res["verdict"]["checks"])
+
+    def test_read_noise_is_an_open_finding_not_a_hidden_one(self):
+        for name in ("video_noise_10", "video_realistic"):
+            with self.subTest(case=name):
+                res = case(name)
+                self.assertEqual(res["verdict"]["verdict"], "FAIL (expected)")
+                failed = {k for k, ok in res["verdict"]["checks"].items() if not ok}
+                # it fails on convergence only: the steady error holds and nothing reloads
+                self.assertEqual(failed, {"convergence_le_10s"})
+                self.assertLessEqual(res["window_medians_ms"]["p95"], S.TARGET_P95_MS)

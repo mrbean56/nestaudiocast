@@ -74,7 +74,7 @@ Chromecast `.80`, débranché de la TV par le propriétaire, n'a donc aucun chem
 | `41-preflight.json` | `.80` : `Backdrop`, inactif, volume 0,25 non muet, build Cast 1.56.291998, **uptime 17 h** | `tools/receiver_probe.py --probe-only` |
 | `41-preflight-unavailable.json` | `28028CD2` → **`APP_UNAVAILABLE`**, `LAUNCH` → `NOT_FOUND` (l'app n'est pas encore connue de l'appareil) | idem |
 | `41a-codec-matrix-dmr.json` | H.264 **joué** ; HEVC, VP9 (mp4 et webm), AV1 **refusés** | idem, backend DMR |
-| `41b-rate-trim-dmr.json` | **`playbackRate` est honoré** : 0,998 → −0,001911 ± 0,000138 ; 1,002 → +0,002044 ± 0,000140 (3 séries) | idem |
+| `41b-rate-trim-dmr.json` | **`playbackRate` est honoré** : 0,998 → −0,001911 ± 0,000138 ; 1,002 → +0,002044 ± 0,000140 (3 cadences, une série de 60 s chacune ; à 1,000 la dérive n'est **pas** distinguable de zéro : 1,25 σ) | idem |
 | `41c-rate-stall-dmr.json` | un changement de cadence ne coupe pas la lecture (`PLAYING`, pas de retour en arrière de tête) | idem |
 | `41y-page-selftest.json` | la logique de `receiver.html` exécutée hors ligne avec un CAF simulé : 33/33 | `receiver/selftest.js` |
 | `41z-final-state.json` | `.80` laissé sur `Backdrop`, aucune app lancée | idem |
@@ -82,6 +82,7 @@ Chromecast `.80`, débranché de la TV par le propriétaire, n'a donc aucun chem
 | `42-sender-link-fake.json` (+ `.log`) | sur un récepteur CASTv2 local : erreur d'horloge **médiane 0,49 ms**, prise de contrôle détectée en **1 poll**, boîte de réception bornée | tâche D |
 | `43-group-*` | estimateur de tête de lecture (médiane 5 échantillons, rejet, hystérésis 2 lectures) ; sonde `--dry-run` prouvée inerte ; suite + `prove.sh` | tâche E |
 | `44-sim.json` | loi de commande simulée avec le bruit mesuré : p95 ≤ 5,4 ms (nominal), **0** `load`/`seek`/`play_at` en régime, 3 cas d'échec attendus et documentés | `tests/v020/sim_v020.py` |
+| `44b-sim-video-side.json` | revue du 2026-10-26 : le côté vidéo **imparfait** (tous les cas de `44` le supposaient parfait). `play_at` dispersé 40/80 ms et groupe à ±80 ms → PASS ; **bruit de lecture vidéo 10 ms → FAIL sur la convergence (36 s)**, combiné réaliste → FAIL (44 s) ; jamais de rechargement. Simulation, pas matériel (`notes/consensus.md` §8.5) | `tests/v020/sim_v020.py --case …` |
 | `45-relay-yield-offline.txt` | le relais v0.1 lit `state/group.owner` et **ne touche plus au groupe** quand v0.2 le possède | tâche H |
 | `47-sender-selftest.json`, `47b`, `47c` | l'app propriétaire hors ligne : 43/43 cas HTTP, garde « zéro rechargement » prouvée contre un contrôleur hostile (2400 tics), 121 tests, `prove.sh` | tâche G |
 | `48-*` | les instruments de la porte : analyseur (échec forcé sur un rechargement caché), acoustique (+6 ms de biais), transport, prise de contrôle étrangère, heures calmes, rollback — **auto-tests uniquement** | tâche J |

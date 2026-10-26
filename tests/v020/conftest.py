@@ -2,7 +2,9 @@
 
 Every test belongs to exactly one tier. Unmarked tests are ``offline``, and an offline test
 cannot reach the LAN: connect/sendto to anything but loopback raises, so "no packet to a
-speaker" is enforced by the runner, not by each test's good manners.
+speaker" is enforced by the runner, not by each test's good manners. The guard is active from
+the start of the session (module imports, setUpClass, fixtures, the test itself). It cannot
+reach into a subprocess: a test that spawns one must make that child safe by itself.
 
 The other tiers only run when explicitly allowed:
 
@@ -19,6 +21,7 @@ import ipaddress
 import os
 import socket
 import sys
+import types
 
 import pytest
 
@@ -87,23 +90,63 @@ class OfflineViolation(AssertionError):
     pass
 
 
-@pytest.fixture(autouse=True)
-def _offline_guard(request, monkeypatch):
-    if _tier(request.node) != "offline":
-        yield
-        return
+# The guard is installed when the session starts, so it also covers collection (module
+# imports) and class setup. It is lifted only while an item of an *allowed* higher tier runs
+# (its setup, call and teardown). A subprocess is NOT covered: it gets a fresh interpreter.
+# Shared by every copy of this conftest (pytester runs nested sessions in-process, and the
+# outer guard must see an inner allowed item).
+_STATE = sys.modules.setdefault("_nac_offline_guard", types.ModuleType("_nac_offline_guard"))
+if not hasattr(_STATE, "allowed"):
+    _STATE.allowed = []  # tiers of the items currently running that may leave loopback
+_allowed: list[str] = _STATE.allowed
+_originals: list[dict] = []  # one entry per guard this copy installed
+
+
+def _install_guard() -> None:
+    saved = {name: getattr(socket.socket, name) for name in ("connect", "connect_ex", "sendto")}
 
     def guard(name, original):
         def wrapper(self, *args):
             address = args[-1] if name == "sendto" else args[0]
-            if self.family in (socket.AF_INET, socket.AF_INET6) and not _loopback(address):
+            if (
+                not _allowed
+                and self.family in (socket.AF_INET, socket.AF_INET6)
+                and not _loopback(address)
+            ):
                 raise OfflineViolation(
-                    f"offline test tried {name}({address!r}); mark it lan/device/audible"
+                    f"offline code tried {name}({address!r}); mark the test lan/device/audible"
                 )
             return original(self, *args)
 
         return wrapper
 
-    for name in ("connect", "connect_ex", "sendto"):
-        monkeypatch.setattr(socket.socket, name, guard(name, getattr(socket.socket, name)))
-    yield
+    for name, original in saved.items():
+        setattr(socket.socket, name, guard(name, original))
+    _originals.append(saved)
+
+
+def _remove_guard() -> None:
+    if _originals:
+        for name, original in _originals.pop().items():
+            setattr(socket.socket, name, original)
+
+
+def pytest_configure(config):
+    _install_guard()
+
+
+def pytest_unconfigure(config):
+    _remove_guard()
+
+
+@pytest.hookimpl(wrapper=True)
+def pytest_runtest_protocol(item, nextitem):
+    tier = _tier(item)
+    lifted = tier != "offline" and os.environ.get(ALLOW[tier]) == "1"
+    if lifted:
+        _allowed.append(tier)
+    try:
+        return (yield)
+    finally:
+        if lifted:
+            _allowed.pop()

@@ -37,6 +37,11 @@ Every test is in exactly one tier (`tests/v020/conftest.py`):
 
 CI sets none of these, so CI only ever runs the offline tier. A hardware test must carry its
 marker; an unmarked test that opens a LAN socket fails with `OfflineViolation`.
+
+The guard is installed when the session starts, so it covers module imports, `setUpClass`,
+fixtures and the test body; it is lifted only while an item of an allowed tier runs. **It does
+not reach into subprocesses** (a child is a fresh interpreter): a test that spawns a script
+relies on that script's own refusals (`test_group.py` → `tools/group_probe_v020.py --run`).
 `tests/v020/test_safety_tiers.py` checks that these rules hold.
 
 The suite is written with `unittest`, and `python -m unittest discover -s tests/v020` still

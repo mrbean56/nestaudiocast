@@ -227,6 +227,9 @@ what was ambiguous.
 3. **§1 — the parked landing delay.** `lead_s` is the delay between telling the **parked** group to
    play and it actually playing: **44 ms** (`evidence/27`, case C: −44 ms mean). It is *not* the
    0.55 s of a LOAD from idle (`evidence/16`, A4) — that path does not exist in v0.2.
+   *Review 2026-10-26:* 44 ms is the **muted bench** mean (σ 30 ms); real use scattered ~±80 ms
+   (A25). Simulated at 80 ms it is absorbed (`evidence/44b-sim-video-side.json`,
+   `group_landing_80`); on hardware it is unmeasured. See `notes/consensus.md` §8.5.2.
 4. **§4/§5 — `MediaProxy` needs an HTTP face.** Add
    `MediaProxy.serve_http(method, path, headers) -> (status, headers, body)`; `/media/<sid>/<n>` is
    delegated to it by the API. Until task B implements it, the API answers `501
@@ -245,8 +248,11 @@ what was ambiguous.
    to the receiver; any other `kind` goes to the group, through the aliases `play|pause|stop|seek|
    prepare|load|volume` (and their `group_`-prefixed forms); `payload["target"] == "group"` forces
    the group (needed because `pause` exists on both sides).
-10. **§2 — a constant clock bias is not a sync error.** `DELTA_V2` is calibrated acoustically, so a
-    constant receiver↔group clock bias is absorbed by the calibration; only its *variation* over a
-    session can move the offset. The clock estimator (task D, ~0.5 ms on the fake) is far below the
-    budget; the sim's "12 ms constant residual" case must therefore be read as a *re-calibration*
-    scenario, not as a structural limit. (Review note recorded in `notes/labo-sync.md`.)
+10. **§2 — clock bias: OPEN, not settled** (review 2026-10-26). A clock bias that is the same in
+    every session is absorbed by the acoustic calibration of `DELTA_V2`. The part of the
+    estimator's error that changes from one session to the next is not: the simulation's
+    `clock_residual` case (12 ms → steady p95 12.7 ms, convergence 271 s) is therefore a real
+    bound, not a re-calibration scenario. The estimator gives 0.5 ms on the fake (task D); the
+    number that decides is task C (d) on the device. Recorded as a disagreement in
+    `notes/consensus.md` §8.5.1. (The earlier wording of this amendment called the case
+    a re-calibration scenario; it is kept in git history, `9f950fd`.)
