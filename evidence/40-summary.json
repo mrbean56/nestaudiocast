@@ -1,0 +1,47 @@
+{
+ "ffmpeg": "/usr/bin/ffmpeg",
+ "ffprobe": "/usr/bin/ffprobe",
+ "host": "castrelay",
+ "ok": true,
+ "python": "3.13.5",
+ "steps": {
+  "expiry": {
+   "ok": true,
+   "rc": 0,
+   "seconds": 106.71,
+   "tail": "21539s\n22:35:12 expiry: fault cleared after the refresh\n22:35:34 media: cFIl1yDcLQOg video upstream dropped at 25165824\n22:36:34 expiry: bytes=33554432 sha_match=True refreshes=1\n{\n \"what\": \"a forced token expiry in the middle of a body, recovered in the same response\",\n \"when\": \"2026-10-26T02:36:34Z\",\n \"host\": \"castrelay\",\n \"where\": \"192.168.2.21\",\n \"python\": \"3.13.5\",\n \"yt_dlp\": \"2026.10.21\",\n \"ffprobe\": \"/usr/bin/ffprobe\",\n \"ffmpeg\": \"/usr/bin/ffmpeg\",\n \"video_id\": \"ai_gI0Jbr_E\",\n \"sid\": \"cFIl1yDcLQOg\",\n \"reader\": {\n  \"progress_max\": 33554432,\n  \"bytes\": 33554432,\n  \"declared\": 33554432,\n  \"sha256\": \"c45566cbcb0b48ec592a074e18c41e60373e265043d2380ad8c3f475df7b29fc\",\n  \"auth\": true,\n  \"rc\": 0,\n  \"ok\": true\n },\n \"expected_bytes\": 33554432,\n \"stale_token_at_reader_bytes\": 1048576,\n \"fault_injection\": \"proxy.faults['drop_upstream_after']=12 MiB: the source connection is closed mid-body, because an already-authorised download does not die of its own expired token\",\n \"source\": {\n  \"bytes\": 33554432,\n  \"sha256\": \"c45566cbcb0b48ec592a074e18c41e60373e265043d2380ad8c3f475df7b29fc\"\n },\n \"refreshes\": 1,\n \"proxy_stats\": {\n  \"sessions\": 1,\n  \"rss_mb\": 75.7,\n  \"refreshes\": 1\n },\n \"ok\": true\n}\n"
+  },
+  "mpd": {
+   "ok": true,
+   "rc": 0,
+   "seconds": 5.45,
+   "tail": "bits_per_raw_sample\\\": \\\"8\\\",\\n            \\\"extradata_size\\\": 45,\\n            \\\"disposition\\\": {\\n                \\\"default\\\": 1,\\n                \\\"dub\\\": 0,\\n                \\\"original\\\": 0,\\n                \\\"comment\\\": 0,\\n                \\\"lyrics\\\": 0,\\n                \\\"karaoke\\\": 0,\\n                \\\"forced\\\": 0,\\n                \\\"hearing_impaired\\\": 0,\\n                \\\"visual_impaired\\\": 0,\\n                \\\"clean_effects\\\": 0,\\n                \\\"attached_pic\\\": 0,\\n                \\\"timed_thumbnails\\\": 0,\\n                \\\"non_diegetic\\\": 0,\\n                \\\"captions\\\": 0,\\n                \\\"descriptions\\\": 0,\\n                \\\"metadata\\\": 0,\\n                \\\"dependent\\\": 0,\\n                \\\"still_image\\\": 0,\\n                \\\"multilayer\\\": 0\\n            },\\n            \\\"tags\\\": {\\n                \\\"variant_bitrate\\\": \\\"2324322\\\",\\n                \\\"id\\\": \\\"v\\\"\\n            }\\n        },\\n        {\\n            \\\"index\\\": 1,\\n            \\\"codec_name\\\": \\\"aac\\\",\\n            \\\"codec_long_name\\\": \\\"AAC (Advanced Audio Coding)\\\",\\n            \\\"profile\\\": \\\"LC\\\",\\n            \\\"codec_type\\\": \\\"audio\\\",\\n            \\\"codec_tag_string\\\": \\\"mp4a\\\",\\n        \n"
+  },
+  "resolve": {
+   "ok": true,
+   "rc": 0,
+   "seconds": 4.77,
+   "tail": ": true\n  },\n  {\n   \"label\": \"long\",\n   \"max_height\": 1080,\n   \"video_id\": \"ai_gI0Jbr_E\",\n   \"title\": \"Pink Floyd - Pulse\",\n   \"duration_s\": 8630.0,\n   \"resolve_s\": 0.96,\n   \"video\": {\n    \"itag\": 137,\n    \"codecs\": \"avc1.640028\",\n    \"height\": 1080,\n    \"width\": 1920,\n    \"fps\": 25.0,\n    \"host\": \"rr4---sn-cxaaj5o5q5-t0ay.googlevideo.com\"\n   },\n   \"audio\": {\n    \"itag\": 140,\n    \"codecs\": \"mp4a.40.2\",\n    \"host\": \"rr4---sn-cxaaj5o5q5-t0ay.googlevideo.com\"\n   },\n   \"expires_in_s\": 21539.7,\n   \"init_range\": null,\n   \"index_range\": null,\n   \"ok\": true\n  },\n  {\n   \"label\": \"capped\",\n   \"max_height\": 720,\n   \"video_id\": \"dQw4w9WgXcQ\",\n   \"title\": \"Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)\",\n   \"duration_s\": 213.0,\n   \"resolve_s\": 1.548,\n   \"video\": {\n    \"itag\": 136,\n    \"codecs\": \"avc1.4D401F\",\n    \"height\": 720,\n    \"width\": 1280,\n    \"fps\": 25.0,\n    \"host\": \"rr1---sn-cxaaj5o5q5-t0ar.googlevideo.com\"\n   },\n   \"audio\": {\n    \"itag\": 140,\n    \"codecs\": \"mp4a.40.2\",\n    \"host\": \"rr1---sn-cxaaj5o5q5-t0ar.googlevideo.com\"\n   },\n   \"expires_in_s\": 21539.1,\n   \"init_range\": null,\n   \"index_range\": null,\n   \"ok\": true,\n   \"tallest_avc1\": 1080\n  }\n ],\n \"ok\": true\n}\n"
+  },
+  "rss": {
+   "ok": true,
+   "rc": 0,
+   "seconds": 61.04,
+   "tail": "3\n  },\n  {\n   \"t\": 11.93,\n   \"rss_mb\": 58.3,\n   \"ps_rss_mb\": 58.3\n  },\n  {\n   \"t\": 14.91,\n   \"rss_mb\": 58.3,\n   \"ps_rss_mb\": 58.3\n  },\n  {\n   \"t\": 17.89,\n   \"rss_mb\": 58.3,\n   \"ps_rss_mb\": 58.3\n  },\n  {\n   \"t\": 20.87,\n   \"rss_mb\": 58.3,\n   \"ps_rss_mb\": 58.3\n  },\n  {\n   \"t\": 23.85,\n   \"rss_mb\": 58.3,\n   \"ps_rss_mb\": 58.3\n  },\n  {\n   \"t\": 26.83,\n   \"rss_mb\": 58.3,\n   \"ps_rss_mb\": 58.3\n  },\n  {\n   \"t\": 29.8,\n   \"rss_mb\": 58.3,\n   \"ps_rss_mb\": 58.3\n  },\n  {\n   \"t\": 32.78,\n   \"rss_mb\": 58.3,\n   \"ps_rss_mb\": 58.3\n  },\n  {\n   \"t\": 35.76,\n   \"rss_mb\": 58.3,\n   \"ps_rss_mb\": 58.3\n  },\n  {\n   \"t\": 38.74,\n   \"rss_mb\": 58.3,\n   \"ps_rss_mb\": 58.3\n  },\n  {\n   \"t\": 41.72,\n   \"rss_mb\": 58.3,\n   \"ps_rss_mb\": 58.3\n  },\n  {\n   \"t\": 44.7,\n   \"rss_mb\": 58.3,\n   \"ps_rss_mb\": 58.3\n  },\n  {\n   \"t\": 47.68,\n   \"rss_mb\": 58.3,\n   \"ps_rss_mb\": 58.3\n  },\n  {\n   \"t\": 50.66,\n   \"rss_mb\": 58.3,\n   \"ps_rss_mb\": 58.3\n  },\n  {\n   \"t\": 53.64,\n   \"rss_mb\": 58.3,\n   \"ps_rss_mb\": 58.3\n  },\n  {\n   \"t\": 56.62,\n   \"rss_mb\": 58.3,\n   \"ps_rss_mb\": 58.3\n  }\n ],\n \"peak_stats_rss_mb\": 58.3,\n \"peak_ps_rss_mb\": 58.3,\n \"proxy_stats_final\": {\n  \"sessions\": 1,\n  \"rss_mb\": 58.3,\n  \"refreshes\": 0\n },\n \"budget_mb\": 150.0,\n \"ok\": true\n}\n"
+  },
+  "scan": {
+   "files": 6,
+   "ok": true
+  },
+  "seek": {
+   "ok": true,
+   "rc": 0,
+   "seconds": 57.03,
+   "tail": " \"bytes\": 1726298,\n  \"sha256\": \"d7d0189ec0d1b3c4737be9610f547f10773841e3f9c01deebd1173b611e403fb\"\n },\n \"proxied\": {\n  \"bytes\": 1726298,\n  \"sha256\": \"d7d0189ec0d1b3c4737be9610f547f10773841e3f9c01deebd1173b611e403fb\"\n },\n \"direct_fragment_first_pts_s\": 7195.84,\n \"seek_via_track_url\": {\n  \"cmd\": [\n   \"ffprobe\",\n   \"-v\",\n   \"warning\",\n   \"-select_streams\",\n   \"v:0\",\n   \"-show_entries\",\n   \"frame=pts_time\",\n   \"-of\",\n   \"csv=p=0\",\n   \"-read_intervals\",\n   \"7200%+#2\",\n   \"http://192.168.2.21:7641/media/gkS8v9TIroeK/0\"\n  ],\n  \"rc\": 0,\n  \"seconds\": 0.3,\n  \"first_pts_s\": 7195.84,\n  \"stderr\": \"\"\n },\n \"seek_via_mpd_ffprobe\": {\n  \"cmd\": [\n   \"ffprobe\",\n   \"-v\",\n   \"warning\",\n   \"-select_streams\",\n   \"v:0\",\n   \"-show_entries\",\n   \"frame=pts_time\",\n   \"-of\",\n   \"csv=p=0\",\n   \"-read_intervals\",\n   \"7200%+#2\",\n   \"http://192.168.2.21:7641/media/gkS8v9TIroeK/manifest.mpd\"\n  ],\n  \"timeout_s\": 25.0,\n  \"first_pts_s\": null,\n  \"note\": \"no answer within the budget: the demuxer reads from 0 instead of seeking to the interval\"\n },\n \"seek_via_mpd_ffmpeg_ss\": {\n  \"timeout_s\": 30.0,\n  \"stderr\": \"\",\n  \"requested_offset\": null,\n  \"note\": \"ffmpeg kept reading from the start instead of seeking\"\n },\n \"ok\": true\n}\n"
+  }
+ },
+ "what": "task B done-when, in order",
+ "when": "2026-10-26T02:32:39Z",
+ "where": "192.168.2.21",
+ "yt_dlp": "2026.10.21"
+}

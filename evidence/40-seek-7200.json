@@ -1,0 +1,74 @@
+{
+ "at_s": 7200.0,
+ "byte_range": [
+  2031653270,
+  2033379567
+ ],
+ "direct_fragment_first_pts_s": 7195.84,
+ "ffmpeg": "/usr/bin/ffmpeg",
+ "ffprobe": "/usr/bin/ffprobe",
+ "host": "castrelay",
+ "media_seconds_of_that_range": 7195.840000000009,
+ "ok": true,
+ "proxied": {
+  "bytes": 1726298,
+  "sha256": "d7d0189ec0d1b3c4737be9610f547f10773841e3f9c01deebd1173b611e403fb"
+ },
+ "python": "3.13.5",
+ "seek_via_mpd_ffmpeg_ss": {
+  "note": "ffmpeg kept reading from the start instead of seeking",
+  "requested_offset": null,
+  "stderr": "",
+  "timeout_s": 30.0
+ },
+ "seek_via_mpd_ffprobe": {
+  "cmd": [
+   "ffprobe",
+   "-v",
+   "warning",
+   "-select_streams",
+   "v:0",
+   "-show_entries",
+   "frame=pts_time",
+   "-of",
+   "csv=p=0",
+   "-read_intervals",
+   "7200%+#2",
+   "http://192.168.2.21:7641/media/gkS8v9TIroeK/manifest.mpd"
+  ],
+  "first_pts_s": null,
+  "note": "no answer within the budget: the demuxer reads from 0 instead of seeking to the interval",
+  "timeout_s": 25.0
+ },
+ "seek_via_track_url": {
+  "cmd": [
+   "ffprobe",
+   "-v",
+   "warning",
+   "-select_streams",
+   "v:0",
+   "-show_entries",
+   "frame=pts_time",
+   "-of",
+   "csv=p=0",
+   "-read_intervals",
+   "7200%+#2",
+   "http://192.168.2.21:7641/media/gkS8v9TIroeK/0"
+  ],
+  "first_pts_s": 7195.84,
+  "rc": 0,
+  "seconds": 0.3,
+  "stderr": ""
+ },
+ "sidx_timescale": 12800,
+ "source": {
+  "bytes": 1726298,
+  "sha256": "d7d0189ec0d1b3c4737be9610f547f10773841e3f9c01deebd1173b611e403fb"
+ },
+ "subsegments": 1594,
+ "video_id": "ai_gI0Jbr_E",
+ "what": "a seek to 7200 s returns the source's own bytes",
+ "when": "2026-10-26T02:33:46Z",
+ "where": "192.168.2.21",
+ "yt_dlp": "2026.10.21"
+}

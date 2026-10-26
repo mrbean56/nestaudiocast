@@ -1,0 +1,82 @@
+{
+ "ffmpeg": "/usr/bin/ffmpeg",
+ "ffprobe": {
+  "cmd": [
+   "ffprobe",
+   "-v",
+   "error",
+   "-print_format",
+   "json",
+   "-show_format",
+   "-show_streams",
+   "http://192.168.2.21:7641/media/Uf9JGF7dGlKI/manifest.mpd"
+  ],
+  "json": null,
+  "rc": 0,
+  "seconds": 1.78,
+  "stderr": "",
+  "stdout": "{\n    \"streams\": [\n        {\n            \"index\": 0,\n            \"codec_name\": \"h264\",\n            \"codec_long_name\": \"H.264 / AVC / MPEG-4 AVC / MPEG-4 part 10\",\n            \"profile\": \"High\",\n            \"codec_type\": \"video\",\n            \"codec_tag_string\": \"avc1\",\n            \"codec_tag\": \"0x31637661\",\n            \"width\": 1920,\n            \"height\": 1080,\n            \"coded_width\": 1920,\n            \"coded_height\": 1080,\n            \"closed_captions\": 0,\n            \"film_grain\": 0,\n            \"has_b_frames\": 1,\n            \"sample_aspect_ratio\": \"1:1\",\n            \"display_aspect_ratio\": \"16:9\",\n            \"pix_fmt\": \"yuv420p\",\n            \"level\": 40,\n            \"color_range\": \"tv\",\n            \"color_space\": \"bt709\",\n            \"color_transfer\": \"bt709\",\n            \"color_primaries\": \"bt709\",\n            \"chroma_location\": \"left\",\n            \"field_order\": \"progressive\",\n            \"refs\": 1,\n            \"is_avc\": \"true\",\n            \"nal_length_size\": \"4\",\n            \"r_frame_rate\": \"25/1\",\n            \"avg_frame_rate\": \"25/1\",\n            \"time_base\": \"1/12800\",\n            \"start_pts\": 0,\n            \"start_time\": \"0.000000\",\n            \"bit_rate\": \"37219\",\n            \"bits_per_raw_sample\": \"8\",\n            \"extradata_size\": 45,\n            \"disposition\": {\n                \"default\": 1,\n                \"dub\": 0,\n                \"original\": 0,\n                \"comment\": 0,\n                \"lyrics\": 0,\n                \"karaoke\": 0,\n                \"forced\": 0,\n                \"hearing_impaired\": 0,\n                \"visual_impaired\": 0,\n                \"clean_effects\": 0,\n                \"attached_pic\": 0,\n                \"timed_thumbnails\": 0,\n                \"non_diegetic\": 0,\n                \"captions\": 0,\n                \"descriptions\": 0,\n                \"metadata\": 0,\n                \"dependent\": 0,\n                \"still_image\": 0,\n                \"multilayer\": 0\n            },\n            \"tags\": {\n                \"variant_bitrate\": \"2324322\",\n                \"id\": \"v\"\n            }\n        },\n        {\n            \"index\": 1,\n            \"codec_name\": \"aac\",\n            \"codec_long_name\": \"AAC (Advanced Audio Coding)\",\n            \"profile\": \"LC\",\n            \"codec_type\": \"audio\",\n            \"codec_tag_string\": \"mp4a\",\n            \"codec_tag\": \"0x6134706d\",\n            \"sample_fmt\": \"fltp\",\n            \"sample_rate\": \"44100\",\n            \"channels\": 2,\n            \"channel_layout\": \"stereo\",\n            \"bits_per_sample\": 0,\n            \"initial_padding\": 0,\n            \"r_frame_rate\": \"0/0\",\n            \"avg_frame_rate\": \"0/0\",\n            \"time_base\": \"1/44100\",\n            \"start_pts\": 0,\n            \"start_time\": \"0.000000\",\n            \"bit_rate\": \"128271\",\n            \"extradata_size\": 16,\n            \"disposition\": {\n                \"default\": 1,\n                \"dub\": 0,\n                \"original\": 0,\n                \"comment\": 0,\n                \"lyrics\": 0,\n                \"karaoke\": 0,\n                \"forced\": 0,\n                \"hearing_impaired\": 0,\n                \"visual_impaired\": 0,\n                \"clean_effects\": 0,\n                \"attached_pic\": 0,\n                \"timed_thumbnails\": 0,\n                \"non_diegetic\": 0,\n                \"captions\": 0,\n                \"descriptions\": 0,\n                \"metadata\": 0,\n                \"dependent\": 0,\n                \"still_image\": 0,\n                \"multilayer\": 0\n            },\n            \"tags\": {\n                \"variant_bitrate\": \"129478\",\n                \"id\": \"a\"\n            }\n        }\n    ],\n    \"format\": {\n        \"filename\": \"http://192.168.2.21:7641/media/Uf9JGF7dGlKI/manifest.mpd\",\n        \"nb_streams\": 2,\n        \"nb_programs\": 1,\n        \"nb_stream_groups\": 0,\n        \"format_name\": \"dash\",\n        \"format_long_name\": \"Dynamic Adaptive Streaming over HTTP\",\n        \"start_time\": \"0.000000\",\n        \"duration\": \"8630.000000\",\n        \"size\": \"1128\",\n        \"bit_rate\": \"1\",\n        \"probe_score\": 100\n    }\n}\n"
+ },
+ "ffprobe_listing": {
+  "cmd": [
+   "ffprobe",
+   "-hide_banner",
+   "-i",
+   "http://192.168.2.21:7641/media/Uf9JGF7dGlKI/manifest.mpd"
+  ],
+  "rc": 0,
+  "seconds": 1.87,
+  "stderr": "[dash @ 0x5abc6adcdf00] Opening 'http://192.168.2.21:7641/media/Uf9JGF7dGlKI/0' for reading\n[dash @ 0x5abc6adcdf00] Opening 'http://192.168.2.21:7641/media/Uf9JGF7dGlKI/1' for reading\nInput #0, dash, from 'http://192.168.2.21:7641/media/Uf9JGF7dGlKI/manifest.mpd':\n  Duration: 02:23:50.00, start: 0.000000, bitrate: 0 kb/s\n  Program 0 \n  Stream #0:0: Video: h264 (High) (avc1 / 0x31637661), yuv420p(tv, bt709, progressive), 1920x1080 [SAR 1:1 DAR 16:9], 37 kb/s, 25 fps, 25 tbr, 12800 tbn (default)\n      Metadata:\n        variant_bitrate : 2324322\n        id              : v\n  Stream #0:1: Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, stereo, fltp, 128 kb/s (default)\n      Metadata:\n        variant_bitrate : 129478\n        id              : a\n",
+  "stdout": ""
+ },
+ "format_duration_s": "8630.000000",
+ "host": "castrelay",
+ "manifest": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\" profiles=\"urn:mpeg:dash:profile:isoff-on-demand:2011\" type=\"static\" mediaPresentationDuration=\"PT8630.000S\" minBufferTime=\"PT2.000S\">\n <Period id=\"p0\" start=\"PT0.000S\">\n  <AdaptationSet id=\"1\" contentType=\"video\" mimeType=\"video/mp4\" segmentAlignment=\"true\" startWithSAP=\"1\" subsegmentAlignment=\"true\" subsegmentStartsWithSAP=\"1\" maxWidth=\"1920\" maxHeight=\"1080\" frameRate=\"25\">\n   <Representation id=\"v\" codecs=\"avc1.640028\" width=\"1920\" height=\"1080\" frameRate=\"25\" bandwidth=\"2324322\">\n   <BaseURL>0</BaseURL>\n   <SegmentBase indexRange=\"742-19901\">\n    <Initialization range=\"0-741\"/>\n   </SegmentBase>\n  </Representation>\n </AdaptationSet>\n  <AdaptationSet id=\"2\" contentType=\"audio\" mimeType=\"audio/mp4\" segmentAlignment=\"true\" startWithSAP=\"1\" subsegmentAlignment=\"true\" subsegmentStartsWithSAP=\"1\">\n   <Representation id=\"a\" codecs=\"mp4a.40.2\" bandwidth=\"129478\">\n   <BaseURL>1</BaseURL>\n   <SegmentBase indexRange=\"723-11134\">\n    <Initialization range=\"0-722\"/>\n   </SegmentBase>\n  </Representation>\n </AdaptationSet>\n </Period>\n</MPD>\n",
+ "manifest_url": "http://192.168.2.21:7641/media/Uf9JGF7dGlKI/manifest.mpd",
+ "ok": true,
+ "python": "3.13.5",
+ "resolve_s": 1.394,
+ "sizes": {
+  "audio_index": [
+   723,
+   11134
+  ],
+  "audio_init": [
+   0,
+   722
+  ],
+  "audio_total": 139674474,
+  "video_index": [
+   742,
+   19901
+  ],
+  "video_init": [
+   0,
+   741
+  ],
+  "video_total": 2507362728
+ },
+ "streams": [
+  {
+   "codec_name": "h264",
+   "codec_tag_string": "avc1",
+   "codec_type": "video",
+   "height": 1080,
+   "index": 0,
+   "width": 1920
+  },
+  {
+   "channels": 2,
+   "codec_name": "aac",
+   "codec_tag_string": "mp4a",
+   "codec_type": "audio",
+   "index": 1,
+   "sample_rate": "44100"
+  }
+ ],
+ "video_id": "ai_gI0Jbr_E",
+ "what": "ffprobe and ffmpeg read the synthesised MPD through the proxy",
+ "when": "2026-10-26T02:32:49Z",
+ "where": "192.168.2.21",
+ "yt_dlp": "2026.10.21"
+}

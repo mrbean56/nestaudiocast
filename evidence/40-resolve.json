@@ -1,0 +1,90 @@
+{
+ "budget_s": 5.0,
+ "ffmpeg": "/usr/bin/ffmpeg",
+ "ffprobe": "/usr/bin/ffprobe",
+ "host": "castrelay",
+ "ok": true,
+ "python": "3.13.5",
+ "videos": [
+  {
+   "audio": {
+    "codecs": "mp4a.40.2",
+    "host": "rr5---sn-cxaaj5o5q5-t0ay.googlevideo.com",
+    "itag": 140
+   },
+   "duration_s": 19.0,
+   "expires_in_s": 21539.6,
+   "index_range": null,
+   "init_range": null,
+   "label": "short",
+   "max_height": 1080,
+   "ok": true,
+   "resolve_s": 1.452,
+   "title": "Me at the zoo",
+   "video": {
+    "codecs": "avc1.4D400C",
+    "fps": 15.0,
+    "height": 240,
+    "host": "rr5---sn-cxaaj5o5q5-t0ay.googlevideo.com",
+    "itag": 133,
+    "width": 320
+   },
+   "video_id": "jNQXAC9IVRw"
+  },
+  {
+   "audio": {
+    "codecs": "mp4a.40.2",
+    "host": "rr4---sn-cxaaj5o5q5-t0ay.googlevideo.com",
+    "itag": 140
+   },
+   "duration_s": 8630.0,
+   "expires_in_s": 21539.7,
+   "index_range": null,
+   "init_range": null,
+   "label": "long",
+   "max_height": 1080,
+   "ok": true,
+   "resolve_s": 0.96,
+   "title": "Pink Floyd - Pulse",
+   "video": {
+    "codecs": "avc1.640028",
+    "fps": 25.0,
+    "height": 1080,
+    "host": "rr4---sn-cxaaj5o5q5-t0ay.googlevideo.com",
+    "itag": 137,
+    "width": 1920
+   },
+   "video_id": "ai_gI0Jbr_E"
+  },
+  {
+   "audio": {
+    "codecs": "mp4a.40.2",
+    "host": "rr1---sn-cxaaj5o5q5-t0ar.googlevideo.com",
+    "itag": 140
+   },
+   "duration_s": 213.0,
+   "expires_in_s": 21539.1,
+   "index_range": null,
+   "init_range": null,
+   "label": "capped",
+   "max_height": 720,
+   "ok": true,
+   "resolve_s": 1.548,
+   "tallest_avc1": 1080,
+   "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)",
+   "video": {
+    "codecs": "avc1.4D401F",
+    "fps": 25.0,
+    "height": 720,
+    "host": "rr1---sn-cxaaj5o5q5-t0ar.googlevideo.com",
+    "itag": 136,
+    "width": 1280
+   },
+   "video_id": "dQw4w9WgXcQ"
+  }
+ ],
+ "what": "three real videos resolved on CT 121 (no download)",
+ "when": "2026-10-26T02:32:44Z",
+ "where": "192.168.2.21",
+ "yt_dlp": "2026.10.21"
+}
