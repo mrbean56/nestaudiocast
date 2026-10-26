@@ -1,0 +1,205 @@
+# Task J — the gate's instruments: every self-test and the archived-log runs
+# host: opencode 192.168.2.18   branch: feat/gate-tools   base: 2fb97ca
+# date: 2026-10-25T22:11:59-04:00   python: Python 3.13.5   numpy: 2.5.4
+# nothing here touches a speaker, the TV or the Chromecast: every target is synthetic or a
+# loopback fake, and each tool's self-test installs a socket guard that refuses a non-loopback
+# connection (it fired once during development and was fixed).
+
+## 0. the offline suite
+$ ./tests/v020/run.sh
+----------------------------------------------------------------------
+Ran 36 tests in 0.195s
+
+OK
+
+## 1. the digital-error instrument on its own inputs
+$ .venv/bin/python measure/analyze_v020.py --self-test --json evidence/48-analyze-v020-selftest.json
+analyze_v020 --self-test (synthetic logs, archived v0.1 logs; no device touched)
+  ok   v0.2 contract log, 3 ms bias (exit 0)
+  ok   v0.2 log with a hidden reload at 120 s (exit 3)
+  ok   v0.2 log with +60 ms/10 min injected drift (exit 1)
+  ok   v0.2 log with a +35 ms median (over ±20 ms) (exit 1)
+  ok   v0.2 log too short for a steady window (exit 4)
+  ok   v0.2 log without video positions + --video-log (exit 0)
+  ok   archived v0.1 relay log evidence/29 (v0.1 realigns after the start: the v0.2 rule forbids it) (exit 3)
+       drift of the 5 s medians: -3.7 ± 4.2 ms/10 min over 84 windows; the archived report's raw-sample slope is -5.5 ± 1.2 (different estimator, same conclusion: no trend beyond 2 sigma)
+       windows over ±20 ms: 8 (v0.1 ran at a 30-70 ms landing tolerance, not at the v0.2 20 ms)
+  ok   archived v0.1 landing report evidence/39 (exit 4)
+  ok   unreadable input rejected (exit 2)
+  -> evidence/48-analyze-v020-selftest.json
+  SELF-TEST PASS — 9/9
+exit=0
+
+## 2. the archived v0.1 session (evidence/29-relay-untouched.jsonl)
+$ .venv/bin/python measure/analyze_v020.py evidence/29-relay-untouched.jsonl --json evidence/48-analyze-v020-29.json
+exit=3
+analyze_v020 — /home/mrbean/opencode/nestaudiocast-wt/gate/evidence/29-relay-untouched.jsonl  [v0.1-relay]
+  verdict: FAIL — 1 load/seek event(s) inside steady state (contracts §1); 96 steady window(s), worst |median| 31.2 ms
+  delta_v2=in-log  samples=1726 (steady 1477)  windows=96 full / 3 partial  transport events=25
+  overall steady: median 8.5 ms, p95|e| 23.8 ms, max|e| 83.9 ms (n=1477)
+  windows (t_start, n, median, p95|e|, max|e|, stdev):
+  steadiest window: 317.38..322.01s median 4.7 ms, sd 1.4 ms
+  drift 61.76..101.43s over 8 windows: 41.2 ± 202.3 ms/10 min (within 2 sigma)
+  drift 182.26..602.06s over 84 windows: -3.7 ± 4.2 ms/10 min (within 2 sigma)
+  drift 607.47..627.24s over 4 windows: 810.2 ± 467.3 ms/10 min (within 2 sigma)
+  transport latencies:
+    content_changed        -> first_frame        9.62 s (via event:first_frame)
+    tv_jump                -> steady again       58.52 s (via first full steady window after the seek)
+    tv_jump                -> steady again       57.28 s (via first full steady window after the seek)
+    sample.action=realign lead_adj=+0.008 -> steady again       47.9 s (via first full steady window after the seek)
+    sink_started:seek      -> steady again       46.28 s (via first full steady window after the seek)
+    sample.action=realign lead_adj=+0.000 -> steady again       41.78 s (via first full steady window after the seek)
+    sink_started:seek      -> steady again       40.16 s (via first full steady window after the seek)
+    sample.action=realign lead_adj=+0.010 -> steady again       36.6 s (via first full steady window after the seek)
+    sink_started:seek      -> steady again       35.0 s (via first full steady window after the seek)
+    sample.action=realign lead_adj=+0.001 -> steady again       31.67 s (via first full steady window after the seek)
+    sink_started:seek      -> steady again       30.04 s (via first full steady window after the seek)
+    sample.action=realign lead_adj=+0.010 -> steady again       77.34 s (via first full steady window after the seek)
+    sink_started:seek      -> steady again       75.73 s (via first full steady window after the seek)
+    tv_jump                -> steady again       73.95 s (via first full steady window after the seek)
+    tv_jump                -> steady again       73.37 s (via first full steady window after the seek)
+    tv_jump                -> steady again       72.9 s (via first full steady window after the seek)
+    tv_jump                -> steady again       55.61 s (via first full steady window after the seek)
+    tv_jump                -> steady again       55.18 s (via first full steady window after the seek)
+    sink_started:seek      -> steady again       40.62 s (via first full steady window after the seek)
+    sample.action=realign lead_adj=-0.001 -> steady again       37.12 s (via first full steady window after the seek)
+    sink_started:seek      -> steady again       35.48 s (via first full steady window after the seek)
+    sample.action=realign lead_adj=-0.012 -> steady again       31.93 s (via first full steady window after the seek)
+    sink_started:seek      -> steady again       30.28 s (via first full steady window after the seek)
+  VIOLATION sample.action=realign lead_adj=+0.010 at t=104.93s, 73.21s after the previous transport event
+  VIOLATION window t=76.93s median 31.2 ms > ±20.0 ms
+  VIOLATION window t=81.82s median 30.6 ms > ±20.0 ms
+  VIOLATION window t=87.01s median 28.6 ms > ±20.0 ms
+  VIOLATION window t=307.38s median 20.5 ms > ±20.0 ms
+  VIOLATION window t=357.33s median 25.3 ms > ±20.0 ms
+  VIOLATION window t=397.59s median 24.0 ms > ±20.0 ms
+  VIOLATION window t=537.59s median -22.6 ms > ±20.0 ms
+  VIOLATION window t=622.4s median 20.4 ms > ±20.0 ms
+  -> evidence/48-analyze-v020-29.json
+
+## 3. the archived v0.1 landing report (evidence/39-landing-30ms.json)
+$ .venv/bin/python measure/analyze_v020.py evidence/39-landing-30ms.json --json evidence/48-analyze-v020-39.json
+analyze_v020 — /home/mrbean/opencode/nestaudiocast-wt/gate/evidence/39-landing-30ms.json  [v0.1-landing]
+  verdict: INCOMPLETE — a v0.1 landing report carries no samples; run the v0.2 session log through this instrument instead
+    case initial play                           median=None max_abs=None within_tol=None
+    case seek 300s                              median=None max_abs=None within_tol=None
+    case seek 120s                              median=None max_abs=None within_tol=None
+    case seek 480s                              median=None max_abs=None within_tol=None
+  -> evidence/48-analyze-v020-39.json
+exit=4
+
+## 4. the acoustic series driver (synthetic recordings + loopback service)
+$ .venv/bin/python tools/acoustic_v020.py --self-test --json evidence/48-acoustic-v020-selftest.json
+  ok   known offset +0 ms -> measured -4.0 ms (20 pairs, sd 0.0)
+  ok   known offset +40 ms -> measured 36.0 ms (20 pairs, sd 0.0)
+  ok   known offset -60 ms -> measured -64.0 ms (20 pairs, sd 0.0)
+  ok   instrument bias +6 ms is subtracted: 34.0
+  ok   alias-ambiguous window refused: analyzer refused the window: AMBIGUOUS — measured 476 ms sits at the ±500 ms aliasing limit of a 1 s
+  ok   dispersion refused: sd 113.0 ms
+  ok   too few pairs refused (4 pairs)
+  ok   injected drift: 40.0 ms/10 min (counts=True, ok=True: within the 60 ms limit)
+  ok   over-limit drift rejected: 114.3 ms/10 min
+  ok   flat series accepted: True
+  ok   linearity 1:1 holds (+100 ms -> +98 ms): True
+  ok   linearity 1:1 broken (+100 ms -> +10 ms): False
+  ok   linearity sign inverted: False
+  ok   reload inside the window changes steady_since -> window discarded
+  ok   pipeline verdict: PASS — 3/3 windows valid; series drift -0.0 ± 0.0 ms/10 min
+  -> evidence/48-acoustic-v020-selftest.json
+  SELF-TEST PASS — 15/15
+exit=0
+
+## 5. the transport matrix (loopback service + five broken variants)
+$ .venv/bin/python tools/transport_v020.py --self-test --json evidence/48-transport-v020-selftest.json
+  ok   healthy fake service: 12/12 rows pass
+  ok   every check carries a duration or an unverified reason
+  FAIL       volume down: group follows {"target": 0.35, "level": 0.4, "reply": {"ok": true, "state": "playing"}, "source": "status.group_volume (not in contracts \u00a75)"}
+  FAIL       volume up: group follows   {"target": 0.45, "level": 0.4, "reply": {"ok": true, "state": "playing"}, "source": "status.group_volume (not in contracts \u00a75)"}
+  ok   broken 'volume' is caught (volume down: group follows)
+  FAIL       resume: playing and advancing {"state": "paused", "position_delta_s": 0.0}
+  FAIL       volume down: group follows {"state": "paused"}
+  FAIL       volume up: group follows   {"state": "paused"}
+  ok   broken 'resume' is caught (resume: playing and advancing)
+  FAIL       new share mid-session: new session {"old_session": "s3", "new_session": "s3", "state": "playing", "reply": {"session_id": "s3", "state": "resolving"}}
+  ok   broken 'newshare' is caught (new share mid-session: new session)
+  FAIL       stop: idle, no session     {"state": "playing", "session_id": "s1", "reply": {"ok": true, "state": "playing"}}
+  ok   broken 'stop' is caught (stop: idle, no session)
+  FAIL       seek +: lands forward      {"target_s": 61.2, "position_video": 4.211, "reply": {"ok": true, "state": "playing"}}
+  FAIL       seek -: lands backward     {"target_s": 10.0, "position_video": 7.717, "reply": {"ok": true, "state": "playing"}}
+  FAIL       end of media: ended then idle {"state_after_end": "playing", "final": "playing"}
+  ok   broken 'seek' is caught (seek +: lands forward)
+  ok   no duration -> end of media is unverified, not a pass
+  FAIL       precondition: idle service {"state": "playing"}
+  ok   non-idle service refused before the matrix
+  -> evidence/48-transport-v020-selftest.json
+  SELF-TEST PASS — 9/9
+exit=0
+
+## 6. the foreign-takeover detector (loopback service + five broken variants)
+$ .venv/bin/python tools/foreign_takeover_v020.py --self-test --json evidence/48-foreign-takeover-v020-selftest.json
+  REFUSED — a foreign launch on the Chromecast needs --yes-takeover (owner-side decision; tonight only the receiver task launches apps)
+  ok   a service that keeps playing is caught
+  ok   two device_lost events are caught
+  ok   a relaunch inside the watch window is caught
+  ok   a group still playing is caught
+  ok   short watch window -> INCOMPLETE, never a PASS
+  ok   healthy service over the contract's 30 s window: PASS
+  ok   no running session -> refused before the takeover
+  ok   --takeover castv2 without --yes-takeover is refused
+  -> evidence/48-foreign-takeover-v020-selftest.json
+  SELF-TEST PASS — 8/8
+exit=0
+
+## 7. quiet hours (loopback service + five broken variants, temporary config)
+$ .venv/bin/python tools/quiet_v020.py --self-test --json evidence/48-quiet-v020-selftest.json
+  ok   a share that plays during quiet hours is caught
+  ok   a group packet during quiet hours is caught
+  ok   a group load under video_only is caught
+  ok   a video_only share that never plays is caught
+  ok   a restore that does not take effect is caught
+  ok   healthy path: quiet_refused, video_only plays, group untouched, config restored
+  ok   --dry-run writes nothing and says so
+  -> evidence/48-quiet-v020-selftest.json
+  SELF-TEST PASS — 7/7
+exit=0
+
+## 8. rollback levels 0/1 (in-memory fleet + four broken variants)
+$ .venv/bin/python tools/rollback_v020.py --self-test --json evidence/48-rollback-v020-selftest.json
+  ok   healthy fleet: silence, volumes identical, receiver stopped, TV untouched
+  ok   the five speakers and the TV are the comparison set
+  ok   a restore that misses one speaker's level is caught
+  ok   a group left playing after level 0 is caught
+  ok   a receiver left running on the Chromecast is caught
+  ok   a restore that changes the TV's volume is caught
+  ok   a speaker muted before the test stays muted after the restore
+  ok   no playing session -> REFUSED before any action
+  -> evidence/48-rollback-v020-selftest.json
+  SELF-TEST PASS — 8/8
+exit=0
+
+## 9. the safety suite (must stay green)
+$ ./tools/prove.sh --fast
+== host ==============================================
+== 1. offset analyzer against known ground truth ======
+ANALYZER SELF-TEST: PASS
+== 3. kitchen endpoints currently silent? =============
+   -> audible right now: none
+== 4. group safety (never play on a group containing the TV) ==
+   Groupe Tous    REFUSED (contains non-speaker): Cuisine Fenêtre Vert, Cuisine Frigo Orange, Chromecast Sous-Sol [VIDEO], Cuisine Frigo Jaune, Chromecast Salon [VIDEO], Cuisine Meuble Rose, Cuisine Meuble Bleu
+   En Haut        REFUSED (contains non-speaker): Cuisine Fenêtre Vert, Cuisine Frigo Orange, Cuisine Frigo Jaune, Chromecast Salon [VIDEO], Cuisine Meuble Rose, Cuisine Meuble Bleu
+   Cuisine        SAFE: Cuisine Fenêtre Vert, Cuisine Frigo Orange, Cuisine Frigo Jaune, Cuisine Meuble Rose, Cuisine Meuble Bleu
+   Dehors         REFUSED (contains non-speaker): Chromecast Sous-Sol [VIDEO], Chromecast Salon [VIDEO]
+== 5. safety regressions (offline, static) ===========
+   ok: silencing mutes only, never zeroes levels
+   ok: the relay undoes its own stop-mute at startup (per member)
+   ok: member uuid -> IP mapping present (needed to unmute members directly)
+   ok: warns when every group member is silent
+   -> all safety regressions clear
+done — evidence in evidence/
+
+## 6b. the throwaway second sender, as a separate process (loopback: no device contacted)
+$ .venv/bin/python tools/foreign_takeover_v020.py --throwaway-launch 127.0.0.1 CC1AD845
+{"host": "127.0.0.1", "app_id": "CC1AD845", "when": 1792981131.1267838, "error": "CastError: connect to 127.0.0.1:8009 failed: ConnectionRefusedError: [Errno 111] Connection refused", "ok": false}
+exit=1
+# the same call against 192.168.2.80 is what --yes-takeover enables at the gate; it was not
+# run tonight: the Chromecast is reserved for the receiver task.

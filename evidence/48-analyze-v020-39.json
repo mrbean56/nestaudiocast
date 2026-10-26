@@ -1,0 +1,65 @@
+{
+ "tool": "analyze_v020",
+ "version": "0.2.0",
+ "when": "2026-10-25 22:12:00",
+ "file": "/home/mrbean/opencode/nestaudiocast-wt/gate/evidence/39-landing-30ms.json",
+ "format": "v0.1-landing",
+ "landing_tol_ms": 30,
+ "windows": [
+  {
+   "case": "initial play",
+   "median_ms": null,
+   "max_abs_ms": null,
+   "n": null,
+   "full": false,
+   "note": "landing report: one number per case, no samples to window"
+  },
+  {
+   "case": "seek 300s",
+   "median_ms": null,
+   "max_abs_ms": null,
+   "n": null,
+   "full": false,
+   "note": "landing report: one number per case, no samples to window"
+  },
+  {
+   "case": "seek 120s",
+   "median_ms": null,
+   "max_abs_ms": null,
+   "n": null,
+   "full": false,
+   "note": "landing report: one number per case, no samples to window"
+  },
+  {
+   "case": "seek 480s",
+   "median_ms": null,
+   "max_abs_ms": null,
+   "n": null,
+   "full": false,
+   "note": "landing report: one number per case, no samples to window"
+  }
+ ],
+ "counts": {
+  "cases": 4,
+  "samples": 0,
+  "windows": 0,
+  "steady_samples": 0
+ },
+ "overall": {
+  "median_ms": null,
+  "p95_abs_ms": null,
+  "max_abs_ms": null,
+  "n": 0
+ },
+ "steadiest_window": null,
+ "latencies": [],
+ "drift": {
+  "stretches": []
+ },
+ "violations": {
+  "forbidden_transport": [],
+  "tolerance": []
+ },
+ "verdict": "INCOMPLETE — a v0.1 landing report carries no samples; run the v0.2 session log through this instrument instead",
+ "exit_code": 4
+}

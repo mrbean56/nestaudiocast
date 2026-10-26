@@ -1,0 +1,225 @@
+{
+ "tool": "foreign_takeover_v020",
+ "self_test": true,
+ "when": "2026-10-25 22:18:50",
+ "offline": true,
+ "targets_touched": [],
+ "note": "loopback fake service only; the Chromecast is never contacted, and the real mode refuses to launch without --yes-takeover",
+ "cases": [
+  {
+   "case": "a service that keeps playing is caught",
+   "ok": true,
+   "detail": {
+    "PASS": false,
+    "verdict": "FAIL — the service never reached idle with no session; 0 device_lost event(s), expected exactly 1; the service left idle after the takeover (23 state(s), 23 new session(s)); the group still runs Default Media Receiver (CC1AD845)",
+    "device_lost_events": 0,
+    "idle_after_s": null,
+    "relaunch_states": [
+     {
+      "dt": 0.25,
+      "state": "playing",
+      "session_id": "s1"
+     },
+     {
+      "dt": 0.5,
+      "state": "playing",
+      "session_id": "s1"
+     },
+     {
+      "dt": 0.75,
+      "state": "playing",
+      "session_id": "s1"
+     },
+     {
+      "dt": 1.0,
+      "state": "playing",
+      "session_id": "s1"
+     },
+     {
+      "dt": 1.25,
+      "state": "playing",
+      "session_id": "s1"
+     },
+     {
+      "dt": 1.5,
+      "state": "playing",
+      "session_id": "s1"
+     },
+     {
+      "dt": 1.76,
+      "state": "playing",
+      "session_id": "s1"
+     },
+     {
+      "dt": 2.01,
+      "state": "playing",
+      "session_id": "s1"
+     },
+     {
+      "dt": 2.26,
+      "state": "playing",
+      "session_id": "s1"
+     },
+     {
+      "dt": 2.51,
+      "state": "playing",
+      "session_id": "s1"
+     },
+     {
+      "dt": 2.76,
+      "state": "playing",
+      "session_id": "s1"
+     },
+     {
+      "dt": 3.01,
+      "state": "playing",
+      "session_id": "s1"
+     },
+     {
+      "dt": 3.26,
+      "state": "playing",
+      "session_id": "s1"
+     },
+     {
+      "dt": 3.51,
+      "state": "playing",
+      "session_id": "s1"
+     },
+     {
+      "dt": 3.76,
+      "state": "playing",
+      "session_id": "s1"
+     },
+     {
+      "dt": 4.01,
+      "state": "playing",
+      "session_id": "s1"
+     },
+     {
+      "dt": 4.26,
+      "state": "playing",
+      "session_id": "s1"
+     },
+     {
+      "dt": 4.51,
+      "state": "playing",
+      "session_id": "s1"
+     },
+     {
+      "dt": 4.76,
+      "state": "playing",
+      "session_id": "s1"
+     },
+     {
+      "dt": 5.01,
+      "state": "playing",
+      "session_id": "s1"
+     },
+     {
+      "dt": 5.26,
+      "state": "playing",
+      "session_id": "s1"
+     },
+     {
+      "dt": 5.52,
+      "state": "playing",
+      "session_id": "s1"
+     },
+     {
+      "dt": 5.77,
+      "state": "playing",
+      "session_id": "s1"
+     }
+    ],
+    "reasons": [
+     "the service never reached idle with no session",
+     "0 device_lost event(s), expected exactly 1",
+     "the service left idle after the takeover (23 state(s), 23 new session(s))",
+     "the group still runs Default Media Receiver (CC1AD845)"
+    ]
+   }
+  },
+  {
+   "case": "two device_lost events are caught",
+   "ok": true,
+   "detail": {
+    "PASS": false,
+    "verdict": "FAIL — 2 device_lost event(s), expected exactly 1",
+    "device_lost_events": 2,
+    "idle_after_s": 0.0,
+    "relaunch_states": [],
+    "reasons": [
+     "2 device_lost event(s), expected exactly 1"
+    ]
+   }
+  },
+  {
+   "case": "a relaunch inside the watch window is caught",
+   "ok": true,
+   "detail": {
+    "PASS": false,
+    "verdict": "FAIL — the service left idle after the takeover (1 state(s), 1 new session(s)); relaunch attempt in the log: ['share']",
+    "device_lost_events": 1,
+    "idle_after_s": 0.0,
+    "relaunch_states": [
+     {
+      "dt": 1.0,
+      "state": "playing",
+      "session_id": "r1"
+     }
+    ],
+    "reasons": [
+     "the service left idle after the takeover (1 state(s), 1 new session(s))",
+     "relaunch attempt in the log: ['share']"
+    ]
+   }
+  },
+  {
+   "case": "a group still playing is caught",
+   "ok": true,
+   "detail": {
+    "PASS": false,
+    "verdict": "FAIL — the group still runs Default Media Receiver (CC1AD845)",
+    "device_lost_events": 1,
+    "idle_after_s": 0.0,
+    "relaunch_states": [],
+    "reasons": [
+     "the group still runs Default Media Receiver (CC1AD845)"
+    ]
+   }
+  },
+  {
+   "case": "short watch window -> INCOMPLETE, never a PASS",
+   "ok": true,
+   "detail": {
+    "verdict": "INCOMPLETE — the four conditions held over 2 s, but the contract asks for 30 s without a relaunch; rerun with --watch-s 30"
+   }
+  },
+  {
+   "case": "healthy service over the contract's 30 s window: PASS",
+   "ok": true,
+   "detail": {
+    "verdict": "PASS — idle 0.0 s after the takeover, one device_lost, group stopped, no relaunch over 30 s",
+    "idle_after_s": 0.0,
+    "device_lost_events": 1
+   }
+  },
+  {
+   "case": "no running session -> refused before the takeover",
+   "ok": true,
+   "detail": {
+    "reasons": [
+     "no running session: a takeover needs one"
+    ]
+   }
+  },
+  {
+   "case": "--takeover castv2 without --yes-takeover is refused",
+   "ok": true,
+   "detail": {}
+  }
+ ],
+ "passed": 8,
+ "total": 8,
+ "result": "SELF-TEST PASS"
+}

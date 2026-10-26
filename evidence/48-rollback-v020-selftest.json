@@ -1,0 +1,142 @@
+{
+ "tool": "rollback_v020",
+ "self_test": true,
+ "when": "2026-10-25 22:14:22",
+ "offline": true,
+ "targets_touched": [],
+ "note": "an in-memory fleet only: no socket, no speaker, no TV, no Chromecast. The same compare()/silent_after() functions judge the LAN run.",
+ "cases": [
+  {
+   "case": "healthy fleet: silence, volumes identical, receiver stopped, TV untouched",
+   "ok": true,
+   "detail": {
+    "PASS": true,
+    "verdict": "PASS — silence in 0.0s, volumes identical before/after (including the receiver app on 192.168.2.80)",
+    "level0_s": 0.0,
+    "volume_diffs": {},
+    "playable_after_level0": {},
+    "receiver_stopped": true
+   }
+  },
+  {
+   "case": "the five speakers and the TV are the comparison set",
+   "ok": true,
+   "detail": {
+    "devices_compared": [
+     "Cuisine Fenetre Vert",
+     "Cuisine Frigo Orange",
+     "Cuisine Frigo Jaune",
+     "Cuisine Meuble Bleu",
+     "Cuisine Meuble Rose",
+     "TV Salon"
+    ]
+   }
+  },
+  {
+   "case": "a restore that misses one speaker's level is caught",
+   "ok": true,
+   "detail": {
+    "PASS": false,
+    "verdict": "FAIL — 1 device(s) changed by the rollback: ['Cuisine Frigo Orange']",
+    "reasons": [
+     "1 device(s) changed by the rollback: ['Cuisine Frigo Orange']"
+    ],
+    "volume_diffs": {
+     "Cuisine Frigo Orange": {
+      "before": {
+       "level": 0.55,
+       "muted": false
+      },
+      "after": {
+       "level": 0.55,
+       "muted": true
+      }
+     }
+    },
+    "playable_after_level0": {},
+    "receiver_stopped": true
+   }
+  },
+  {
+   "case": "a group left playing after level 0 is caught",
+   "ok": true,
+   "detail": {
+    "PASS": false,
+    "verdict": "FAIL — still playing after level 0: ['group Cuisine']",
+    "reasons": [
+     "still playing after level 0: ['group Cuisine']"
+    ],
+    "volume_diffs": {},
+    "playable_after_level0": {
+     "group Cuisine": {
+      "app_name": "Default Media Receiver",
+      "app_id": "Default Media Receiver"
+     }
+    },
+    "receiver_stopped": true
+   }
+  },
+  {
+   "case": "a receiver left running on the Chromecast is caught",
+   "ok": true,
+   "detail": {
+    "PASS": false,
+    "verdict": "FAIL — our receiver app is still on the Chromecast after level 0",
+    "reasons": [
+     "our receiver app is still on the Chromecast after level 0"
+    ],
+    "volume_diffs": {},
+    "playable_after_level0": {},
+    "receiver_stopped": false
+   }
+  },
+  {
+   "case": "a restore that changes the TV's volume is caught",
+   "ok": true,
+   "detail": {
+    "PASS": false,
+    "verdict": "FAIL — 1 device(s) changed by the rollback: ['TV Salon']; the rollback changed the TV's volume (it must never be touched)",
+    "reasons": [
+     "1 device(s) changed by the rollback: ['TV Salon']",
+     "the rollback changed the TV's volume (it must never be touched)"
+    ],
+    "volume_diffs": {
+     "TV Salon": {
+      "before": {
+       "level": 0.4,
+       "muted": false
+      },
+      "after": {
+       "level": 0.1,
+       "muted": false
+      }
+     }
+    },
+    "playable_after_level0": {},
+    "receiver_stopped": true
+   }
+  },
+  {
+   "case": "a speaker muted before the test stays muted after the restore",
+   "ok": true,
+   "detail": {
+    "device": [
+     0.0834,
+     true
+    ],
+    "PASS": true
+   }
+  },
+  {
+   "case": "no playing session -> REFUSED before any action",
+   "ok": true,
+   "detail": {
+    "verdict": "REFUSED — no playing session to roll back (state idle)",
+    "calls": []
+   }
+  }
+ ],
+ "passed": 8,
+ "total": 8,
+ "result": "SELF-TEST PASS"
+}
