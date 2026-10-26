@@ -1,0 +1,59 @@
+{
+  "task": "C — why the receiver could not be launched",
+  "command": "see notes/labo-receiver.md §C0",
+  "at": "2026-10-25T21:47:21-0400",
+  "host": "192.168.2.80",
+  "app_id": "28028CD2",
+  "availability": {
+    "availability": {
+      "233637DE": "APP_AVAILABLE",
+      "28028CD2": "APP_UNAVAILABLE",
+      "CC1AD845": "APP_AVAILABLE",
+      "E8C28D3C": "APP_AVAILABLE"
+    },
+    "requestId": 1,
+    "responseType": "GET_APP_AVAILABILITY"
+  },
+  "launch_reply": {
+    "reason": "NOT_FOUND",
+    "requestId": 2,
+    "type": "LAUNCH_ERROR"
+  },
+  "status_after_launch": {
+    "applications": [
+      {
+        "appId": "E8C28D3C",
+        "appType": "WEB",
+        "displayName": "Backdrop",
+        "iconUrl": "",
+        "isIdleScreen": true,
+        "launchedFromCloud": false,
+        "namespaces": [
+          {
+            "name": "urn:x-cast:com.google.cast.debugoverlay"
+          },
+          {
+            "name": "urn:x-cast:com.google.cast.cac"
+          },
+          {
+            "name": "urn:x-cast:com.google.cast.sse"
+          },
+          {
+            "name": "urn:x-cast:com.google.cast.remotecontrol"
+          }
+        ],
+        "sessionId": "3f27f0a9-7ec6-4474-a5d9-443f6ac78a1d",
+        "statusText": "",
+        "transportId": "3f27f0a9-7ec6-4474-a5d9-443f6ac78a1d",
+        "universalAppId": "E8C28D3C"
+      }
+    ],
+    "volume": {
+      "controlType": "attenuation",
+      "level": 0.25,
+      "muted": false,
+      "stepInterval": 0.05000000074505806
+    }
+  },
+  "reading": "the device answers, is idle on Backdrop, and refuses APP_ID 28028CD2 with APP_UNAVAILABLE / LAUNCH_ERROR NOT_FOUND. YouTube, the Default Media Receiver and Backdrop are available on the same device, so the Cast stack is healthy: an unpublished receiver is only listed on a device whose serial is registered in the Cast console, and the app itself must have a receiver URL registered."
+}

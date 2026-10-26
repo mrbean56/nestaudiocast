@@ -1,0 +1,71 @@
+{
+  "task": "C — receiver preflight",
+  "command": "./tools/receiver_probe.py --probe-only",
+  "at": "2026-10-25T22:20:44-0400",
+  "host": "192.168.2.80",
+  "eureka": {
+    "url": "http://192.168.2.80:8008/setup/eureka_info",
+    "ok": true,
+    "name": "Chromecast Salon",
+    "model": null,
+    "device_info": null,
+    "cast_build_revision": "1.56.291998",
+    "build_version": "291998",
+    "uptime_s": 63596.7,
+    "ip": "192.168.2.80",
+    "connected": true
+  },
+  "mdns": {
+    "host": "192.168.2.80",
+    "source": "_googlecast._tcp.local.",
+    "ok": true,
+    "model": "Chromecast",
+    "friendly_name": "Chromecast Salon",
+    "capabilities": "201221",
+    "device_id": "dea0f72e3ce7e3f8bd2cdde1fb77d259",
+    "port": 8009
+  },
+  "tcp": [
+    {
+      "port": 8008,
+      "open": true,
+      "connect_ms": 3.0
+    },
+    {
+      "port": 8009,
+      "open": true,
+      "connect_ms": 4.0
+    }
+  ],
+  "http_serve": {
+    "port": 7640,
+    "open": true,
+    "connect_ms": 0.1
+  },
+  "receiver_status": {
+    "app_id": "E8C28D3C",
+    "app_name": "Backdrop",
+    "transport_id": "adfe606c-a1cd-4876-ba55-f2c3315476b4",
+    "volume": {
+      "controlType": "attenuation",
+      "level": 0.25,
+      "muted": false,
+      "stepInterval": 0.05000000074505806
+    },
+    "idle_screen": true,
+    "applications": [
+      {
+        "appId": "E8C28D3C",
+        "displayName": "Backdrop",
+        "isIdleScreen": true
+      }
+    ]
+  },
+  "verdict": "idle",
+  "safe_to_launch": true,
+  "app_availability": {
+    "28028CD2": "APP_UNAVAILABLE",
+    "CC1AD845": "APP_AVAILABLE",
+    "E8C28D3C": "APP_AVAILABLE"
+  }
+}

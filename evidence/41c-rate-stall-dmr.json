@@ -1,0 +1,41 @@
+{
+  "task": "C (c) — cost of a rate change, platform DMR",
+  "command": "./tools/receiver_probe.py --only bc --backend dmr",
+  "at": "2026-10-25T22:15:05-0400",
+  "backend": "Default Media Receiver CC1AD845 (NOT our page)",
+  "events": [
+    {
+      "asked_rate": 1.0,
+      "echoed_rate": 1,
+      "player_states": [
+        "PLAYING"
+      ],
+      "left_playing": false,
+      "playhead_backstep_s": 0.0,
+      "max_poll_gap_ms": 100.3,
+      "median_poll_gap_ms": 50.3
+    },
+    {
+      "asked_rate": 0.998,
+      "echoed_rate": 0.998,
+      "player_states": [
+        "PLAYING"
+      ],
+      "left_playing": false,
+      "playhead_backstep_s": 0.0,
+      "max_poll_gap_ms": 130.4,
+      "median_poll_gap_ms": 50.1
+    },
+    {
+      "asked_rate": 1.002,
+      "echoed_rate": 1.002,
+      "player_states": [
+        "PLAYING"
+      ],
+      "left_playing": false,
+      "playhead_backstep_s": 0.0,
+      "max_poll_gap_ms": 80.4,
+      "median_poll_gap_ms": 50.1
+    }
+  ]
+}

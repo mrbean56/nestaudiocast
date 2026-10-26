@@ -1,0 +1,82 @@
+{
+  "task": "C (b) — rate trim, platform DMR",
+  "command": "./tools/receiver_probe.py --only bc --backend dmr",
+  "at": "2026-10-25T22:15:05-0400",
+  "backend": "Default Media Receiver CC1AD845 on the same Chromecast (NOT our page)",
+  "caveat": "the receiver page could not be launched; the platform's own video player stands in for its media pipeline, as evidence/17 did on a Nest Audio for the group",
+  "method": "least squares of currentTime vs (t0+t1)/2 across GET_STATUS polls, 60 s",
+  "runs": [
+    {
+      "asked_rate": 1.0,
+      "reply": {
+        "reply": "MEDIA_STATUS",
+        "player_state": "PLAYING",
+        "current_time": 2.932077,
+        "playback_rate": 1
+      },
+      "samples": 592,
+      "playing_samples": 592,
+      "echoed_rate": 1,
+      "measured_ratio": 0.999824,
+      "ratio_sigma": 0.00014,
+      "measured_gain": -0.000176,
+      "asked_gain": 0.0,
+      "gain_error": -0.000176,
+      "gain_error_sigmas": -1.25,
+      "distinguishable_from_zero_at_3sigma": false,
+      "drift_ms_per_10min": -105.5,
+      "residual_max_ms": 148.52,
+      "span_s": 59.95
+    },
+    {
+      "asked_rate": 0.998,
+      "reply": {
+        "reply": "MEDIA_STATUS",
+        "player_state": "PLAYING",
+        "current_time": 2.945855,
+        "playback_rate": 0.998
+      },
+      "samples": 600,
+      "playing_samples": 600,
+      "echoed_rate": 0.998,
+      "measured_ratio": 0.998089,
+      "ratio_sigma": 0.000138,
+      "measured_gain": -0.001911,
+      "asked_gain": -0.002,
+      "gain_error": 8.9e-05,
+      "gain_error_sigmas": 0.64,
+      "distinguishable_from_zero_at_3sigma": true,
+      "drift_ms_per_10min": -1146.9,
+      "residual_max_ms": 147.01,
+      "span_s": 59.91
+    },
+    {
+      "asked_rate": 1.002,
+      "reply": {
+        "reply": "MEDIA_STATUS",
+        "player_state": "PLAYING",
+        "current_time": 2.6665,
+        "playback_rate": 1.002
+      },
+      "samples": 597,
+      "playing_samples": 597,
+      "echoed_rate": 1.002,
+      "measured_ratio": 1.002044,
+      "ratio_sigma": 0.00014,
+      "measured_gain": 0.002044,
+      "asked_gain": 0.002,
+      "gain_error": 4.4e-05,
+      "gain_error_sigmas": 0.31,
+      "distinguishable_from_zero_at_3sigma": true,
+      "drift_ms_per_10min": 1226.2,
+      "residual_max_ms": 168.43,
+      "span_s": 59.92
+    }
+  ],
+  "asset": {
+    "name": "rate-90s.mp4",
+    "url": "http://192.168.2.21:7640/media/rate-90s.mp4",
+    "ok": true,
+    "bytes": 2885457
+  }
+}

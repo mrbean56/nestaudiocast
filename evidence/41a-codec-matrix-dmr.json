@@ -1,0 +1,147 @@
+{
+  "task": "C (a) — codec matrix, platform DMR",
+  "command": "./tools/receiver_probe.py --backend dmr",
+  "at": "2026-10-25T22:05:32-0400",
+  "backend": "Default Media Receiver CC1AD845 on the same Chromecast (NOT our page)",
+  "caveat": "our custom receiver page could not be launched (APP_UNAVAILABLE); this measures what the device's own video player renders, which is the same platform media pipeline but not our HTML5 page",
+  "results": [
+    {
+      "asset": "codec-h264.mp4",
+      "content_type": "video/mp4",
+      "what": "H.264 Baseline 640x360 30fps",
+      "asset_head": {
+        "name": "codec-h264.mp4",
+        "url": "http://192.168.2.21:7640/media/codec-h264.mp4",
+        "ok": true,
+        "bytes": 621243
+      },
+      "load": {
+        "reply_type": "MEDIA_STATUS",
+        "player_state": "IDLE",
+        "media_session_id": 1
+      },
+      "states_seen": [
+        "BUFFERING",
+        "PLAYING"
+      ],
+      "samples": 63,
+      "playing_samples": 57,
+      "playhead_advance_s": 6,
+      "first_state": "PLAYING",
+      "last_state": "PLAYING",
+      "session_polls": 63,
+      "session_dropped_after_s": 7.25,
+      "supported_media_commands_after_load": null,
+      "idle_reason": null,
+      "verdict": "plays"
+    },
+    {
+      "asset": "codec-hevc.mp4",
+      "content_type": "video/mp4",
+      "what": "HEVC Main 640x360 30fps (hvc1)",
+      "asset_head": {
+        "name": "codec-hevc.mp4",
+        "url": "http://192.168.2.21:7640/media/codec-hevc.mp4",
+        "ok": true,
+        "bytes": 398824
+      },
+      "load": {
+        "reply_type": "MEDIA_STATUS",
+        "player_state": "IDLE",
+        "media_session_id": 2
+      },
+      "states_seen": [],
+      "samples": 0,
+      "playing_samples": 0,
+      "playhead_advance_s": 0.0,
+      "first_state": null,
+      "last_state": null,
+      "session_polls": 0,
+      "session_dropped_after_s": 0.19,
+      "supported_media_commands_after_load": null,
+      "idle_reason": null,
+      "verdict": "rejected"
+    },
+    {
+      "asset": "codec-vp9.mp4",
+      "content_type": "video/mp4",
+      "what": "VP9 profile 0 640x360 30fps",
+      "asset_head": {
+        "name": "codec-vp9.mp4",
+        "url": "http://192.168.2.21:7640/media/codec-vp9.mp4",
+        "ok": true,
+        "bytes": 245112
+      },
+      "load": {
+        "reply_type": "MEDIA_STATUS",
+        "player_state": "IDLE",
+        "media_session_id": 3
+      },
+      "states_seen": [],
+      "samples": 0,
+      "playing_samples": 0,
+      "playhead_advance_s": 0.0,
+      "first_state": null,
+      "last_state": null,
+      "session_polls": 0,
+      "session_dropped_after_s": 0.14,
+      "supported_media_commands_after_load": null,
+      "idle_reason": null,
+      "verdict": "rejected"
+    },
+    {
+      "asset": "codec-vp9.webm",
+      "content_type": "video/webm",
+      "what": "VP9 profile 0 640x360 30fps (webm control)",
+      "asset_head": {
+        "name": "codec-vp9.webm",
+        "url": "http://192.168.2.21:7640/media/codec-vp9.webm",
+        "ok": true,
+        "bytes": 245354
+      },
+      "load": {
+        "reply_type": "MEDIA_STATUS",
+        "player_state": "IDLE",
+        "media_session_id": 4
+      },
+      "states_seen": [],
+      "samples": 0,
+      "playing_samples": 0,
+      "playhead_advance_s": 0.0,
+      "first_state": null,
+      "last_state": null,
+      "session_polls": 0,
+      "session_dropped_after_s": 0.14,
+      "supported_media_commands_after_load": null,
+      "idle_reason": null,
+      "verdict": "rejected"
+    },
+    {
+      "asset": "codec-av1.mp4",
+      "content_type": "video/mp4",
+      "what": "AV1 main 640x360 30fps",
+      "asset_head": {
+        "name": "codec-av1.mp4",
+        "url": "http://192.168.2.21:7640/media/codec-av1.mp4",
+        "ok": true,
+        "bytes": 408304
+      },
+      "load": {
+        "reply_type": "MEDIA_STATUS",
+        "player_state": "IDLE",
+        "media_session_id": 5
+      },
+      "states_seen": [],
+      "samples": 0,
+      "playing_samples": 0,
+      "playhead_advance_s": 0.0,
+      "first_state": null,
+      "last_state": null,
+      "session_polls": 0,
+      "session_dropped_after_s": 0.17,
+      "supported_media_commands_after_load": null,
+      "idle_reason": null,
+      "verdict": "rejected"
+    }
+  ]
+}
