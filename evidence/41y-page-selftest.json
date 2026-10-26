@@ -1,0 +1,212 @@
+{
+  "task": "C — receiver.html exercised offline (CAF stubbed)",
+  "command": "node receiver/selftest.js",
+  "at": "2026-10-25T22:14:20-0400",
+  "what": "the page's own <script> run with a stub CAF/localStorage-free environment: protocol behaviour only, no rendering, no device",
+  "checks": 33,
+  "passed": 33,
+  "failed": 0,
+  "results": [
+    {
+      "name": "caf_started",
+      "ok": true,
+      "detail": {
+        "disableIdleTimeout": true,
+        "statusText": "VideoNetCaster",
+        "maxInactivity": 86400
+      }
+    },
+    {
+      "name": "subscribed_to_our_namespace",
+      "ok": true,
+      "detail": null
+    },
+    {
+      "name": "idle_page_says_ready",
+      "ok": true,
+      "detail": "ready"
+    },
+    {
+      "name": "hello_on_connect",
+      "ok": true,
+      "detail": 1
+    },
+    {
+      "name": "hello_fields",
+      "ok": true,
+      "detail": [
+        "type",
+        "seq",
+        "rx_ms",
+        "ua",
+        "codecs",
+        "version",
+        "app",
+        "app_id"
+      ]
+    },
+    {
+      "name": "hello_seq_present",
+      "ok": true,
+      "detail": 0
+    },
+    {
+      "name": "hello_codecs_has_the_matrix",
+      "ok": true,
+      "detail": [
+        "h264",
+        "hevc",
+        "vp9",
+        "av1",
+        "mp4",
+        "dash",
+        "ua"
+      ]
+    },
+    {
+      "name": "hello_rx_ms_from_timeorigin",
+      "ok": true,
+      "detail": 1700001000000
+    },
+    {
+      "name": "clock_reply",
+      "ok": true,
+      "detail": 1
+    },
+    {
+      "name": "clock_reply_echoes_seq",
+      "ok": true,
+      "detail": 41
+    },
+    {
+      "name": "clock_reply_to_the_sender",
+      "ok": true,
+      "detail": "sender-test"
+    },
+    {
+      "name": "load_sets_src",
+      "ok": true,
+      "detail": "http://192.168.2.21:7640/media/a.mp4"
+    },
+    {
+      "name": "load_parks_at_media",
+      "ok": true,
+      "detail": 1.5
+    },
+    {
+      "name": "load_does_not_autoplay",
+      "ok": true,
+      "detail": true
+    },
+    {
+      "name": "load_emits_state",
+      "ok": true,
+      "detail": 1
+    },
+    {
+      "name": "state_fields",
+      "ok": true,
+      "detail": [
+        "type",
+        "seq",
+        "rx_ms",
+        "media",
+        "rate",
+        "player_state",
+        "buffered_end",
+        "dropped"
+      ]
+    },
+    {
+      "name": "state_seq_present",
+      "ok": true,
+      "detail": 42
+    },
+    {
+      "name": "pause_pauses",
+      "ok": true,
+      "detail": true
+    },
+    {
+      "name": "pause_no_false_intent",
+      "ok": true,
+      "detail": 0
+    },
+    {
+      "name": "seek_moves",
+      "ok": true,
+      "detail": 12.25
+    },
+    {
+      "name": "seek_no_false_intent",
+      "ok": true,
+      "detail": []
+    },
+    {
+      "name": "rate_applied",
+      "ok": true,
+      "detail": 1.002
+    },
+    {
+      "name": "rate_echoed_in_state",
+      "ok": true,
+      "detail": 1.002
+    },
+    {
+      "name": "play_at_parks_immediately",
+      "ok": true,
+      "detail": 3
+    },
+    {
+      "name": "play_at_single_play",
+      "ok": true,
+      "detail": false
+    },
+    {
+      "name": "play_at_emits_state",
+      "ok": true,
+      "detail": 1
+    },
+    {
+      "name": "foreign_pause_intent",
+      "ok": true,
+      "detail": [
+        {
+          "type": "intent",
+          "seq": 46,
+          "action": "pause"
+        }
+      ]
+    },
+    {
+      "name": "stop_clears_source",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "stop_shows_idle",
+      "ok": true,
+      "detail": "ready"
+    },
+    {
+      "name": "stop_reports_idle_state",
+      "ok": true,
+      "detail": "idle"
+    },
+    {
+      "name": "idle_announces_ready",
+      "ok": true,
+      "detail": 2
+    },
+    {
+      "name": "unknown_type_reported",
+      "ok": true,
+      "detail": 1
+    },
+    {
+      "name": "json_string_payload",
+      "ok": true,
+      "detail": null
+    }
+  ]
+}

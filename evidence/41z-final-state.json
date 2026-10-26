@@ -1,0 +1,97 @@
+{
+  "command": "./tools/receiver_probe.py --only bc --backend dmr",
+  "backend": "dmr",
+  "assets": {
+    "host": "192.168.2.21",
+    "dir": "/opt/nac-dev/media",
+    "assets": {},
+    "stdout": [
+      "have codec-h264.mp4",
+      "have codec-hevc.mp4",
+      "have codec-vp9.mp4",
+      "have codec-vp9.webm",
+      "have codec-av1.mp4",
+      "have rate-90s.mp4",
+      "total 4712",
+      "-rw-r--r-- 1 root root  408304 Oct 25 21:51 codec-av1.mp4",
+      "-rw-r--r-- 1 root root  621243 Oct 25 21:51 codec-h264.mp4",
+      "-rw-r--r-- 1 root root  398824 Oct 25 21:51 codec-hevc.mp4",
+      "-rw-r--r-- 1 root root  245112 Oct 25 21:51 codec-vp9.mp4",
+      "-rw-r--r-- 1 root root  245354 Oct 25 21:51 codec-vp9.webm",
+      "drwxr-xr-x 2 root root    4096 Oct 25 22:12 evidence",
+      "drwxr-xr-x 3 root root    4096 Oct 25 22:11 lib",
+      "drwxr-xr-x 2 root root    4096 Oct 25 22:11 probe",
+      "-rw-r--r-- 1 root root 2885457 Oct 25 21:51 rate-90s.mp4"
+    ],
+    "stderr": "",
+    "rc": 0
+  },
+  "volume_before": {
+    "controlType": "attenuation",
+    "level": 0.25,
+    "muted": false,
+    "stepInterval": 0.05000000074505806
+  },
+  "measurements": "bc",
+  "app_availability": {
+    "28028CD2": "APP_UNAVAILABLE",
+    "CC1AD845": "APP_AVAILABLE",
+    "E8C28D3C": "APP_AVAILABLE"
+  },
+  "launch": {
+    "launch_reply": {
+      "requestId": 2,
+      "status": {
+        "applications": [
+          {
+            "appId": "CC1AD845",
+            "appType": "WEB",
+            "displayName": "Default Media Receiver",
+            "iconUrl": "",
+            "isIdleScreen": false,
+            "launchedFromCloud": false,
+            "namespaces": [
+              {
+                "name": "urn:x-cast:com.google.cast.debugoverlay"
+              },
+              {
+                "name": "urn:x-cast:com.google.cast.cac"
+              },
+              {
+                "name": "urn:x-cast:com.google.cast.media"
+              }
+            ],
+            "sessionId": "f3a82694-857f-45d1-bd1f-a79b15bef5de",
+            "statusText": "Default Media Receiver",
+            "transportId": "f3a82694-857f-45d1-bd1f-a79b15bef5de",
+            "universalAppId": "CC1AD845"
+          }
+        ],
+        "userEq": {},
+        "volume": {
+          "controlType": "attenuation",
+          "level": 0.25,
+          "muted": true,
+          "stepInterval": 0.05000000074505806
+        }
+      },
+      "type": "RECEIVER_STATUS"
+    },
+    "transport_id": "f3a82694-857f-45d1-bd1f-a79b15bef5de"
+  },
+  "volume_restored": {
+    "muted": false,
+    "level": 0.25
+  },
+  "after": {
+    "verdict": "idle",
+    "app_name": "Backdrop",
+    "volume": {
+      "controlType": "attenuation",
+      "level": 0.25,
+      "muted": false,
+      "stepInterval": 0.05000000074505806
+    }
+  },
+  "left_on_backdrop": true
+}
