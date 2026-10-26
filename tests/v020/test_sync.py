@@ -325,7 +325,12 @@ class TestObservation(unittest.TestCase):
 
     def test_steady_is_false_while_a_trim_is_fresh(self):
         drive(self.ctl, 1.0, 100.0, err_s=0.0)
-        drive(self.ctl, 100.25, 110.0, err_s=0.050)  # a trim goes out
+        # a real offset is the *group* being 50 ms ahead: the video read is filtered now, so
+        # biasing it would only be absorbed (that is the point of VideoClock, evidence/49)
+        t = 100.25
+        while t < 110.0:
+            self.ctl.step(t, vsample(t, t), gsample(t, t + 0.050))
+            t = round(t + DT, 9)
         self.assertGreater(self.ctl._rate_at, 100.0)
         self.assertFalse(self.ctl.steady(self.ctl._rate_at + 1.0), "a trim 1 s ago is not steady (§2)")
         self.assertTrue(self.ctl.steady(self.ctl._rate_at + 3.0))
@@ -365,15 +370,17 @@ class TestObservation(unittest.TestCase):
         self.assertIsNotNone(med)
         self.assertAlmostEqual(med, 12.0, delta=1.5)
 
-    def test_a_stale_outlier_read_is_rejected(self):
+    def test_a_stale_outlier_read_is_absorbed_not_obeyed(self):
+        """A ±150 ms stale read (A15) must not move the estimate, nor cause a trim."""
         drive(self.ctl, 1.0, 60.0, err_s=0.0)
         before = self.ctl.estimated_error()
+        rates_before = self.ctl.counts.get(sync.MSG_RATE, 0)
         t = 61.0
         for stale in (0.150, -0.156):
             self.ctl.step(t, vsample(t, t + stale), gsample(t, t))
             t = round(t + DT, 9)
-        self.assertGreaterEqual(self.ctl.rejected, 2)
-        self.assertAlmostEqual(self.ctl.estimated_error(), before, places=3)
+        self.assertAlmostEqual(self.ctl.estimated_error(), before, delta=0.005)
+        self.assertEqual(self.ctl.counts.get(sync.MSG_RATE, 0), rates_before)
 
     def test_snapshot_carries_the_status_fields(self):
         drive(self.ctl, 1.0, 60.0, err_s=0.0)

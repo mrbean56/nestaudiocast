@@ -114,6 +114,86 @@ RELOAD_COMMANDS = (MSG_LOAD, MSG_SEEK, CMD_GROUP_SEEK)
 EMITTABLE = (MSG_PLAY_AT, MSG_RATE, MSG_PAUSE, MSG_IDLE, MSG_STOP) + GROUP_COMMANDS
 
 
+VDO_WINDOW_S = 30.0  # the mean's window; measured, not assumed (evidence/49)
+VDO_WARM_S = 2.5  # enough history (several refreshes at 4 Hz) before it is trusted
+VDO_JUMP_S = 0.40  # a read this far from the estimate is a seek, not noise
+VDO_MIN_SAMPLES = 8
+
+
+class VideoClock:
+    """Filtered video playhead, in the receiver's clock domain (contracts §2).
+
+    Measured on 2026-10-26 (`evidence/49-playhead-noise-dmr.json`, 238 reads at 4 Hz): the
+    Chromecast reports a **sawtooth** playhead — σ 60 ms, −153…+146 ms, 31 % of second-to-second
+    moves larger than 20 ms — so a law fed the raw value chases it, and the simulation shows what
+    that costs (10 ms of symmetric noise is already enough to blow the 10 s convergence target:
+    `evidence/44b-sim-video-side.json`).
+
+    Which filter? Not a matter of taste: the candidates were scored on those 238 real reads against
+    a local least-squares truth, over identical windows (`notes/labo-sync.md` §5):
+
+        estimator            σ       p50     p95     bias
+        10 s mean          8.6 ms   5.2 ms  16.4 ms  +1.7 ms   <- chosen
+        10 s median        9.9      22.4    35.1    +21.0
+        upper envelope     5.2      82.8    92.1    +83.0   (v0.1's TvClock, tuned for the TV)
+
+    The TV's sawtooth only ever ran *slow* between refreshes, so its envelope is the truth (A20).
+    This device scatters on **both sides** of the truth: no percentile is unbiased, but the
+    time-average is. Hence a plain mean, and the window is measured too — scored against a single
+    global fit of the same 238 reads:
+
+        window    σ       p50     p95     max
+        10 s    10.7 ms  9.5 ms  17.2 ms  21.8
+        20 s     8.6      7.0    15.3    15.8
+        30 s     5.1      4.7    10.2    11.7   <- chosen
+
+    The device carries a slow wobble of a few tens of seconds, which only a long window removes.
+    The lag that comes with it costs nothing: a landing resets the window (``_reset_estimator``)
+    and the law may not trim until 30 s after an event anyway (§2), by which time the window is
+    full again. It also cannot inject fast corrections, which is what a low dead band needs.
+    """
+
+    def __init__(
+        self, window_s: float = VDO_WINDOW_S, warm_s: float = VDO_WARM_S, jump_s: float = VDO_JUMP_S
+    ) -> None:
+        self.window_s, self.warm_s, self.jump_s = window_s, warm_s, jump_s
+        self.samples: list[tuple[float, float]] = []  # (rx seconds, media - rx)
+        self.resets = 0
+
+    def reset(self) -> None:
+        self.samples.clear()
+
+    def offset(self) -> float | None:
+        """The window's estimate of ``media - rx`` (seconds), or None while empty."""
+        if not self.samples:
+            return None
+        return sum(o for _, o in self.samples) / len(self.samples)
+
+    def add(self, rx_ms: float, media: float) -> bool:
+        """Feed one read. False means a discontinuity: the window restarted on this read."""
+        rx = float(rx_ms) / 1000.0
+        o = float(media) - rx
+        cur = self.offset()
+        if cur is not None and abs(o - cur) > self.jump_s:
+            self.samples = [(rx, o)]
+            self.resets += 1
+            return False
+        self.samples.append((rx, o))
+        self.samples = [(r, x) for r, x in self.samples if r > rx - self.window_s]
+        return True
+
+    def ready(self) -> bool:
+        return (
+            len(self.samples) >= VDO_MIN_SAMPLES
+            and self.samples[-1][0] - self.samples[0][0] >= self.warm_s
+        )
+
+    def at(self, rx: float) -> float | None:
+        """Media position at receiver time ``rx`` (seconds), or None while warming up."""
+        off = self.offset()
+        return None if off is None else rx + off
+
+
 class Controller:
     """Decides what to tell the two sides, given their samples. Emits nothing by itself.
 
@@ -199,6 +279,8 @@ class Controller:
         self._last_raw: float | None = None  # last single-tick error, before filtering
         self._steady_window: list[tuple[float, float]] = []
         self.rejected = 0  # stale reads thrown out by the outlier filter
+        #: filtered video playhead (evidence/49: the device reports a sawtooth)
+        self.video_clock = VideoClock()
         self._np = {"video": 0, "group": 0}
         self._playing_since: dict[str, float | None] = {"video": None, "group": None}
         self._last_nonplaying: dict[str, float | None] = {"video": None, "group": None}
@@ -434,6 +516,7 @@ class Controller:
         self._reset_estimator()
 
     def _reset_estimator(self) -> None:
+        self.video_clock.reset()  # a landing moves the playhead: the envelope is invalid
         self._err.clear()
         self._last_raw = None
         self._steady_window.clear()
@@ -510,6 +593,8 @@ class Controller:
     # -- sample handling ---------------------------------------------------------------------
     def _track(self, now: float, video: Sample, group: GroupSample) -> None:
         self._last_video, self._last_group = video, group
+        if video.player_state == PLAYER_PLAYING and video.media is not None:
+            self.video_clock.add(video.rx_ms, video.media)
         for side, state in (("video", video.player_state), ("group", group.player_state)):
             if state == PLAYER_PLAYING:
                 self._np[side] = 0
@@ -543,8 +628,18 @@ class Controller:
         self._err.append((now, e_raw))
 
     def _video_pos(self, now: float, video: Sample) -> float:
+        """Video position, from the filtered envelope once it has warmed up (evidence/49).
+
+        Raw fallback only while warming up or when the device reports a non-playing state: the
+        law must never be fed a sawtooth if a filtered value exists.
+        """
         if video.player_state != PLAYER_PLAYING:
             return float(video.media)
+        if self.video_clock.ready():
+            rx = self._rx_ms(now) / 1000.0
+            est = self.video_clock.at(rx)
+            if est is not None:
+                return est
         t_rx = float(video.rx_ms) / 1000.0 - self.clock_offset_ms / 1000.0
         return float(video.media) + (now - t_rx) * float(video.rate)
 

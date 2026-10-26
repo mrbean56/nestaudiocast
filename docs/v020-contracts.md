@@ -74,6 +74,11 @@ Two reaction speeds, never mixed up:
   because the group's raw reads carry isolated outliers (A15: σ 10.2 ms, outliers ±156 ms).
 - Drift is `least squares slope of the 5 s medians`, reported in ms / 10 min with its standard
   error. A trend only counts if the projected 10 min value exceeds 2σ.
+- **Both playheads are filtered, and the video side's filter is measured** (§10.11): the receiver's
+  reported playhead is a sawtooth (σ 60 ms, `evidence/49`), so `e` is computed from a 30 s running
+  mean of `media − rx` on the video side (reset at every landing) and from the group's own
+  estimator. `DELTA_V2` does **not** absorb an estimator bias — it cancels in the true error — so
+  the filter's choice is a matter of accuracy, not of taste.
 
 ## 3. Receiver protocol (CASTv2 custom namespace)
 
@@ -257,3 +262,11 @@ what was ambiguous.
     number that decides is task C (d) on the device. Recorded as a disagreement in
     `notes/consensus.md` §8.5.1. (The earlier wording of this amendment called the case
     a re-calibration scenario; it is kept in git history, `9f950fd`.)
+
+11. **§2 — the video playhead is filtered, and which filter is a measurement** (2026-10-26). On the
+    device's own 238 reads, a 30 s mean gives σ 5.1 ms / p95 10.2 ms with +1.0 ms bias; a 10 s
+    median gives +21 ms of bias and v0.1's upper envelope +82 ms (the TV's sawtooth ran only slow,
+    this device's scatters both ways). `sync.VideoClock` implements the mean; the scoring table and
+    the reasoning are in `notes/labo-sync.md` §5. The consequence is recorded honestly: with the
+    measured noise the steady p95 is ~13 ms — inside the acceptance's 20 ms, above the 10 ms the
+    simulation met with a perfect video side.

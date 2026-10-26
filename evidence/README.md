@@ -78,11 +78,12 @@ Chromecast `.80`, débranché de la TV par le propriétaire, n'a donc aucun chem
 | `41c-rate-stall-dmr.json` | un changement de cadence ne coupe pas la lecture (`PLAYING`, pas de retour en arrière de tête) | idem |
 | `41y-page-selftest.json` | la logique de `receiver.html` exécutée hors ligne avec un CAF simulé : 33/33 | `receiver/selftest.js` |
 | `41z-final-state.json` | `.80` laissé sur `Backdrop`, aucune app lancée | idem |
+| `49-playhead-noise-dmr.json` | **la tête de lecture vidéo est un sawtooth** : σ 60,1 ms, −152,5…+145,6 ms, 31 % des pas > 20 ms, 238 lectures à 4 Hz | `tools/playhead_noise.py --seconds 60` |
 | `42-eureka-info-80.json` | lecture seule de `.80` (aucun lancement) | `tools/… --probe` (tâche D) |
 | `42-sender-link-fake.json` (+ `.log`) | sur un récepteur CASTv2 local : erreur d'horloge **médiane 0,49 ms**, prise de contrôle détectée en **1 poll**, boîte de réception bornée | tâche D |
 | `43-group-*` | estimateur de tête de lecture (médiane 5 échantillons, rejet, hystérésis 2 lectures) ; sonde `--dry-run` prouvée inerte ; suite + `prove.sh` | tâche E |
 | `44-sim.json` | loi de commande simulée avec le bruit mesuré : p95 ≤ 5,4 ms (nominal), **0** `load`/`seek`/`play_at` en régime, 3 cas d'échec attendus et documentés | `tests/v020/sim_v020.py` |
-| `44b-sim-video-side.json` | revue du 2026-10-26 : le côté vidéo **imparfait** (tous les cas de `44` le supposaient parfait). `play_at` dispersé 40/80 ms et groupe à ±80 ms → PASS ; **bruit de lecture vidéo 10 ms → FAIL sur la convergence (36 s)**, combiné réaliste → FAIL (44 s) ; jamais de rechargement. Simulation, pas matériel (`notes/consensus.md` §8.5) | `tests/v020/sim_v020.py --case …` |
+| `44b-sim-video-side.json` | revue du 2026-10-26, **après** le filtre vidéo : départ dispersé 40/80 ms → PASS ; groupe ±80 ms → PASS ; bruit 10 ms → PASS ; **bruit mesuré 60 ms → PASS à 13,2 ms de p95** ; combiné réaliste + seek → 13,6 ms, aucun rechargement ; rapport en retard seulement (forme A20) → FAIL attendu, 90,8 ms | `tests/v020/sim_v020.py --case …` |
 | `45-relay-yield-offline.txt` | le relais v0.1 lit `state/group.owner` et **ne touche plus au groupe** quand v0.2 le possède | tâche H |
 | `47-sender-selftest.json`, `47b`, `47c` | l'app propriétaire hors ligne : 43/43 cas HTTP, garde « zéro rechargement » prouvée contre un contrôleur hostile (2400 tics), 121 tests, `prove.sh` | tâche G |
 | `48-*` | les instruments de la porte : analyseur (échec forcé sur un rechargement caché), acoustique (+6 ms de biais), transport, prise de contrôle étrangère, heures calmes, rollback — **auto-tests uniquement** | tâche J |

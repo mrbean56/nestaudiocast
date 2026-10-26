@@ -261,3 +261,22 @@ ce qui le trancherait.
    le son **peut** démarrer — l'inverse de ce que le nom suggère ; renommer avant d'y mettre une
    valeur.
 
+
+### 8.6 Blocage du 2026-10-26 : l'app n'est pas connue de l'appareil
+
+Mesure (lecture seule, `GET_APP_AVAILABILITY`) après le redémarrage demandé par le propriétaire :
+
+| appareil | `28028CD2` | `CC1AD845` |
+|---|---|---|
+| Chromecast Salon `.80` (uptime 2061 s après redémarrage) | **APP_UNAVAILABLE** | APP_AVAILABLE |
+| Chromecast Sous-Sol `.81`, Basement `.128`, Salon Orange `.66`, Salon Jaune `.67`, Chambre `.120`, TV chambre `.130` | APP_UNAVAILABLE | APP_AVAILABLE |
+
+`LAUNCH 28028CD2` → `LAUNCH_ERROR / NOT_FOUND`. Aucun appareil du LAN ne connaît donc l'APP_ID, y
+compris celui que le propriétaire a enregistré. La pile Cast est saine (les autres apps répondent) :
+c'est l'enregistrement de l'appareil dans la console qui n'a pas pris effet. Trois causes restent,
+non départageables d'ici : numéro de série saisi qui ne correspond pas à cet appareil, enregistrement
+fait sous un autre compte Google que l'app, ou propagation non terminée. **À vérifier côté console
+par le propriétaire** (onglet *Devices*, numéro de série comparé à celui de l'appareil).
+Conséquence : tout ce qui demande **notre page** reste non mesuré (horloge, dispersion de départ,
+bruit de `currentTime` côté page, gain de cadence via la page). Ce qui ne la demande pas a été mesuré
+(lecteur de la plateforme, `evidence/49`).

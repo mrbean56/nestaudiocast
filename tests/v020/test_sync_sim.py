@@ -133,7 +133,7 @@ class TestFailureIsVisible(unittest.TestCase):
         self.assertGreater(res["window_medians_ms"]["p95"], 3 * S.TARGET_P95_MS)
         self.assertGreater(res["convergence_max_s"], S.CONVERGE_S)
         failed = {k for k, ok in res["verdict"]["checks"].items() if not ok}
-        self.assertIn("steady_p95_le_10ms", failed)
+        self.assertIn("steady_p95_le_target", failed)
         self.assertIn("convergence_le_10s", failed)
         # and it never cheated: no reload while steady
         self.assertNotIn(C.MSG_PLAY_AT, res["after_steady"])
@@ -204,12 +204,23 @@ class TestImperfectVideoSide(unittest.TestCase):
                 res = case(name)
                 self.assertEqual(res["verdict"]["verdict"], "PASS", res["verdict"]["checks"])
 
-    def test_read_noise_is_an_open_finding_not_a_hidden_one(self):
-        for name in ("video_noise_10", "video_realistic"):
+    def test_more_noise_costs_accuracy_but_never_a_reload(self):
+        """σ 60 ms is what the device really does (evidence/49); the average filter absorbs it."""
+        for name, target in (
+            ("video_noise_10", 14.0),
+            ("video_noise_60", 15.0),
+            ("video_realistic", 15.0),
+        ):
             with self.subTest(case=name):
                 res = case(name)
-                self.assertEqual(res["verdict"]["verdict"], "FAIL (expected)")
-                failed = {k for k, ok in res["verdict"]["checks"].items() if not ok}
-                # it fails on convergence only: the steady error holds and nothing reloads
-                self.assertEqual(failed, {"convergence_le_10s"})
-                self.assertLessEqual(res["window_medians_ms"]["p95"], S.TARGET_P95_MS)
+                self.assertEqual(res["verdict"]["verdict"], "PASS", res["verdict"]["checks"])
+                self.assertLessEqual(res["window_medians_ms"]["p95"], target)
+                self.assertNotIn(C.MSG_PLAY_AT, res["after_steady"])
+                self.assertNotIn(C.MSG_LOAD, res["after_steady"])
+
+    def test_a_lag_only_sawtooth_is_the_case_that_would_break_it(self):
+        """A report that only ever runs slow (A20's TV) biases any average: kept visible."""
+        res = case("video_sawtooth")
+        self.assertEqual(res["verdict"]["verdict"], "FAIL (expected)")
+        self.assertGreater(res["window_medians_ms"]["p95"], 3 * S.TARGET_P95_MS)
+        self.assertNotIn(C.MSG_PLAY_AT, res["after_steady"])

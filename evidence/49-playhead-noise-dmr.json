@@ -1,0 +1,2519 @@
+{
+ "task": "video playhead read noise (review 2026-10-26)",
+ "command": "playhead_noise.py --seconds 60 --json evidence/49-playhead-noise-dmr.json",
+ "at": "2026-10-26T14:43:09-0400",
+ "device": "192.168.2.80",
+ "backend": "platform Default Media Receiver CC1AD845 (not our page)",
+ "asset": "http://192.168.2.21:7641/media/rate-90s.mp4",
+ "hz": 4.0,
+ "launch": {
+  "launch_reply": {
+   "requestId": 2,
+   "status": {
+    "applications": [
+     {
+      "appId": "CC1AD845",
+      "appType": "WEB",
+      "displayName": "Default Media Receiver",
+      "iconUrl": "",
+      "isIdleScreen": false,
+      "launchedFromCloud": false,
+      "namespaces": [
+       {
+        "name": "urn:x-cast:com.google.cast.debugoverlay"
+       },
+       {
+        "name": "urn:x-cast:com.google.cast.cac"
+       },
+       {
+        "name": "urn:x-cast:com.google.cast.media"
+       }
+      ],
+      "sessionId": "d5a986ca-2662-4be4-980a-17a243f39698",
+      "statusText": "Default Media Receiver",
+      "transportId": "d5a986ca-2662-4be4-980a-17a243f39698",
+      "universalAppId": "CC1AD845"
+     }
+    ],
+    "userEq": {},
+    "volume": {
+     "controlType": "attenuation",
+     "level": 0.25,
+     "muted": false,
+     "stepInterval": 0.05000000074505806
+    }
+   },
+   "type": "RECEIVER_STATUS"
+  },
+  "transport_id": "d5a986ca-2662-4be4-980a-17a243f39698"
+ },
+ "load": {
+  "reply_type": "MEDIA_STATUS",
+  "player_state": "IDLE",
+  "media_session_id": 2
+ },
+ "result": {
+  "ok": true,
+  "samples": 238,
+  "span_s": 59.77,
+  "rate_measured": 0.999663,
+  "rtt_ms_median": 20.25,
+  "residual_ms": {
+   "sigma": 60.09,
+   "p50_abs": 47.38,
+   "p95_abs": 111.78,
+   "max_abs": 152.53,
+   "min_signed": -152.53,
+   "max_signed": 145.59
+  },
+  "frame_step_ms_median": 15.62,
+  "big_moves_over_20ms": 74,
+  "big_move_fraction": 0.312,
+  "verdict": "sawtooth-like",
+  "worth_for_the_filter": "an upper-envelope filter (v0.1's TvClock, A20) fits a sawtooth; a median fits outlier spikes; a 4 Hz read of a clean device needs neither"
+ },
+ "rows_sample": [
+  {
+   "t": 1793040129.1362777,
+   "t0": 1793040129.126178,
+   "t1": 1793040129.1463776,
+   "media": 0.808829,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040129.3863583,
+   "t0": 1793040129.3762522,
+   "t1": 1793040129.3964646,
+   "media": 1.050989,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040129.636443,
+   "t0": 1793040129.6263258,
+   "t1": 1793040129.64656,
+   "media": 1.299765,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040188.4077563,
+   "t0": 1793040188.3976314,
+   "t1": 1793040188.4178815,
+   "media": 60.010411,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040188.6578243,
+   "t0": 1793040188.647705,
+   "t1": 1793040188.6679435,
+   "media": 60.265577,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040188.9078975,
+   "t0": 1793040188.8977766,
+   "t1": 1793040188.9180186,
+   "media": 60.527677,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  }
+ ],
+ "raw_rows": [
+  {
+   "t": 1793040129.1362777,
+   "t0": 1793040129.126178,
+   "t1": 1793040129.1463776,
+   "media": 0.808829,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040129.3863583,
+   "t0": 1793040129.3762522,
+   "t1": 1793040129.3964646,
+   "media": 1.050989,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040129.636443,
+   "t0": 1793040129.6263258,
+   "t1": 1793040129.64656,
+   "media": 1.299765,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040129.8865013,
+   "t0": 1793040129.876396,
+   "t1": 1793040129.896607,
+   "media": 1.547544,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040130.1365788,
+   "t0": 1793040130.1264653,
+   "t1": 1793040130.1466923,
+   "media": 1.796131,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040130.3866563,
+   "t0": 1793040130.3765402,
+   "t1": 1793040130.3967721,
+   "media": 2.043917,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040130.6367378,
+   "t0": 1793040130.6266174,
+   "t1": 1793040130.646858,
+   "media": 2.292654,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040130.8868036,
+   "t0": 1793040130.8766882,
+   "t1": 1793040130.8969193,
+   "media": 2.54032,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040131.1469164,
+   "t0": 1793040131.126763,
+   "t1": 1793040131.1670697,
+   "media": 2.794193,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040131.3869395,
+   "t0": 1793040131.3768344,
+   "t1": 1793040131.3970444,
+   "media": 3.043809,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040131.6370087,
+   "t0": 1793040131.626903,
+   "t1": 1793040131.647114,
+   "media": 3.291331,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040131.887086,
+   "t0": 1793040131.8769748,
+   "t1": 1793040131.897197,
+   "media": 3.536522,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040132.1371706,
+   "t0": 1793040132.127047,
+   "t1": 1793040132.147294,
+   "media": 3.783869,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040132.3872404,
+   "t0": 1793040132.3771224,
+   "t1": 1793040132.3973584,
+   "media": 4.034149,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040132.6373467,
+   "t0": 1793040132.6272066,
+   "t1": 1793040132.6474867,
+   "media": 4.130755,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040132.8974485,
+   "t0": 1793040132.877282,
+   "t1": 1793040132.917615,
+   "media": 4.381166,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040133.1474905,
+   "t0": 1793040133.127322,
+   "t1": 1793040133.167659,
+   "media": 4.633077,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040133.3975573,
+   "t0": 1793040133.3773947,
+   "t1": 1793040133.4177198,
+   "media": 4.884044,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040133.6375873,
+   "t0": 1793040133.6274683,
+   "t1": 1793040133.6477063,
+   "media": 5.320061,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040133.8977063,
+   "t0": 1793040133.8775408,
+   "t1": 1793040133.9178717,
+   "media": 5.560749,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040134.137733,
+   "t0": 1793040134.1276124,
+   "t1": 1793040134.1478539,
+   "media": 5.806871,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040134.387804,
+   "t0": 1793040134.3776855,
+   "t1": 1793040134.3979225,
+   "media": 6.057008,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040134.637878,
+   "t0": 1793040134.6277583,
+   "t1": 1793040134.6479976,
+   "media": 6.315418,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040134.8979976,
+   "t0": 1793040134.877832,
+   "t1": 1793040134.9181633,
+   "media": 6.568771,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040135.1380267,
+   "t0": 1793040135.1279051,
+   "t1": 1793040135.1481485,
+   "media": 6.667322,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040135.3981462,
+   "t0": 1793040135.377975,
+   "t1": 1793040135.4183173,
+   "media": 6.924288,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040135.638165,
+   "t0": 1793040135.6280491,
+   "t1": 1793040135.648281,
+   "media": 7.187422,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040135.888258,
+   "t0": 1793040135.8781242,
+   "t1": 1793040135.8983917,
+   "media": 7.447433,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040136.1383843,
+   "t0": 1793040136.1282117,
+   "t1": 1793040136.1485567,
+   "media": 7.717422,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040136.3884168,
+   "t0": 1793040136.3782852,
+   "t1": 1793040136.3985484,
+   "media": 7.987555,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040136.6485248,
+   "t0": 1793040136.6283603,
+   "t1": 1793040136.6686893,
+   "media": 8.2423,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040136.8885565,
+   "t0": 1793040136.8784359,
+   "t1": 1793040136.898677,
+   "media": 8.497388,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040137.1486554,
+   "t0": 1793040137.1285071,
+   "t1": 1793040137.1688037,
+   "media": 8.767355,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040137.3887053,
+   "t0": 1793040137.3785794,
+   "t1": 1793040137.3988314,
+   "media": 9.0376,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040137.6387715,
+   "t0": 1793040137.6286516,
+   "t1": 1793040137.6488914,
+   "media": 9.287757,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040137.8888469,
+   "t0": 1793040137.8787243,
+   "t1": 1793040137.8989697,
+   "media": 9.529648,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040138.1389143,
+   "t0": 1793040138.1287968,
+   "t1": 1793040138.1490319,
+   "media": 9.777202,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040138.3889885,
+   "t0": 1793040138.37887,
+   "t1": 1793040138.399107,
+   "media": 10.040587,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040138.6390452,
+   "t0": 1793040138.62894,
+   "t1": 1793040138.6491506,
+   "media": 10.266023,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040138.8991702,
+   "t0": 1793040138.879015,
+   "t1": 1793040138.9193254,
+   "media": 10.532031,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040139.1392055,
+   "t0": 1793040139.129087,
+   "t1": 1793040139.149324,
+   "media": 10.778182,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040139.3892877,
+   "t0": 1793040139.3791616,
+   "t1": 1793040139.3994138,
+   "media": 11.030155,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040139.6393619,
+   "t0": 1793040139.6292326,
+   "t1": 1793040139.6494908,
+   "media": 11.128288,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040139.8894317,
+   "t0": 1793040139.8793097,
+   "t1": 1793040139.8995538,
+   "media": 11.397444,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040140.1495404,
+   "t0": 1793040140.1293821,
+   "t1": 1793040140.169699,
+   "media": 11.667411,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040140.3895764,
+   "t0": 1793040140.3794556,
+   "t1": 1793040140.399697,
+   "media": 11.937433,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040140.639625,
+   "t0": 1793040140.6295245,
+   "t1": 1793040140.6497257,
+   "media": 12.207566,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040140.8897204,
+   "t0": 1793040140.8795967,
+   "t1": 1793040140.8998444,
+   "media": 12.477455,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040141.1397839,
+   "t0": 1793040141.1296716,
+   "t1": 1793040141.149896,
+   "media": 12.737388,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040141.389849,
+   "t0": 1793040141.3797405,
+   "t1": 1793040141.3999574,
+   "media": 13.0074,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040141.6399353,
+   "t0": 1793040141.6298132,
+   "t1": 1793040141.6500573,
+   "media": 13.277544,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040141.9000392,
+   "t0": 1793040141.8798816,
+   "t1": 1793040141.920197,
+   "media": 13.547322,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040142.1400762,
+   "t0": 1793040142.1299539,
+   "t1": 1793040142.1501985,
+   "media": 13.806883,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040142.3901315,
+   "t0": 1793040142.3800244,
+   "t1": 1793040142.4002385,
+   "media": 14.002197,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040142.6402054,
+   "t0": 1793040142.6300945,
+   "t1": 1793040142.6503162,
+   "media": 14.265302,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040142.890283,
+   "t0": 1793040142.8801684,
+   "t1": 1793040142.9003975,
+   "media": 14.527234,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040143.140352,
+   "t0": 1793040143.130238,
+   "t1": 1793040143.150466,
+   "media": 14.799064,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040143.3904238,
+   "t0": 1793040143.3803163,
+   "t1": 1793040143.4005313,
+   "media": 14.847411,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040143.6404862,
+   "t0": 1793040143.6303856,
+   "t1": 1793040143.6505868,
+   "media": 15.115588,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040143.8905768,
+   "t0": 1793040143.8804598,
+   "t1": 1793040143.9006937,
+   "media": 15.3676,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040144.1406221,
+   "t0": 1793040144.1305254,
+   "t1": 1793040144.1507187,
+   "media": 15.637422,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040144.4007607,
+   "t0": 1793040144.3805997,
+   "t1": 1793040144.4209213,
+   "media": 15.897266,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040144.6407893,
+   "t0": 1793040144.6306734,
+   "t1": 1793040144.6509051,
+   "media": 16.149833,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040144.89087,
+   "t0": 1793040144.8807454,
+   "t1": 1793040144.900995,
+   "media": 16.4076,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040145.1509795,
+   "t0": 1793040145.130816,
+   "t1": 1793040145.1711428,
+   "media": 16.667422,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040145.3910155,
+   "t0": 1793040145.3808882,
+   "t1": 1793040145.4011426,
+   "media": 16.937555,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040145.6410851,
+   "t0": 1793040145.630959,
+   "t1": 1793040145.6512115,
+   "media": 17.207355,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040145.9012191,
+   "t0": 1793040145.8810408,
+   "t1": 1793040145.9213974,
+   "media": 17.477588,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040146.1412249,
+   "t0": 1793040146.1311107,
+   "t1": 1793040146.1513388,
+   "media": 17.737455,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040146.391269,
+   "t0": 1793040146.381148,
+   "t1": 1793040146.4013898,
+   "media": 18.007411,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040146.6413412,
+   "t0": 1793040146.6312199,
+   "t1": 1793040146.6514626,
+   "media": 18.267277,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040146.891416,
+   "t0": 1793040146.8812938,
+   "t1": 1793040146.9015386,
+   "media": 18.519088,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040147.1514854,
+   "t0": 1793040147.131322,
+   "t1": 1793040147.1716487,
+   "media": 18.785833,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040147.391531,
+   "t0": 1793040147.381401,
+   "t1": 1793040147.4016612,
+   "media": 19.009142,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040147.6415925,
+   "t0": 1793040147.6314733,
+   "t1": 1793040147.6517115,
+   "media": 19.260968,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040147.8916693,
+   "t0": 1793040147.881545,
+   "t1": 1793040147.9017935,
+   "media": 19.511187,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040148.1417422,
+   "t0": 1793040148.131618,
+   "t1": 1793040148.1518667,
+   "media": 19.780526,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040148.391809,
+   "t0": 1793040148.3816922,
+   "t1": 1793040148.4019258,
+   "media": 20.056957,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040148.651927,
+   "t0": 1793040148.6317656,
+   "t1": 1793040148.6720886,
+   "media": 20.332786,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040148.8919647,
+   "t0": 1793040148.8818417,
+   "t1": 1793040148.9020877,
+   "media": 20.525261,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040149.1420517,
+   "t0": 1793040149.1319103,
+   "t1": 1793040149.1521928,
+   "media": 20.80049,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040149.3920984,
+   "t0": 1793040149.3819854,
+   "t1": 1793040149.4022112,
+   "media": 20.8874,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040149.6421857,
+   "t0": 1793040149.632059,
+   "t1": 1793040149.6523123,
+   "media": 21.1474,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040149.9023008,
+   "t0": 1793040149.8821337,
+   "t1": 1793040149.9224682,
+   "media": 21.4174,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040150.142332,
+   "t0": 1793040150.1322083,
+   "t1": 1793040150.152456,
+   "media": 21.687633,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040150.392407,
+   "t0": 1793040150.3822844,
+   "t1": 1793040150.4025297,
+   "media": 21.9557,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040150.6424437,
+   "t0": 1793040150.63233,
+   "t1": 1793040150.6525576,
+   "media": 22.222655,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040150.892527,
+   "t0": 1793040150.8824034,
+   "t1": 1793040150.9026506,
+   "media": 22.487388,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040151.1426,
+   "t0": 1793040151.1324778,
+   "t1": 1793040151.1527221,
+   "media": 22.756633,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040151.3926764,
+   "t0": 1793040151.3825533,
+   "t1": 1793040151.4027991,
+   "media": 23.016711,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040151.64275,
+   "t0": 1793040151.6326268,
+   "t1": 1793040151.6528733,
+   "media": 23.25108,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040151.9028623,
+   "t0": 1793040151.8826985,
+   "t1": 1793040151.923026,
+   "media": 23.501416,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040152.1428952,
+   "t0": 1793040152.1327727,
+   "t1": 1793040152.1530178,
+   "media": 23.770679,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040152.392958,
+   "t0": 1793040152.3828447,
+   "t1": 1793040152.4030712,
+   "media": 24.030625,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040152.6430578,
+   "t0": 1793040152.6329358,
+   "t1": 1793040152.6531801,
+   "media": 24.283239,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040152.8931112,
+   "t0": 1793040152.8830054,
+   "t1": 1793040152.9032173,
+   "media": 24.55104,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040153.1432076,
+   "t0": 1793040153.1330788,
+   "t1": 1793040153.1533365,
+   "media": 24.821606,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040153.3932817,
+   "t0": 1793040153.3831532,
+   "t1": 1793040153.4034102,
+   "media": 24.877588,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040153.6433506,
+   "t0": 1793040153.6332278,
+   "t1": 1793040153.6534731,
+   "media": 25.1374,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040153.8934302,
+   "t0": 1793040153.8833063,
+   "t1": 1793040153.903554,
+   "media": 25.407333,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040154.1535387,
+   "t0": 1793040154.1333785,
+   "t1": 1793040154.173699,
+   "media": 25.676166,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040154.393577,
+   "t0": 1793040154.3834496,
+   "t1": 1793040154.403705,
+   "media": 25.927644,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040154.6436467,
+   "t0": 1793040154.6335227,
+   "t1": 1793040154.653771,
+   "media": 26.197488,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040154.8937182,
+   "t0": 1793040154.8835962,
+   "t1": 1793040154.9038403,
+   "media": 26.467488,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040155.1437895,
+   "t0": 1793040155.1336713,
+   "t1": 1793040155.1539078,
+   "media": 26.737488,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040155.3938699,
+   "t0": 1793040155.3837454,
+   "t1": 1793040155.4039943,
+   "media": 26.998011,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040155.6439302,
+   "t0": 1793040155.6338172,
+   "t1": 1793040155.6540432,
+   "media": 27.267411,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040155.8940132,
+   "t0": 1793040155.8838928,
+   "t1": 1793040155.9041336,
+   "media": 27.537366,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040156.1440861,
+   "t0": 1793040156.1339655,
+   "t1": 1793040156.1542068,
+   "media": 27.752114,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040156.3941627,
+   "t0": 1793040156.38404,
+   "t1": 1793040156.4042854,
+   "media": 28.04595,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040156.6442363,
+   "t0": 1793040156.6341164,
+   "t1": 1793040156.6543562,
+   "media": 28.251933,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040156.8943095,
+   "t0": 1793040156.884188,
+   "t1": 1793040156.9044309,
+   "media": 28.571674,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040157.1443877,
+   "t0": 1793040157.1342618,
+   "t1": 1793040157.1545136,
+   "media": 28.607433,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040157.3944561,
+   "t0": 1793040157.3843365,
+   "t1": 1793040157.4045758,
+   "media": 28.877411,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040157.6546087,
+   "t0": 1793040157.6344137,
+   "t1": 1793040157.6748035,
+   "media": 29.137555,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040157.8946009,
+   "t0": 1793040157.8844862,
+   "t1": 1793040157.9047155,
+   "media": 29.407422,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040158.14468,
+   "t0": 1793040158.1345613,
+   "t1": 1793040158.1547987,
+   "media": 29.677455,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040158.395279,
+   "t0": 1793040158.3851492,
+   "t1": 1793040158.4054086,
+   "media": 29.937466,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040158.645343,
+   "t0": 1793040158.6352224,
+   "t1": 1793040158.6554637,
+   "media": 30.197622,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040158.8953943,
+   "t0": 1793040158.8852825,
+   "t1": 1793040158.905506,
+   "media": 30.467566,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040159.1554604,
+   "t0": 1793040159.1353164,
+   "t1": 1793040159.1756046,
+   "media": 30.7374,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040159.3954895,
+   "t0": 1793040159.3853853,
+   "t1": 1793040159.4055936,
+   "media": 31.007377,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040159.6455595,
+   "t0": 1793040159.635454,
+   "t1": 1793040159.6556652,
+   "media": 31.267622,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040159.8956366,
+   "t0": 1793040159.885524,
+   "t1": 1793040159.9057493,
+   "media": 31.5272,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040160.1457055,
+   "t0": 1793040160.135594,
+   "t1": 1793040160.155817,
+   "media": 31.768344,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040160.39579,
+   "t0": 1793040160.3856692,
+   "t1": 1793040160.405911,
+   "media": 32.004132,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040160.645871,
+   "t0": 1793040160.6357455,
+   "t1": 1793040160.6559963,
+   "media": 32.272562,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040160.9059782,
+   "t0": 1793040160.8858192,
+   "t1": 1793040160.926137,
+   "media": 32.520574,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040161.146008,
+   "t0": 1793040161.1358864,
+   "t1": 1793040161.1561294,
+   "media": 32.781008,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040161.3960826,
+   "t0": 1793040161.3859594,
+   "t1": 1793040161.406206,
+   "media": 33.058933,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040161.646159,
+   "t0": 1793040161.636033,
+   "t1": 1793040161.6562848,
+   "media": 33.264595,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040161.9062672,
+   "t0": 1793040161.886108,
+   "t1": 1793040161.9264262,
+   "media": 33.540516,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040162.1463087,
+   "t0": 1793040162.13618,
+   "t1": 1793040162.1564374,
+   "media": 33.823661,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040162.3963737,
+   "t0": 1793040162.3862512,
+   "t1": 1793040162.406496,
+   "media": 33.8773,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040162.6564724,
+   "t0": 1793040162.6363196,
+   "t1": 1793040162.6766253,
+   "media": 34.147344,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040162.8965049,
+   "t0": 1793040162.8863926,
+   "t1": 1793040162.9066172,
+   "media": 34.407555,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040163.1566126,
+   "t0": 1793040163.1364613,
+   "t1": 1793040163.176764,
+   "media": 34.677444,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040163.39667,
+   "t0": 1793040163.3865333,
+   "t1": 1793040163.406807,
+   "media": 34.947422,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040163.6467357,
+   "t0": 1793040163.6366096,
+   "t1": 1793040163.6568618,
+   "media": 35.207411,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040163.8968062,
+   "t0": 1793040163.886683,
+   "t1": 1793040163.9069295,
+   "media": 35.477555,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040164.1468792,
+   "t0": 1793040164.1367571,
+   "t1": 1793040164.1570015,
+   "media": 35.747466,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040164.3969648,
+   "t0": 1793040164.3868299,
+   "t1": 1793040164.4070997,
+   "media": 36.017355,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040164.647017,
+   "t0": 1793040164.6369026,
+   "t1": 1793040164.6571312,
+   "media": 36.2774,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040164.8971076,
+   "t0": 1793040164.8869762,
+   "t1": 1793040164.9072387,
+   "media": 36.537611,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040165.1471796,
+   "t0": 1793040165.1370485,
+   "t1": 1793040165.1573107,
+   "media": 36.797255,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040165.397241,
+   "t0": 1793040165.3871207,
+   "t1": 1793040165.4073613,
+   "media": 37.015848,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040165.6473157,
+   "t0": 1793040165.6371944,
+   "t1": 1793040165.657437,
+   "media": 37.278751,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040165.8973985,
+   "t0": 1793040165.8872697,
+   "t1": 1793040165.9075272,
+   "media": 37.538334,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040166.1474643,
+   "t0": 1793040166.1373427,
+   "t1": 1793040166.1575859,
+   "media": 37.795611,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040166.397544,
+   "t0": 1793040166.3874164,
+   "t1": 1793040166.4076712,
+   "media": 38.064961,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040166.6476111,
+   "t0": 1793040166.6374857,
+   "t1": 1793040166.6577368,
+   "media": 38.324312,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040166.8976676,
+   "t0": 1793040166.887556,
+   "t1": 1793040166.9077792,
+   "media": 38.550787,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040167.1477506,
+   "t0": 1793040167.1376317,
+   "t1": 1793040167.1578696,
+   "media": 38.647577,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040167.3978233,
+   "t0": 1793040167.3877046,
+   "t1": 1793040167.4079418,
+   "media": 38.917388,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040167.6479023,
+   "t0": 1793040167.6377783,
+   "t1": 1793040167.6580262,
+   "media": 39.177422,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040167.908019,
+   "t0": 1793040167.8878531,
+   "t1": 1793040167.928185,
+   "media": 39.447355,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040168.1480722,
+   "t0": 1793040168.1379297,
+   "t1": 1793040168.1582146,
+   "media": 39.707511,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040168.3981414,
+   "t0": 1793040168.3880055,
+   "t1": 1793040168.4082775,
+   "media": 39.977544,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040168.6481948,
+   "t0": 1793040168.6380777,
+   "t1": 1793040168.6583118,
+   "media": 40.247422,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040168.898276,
+   "t0": 1793040168.88815,
+   "t1": 1793040168.9084022,
+   "media": 40.517333,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040169.1684408,
+   "t0": 1793040169.1382256,
+   "t1": 1793040169.1986558,
+   "media": 40.787577,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040169.398426,
+   "t0": 1793040169.3883045,
+   "t1": 1793040169.4085476,
+   "media": 41.02271,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040169.6486373,
+   "t0": 1793040169.63851,
+   "t1": 1793040169.6587648,
+   "media": 41.258104,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040169.898714,
+   "t0": 1793040169.8885846,
+   "t1": 1793040169.9088433,
+   "media": 41.575266,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040170.148792,
+   "t0": 1793040170.1386592,
+   "t1": 1793040170.1589248,
+   "media": 41.795145,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040170.3988628,
+   "t0": 1793040170.3887315,
+   "t1": 1793040170.408994,
+   "media": 42.037171,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040170.6589687,
+   "t0": 1793040170.6388078,
+   "t1": 1793040170.6791296,
+   "media": 42.302874,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040170.8990068,
+   "t0": 1793040170.888882,
+   "t1": 1793040170.9091318,
+   "media": 42.57635,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040171.1490722,
+   "t0": 1793040171.138958,
+   "t1": 1793040171.1591866,
+   "media": 42.827004,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040171.399158,
+   "t0": 1793040171.3890357,
+   "t1": 1793040171.4092803,
+   "media": 42.8977,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040171.6492176,
+   "t0": 1793040171.6391082,
+   "t1": 1793040171.6593273,
+   "media": 43.167444,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040171.8992987,
+   "t0": 1793040171.8891845,
+   "t1": 1793040171.9094129,
+   "media": 43.437388,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040172.1493845,
+   "t0": 1793040172.1392574,
+   "t1": 1793040172.1595113,
+   "media": 43.707355,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040172.3994596,
+   "t0": 1793040172.3893318,
+   "t1": 1793040172.4095874,
+   "media": 43.977777,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040172.6495264,
+   "t0": 1793040172.6394024,
+   "t1": 1793040172.6596503,
+   "media": 44.244677,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040172.8995976,
+   "t0": 1793040172.8894763,
+   "t1": 1793040172.9097188,
+   "media": 44.497466,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040173.1597114,
+   "t0": 1793040173.1395514,
+   "t1": 1793040173.179871,
+   "media": 44.767366,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040173.3997412,
+   "t0": 1793040173.389622,
+   "t1": 1793040173.4098601,
+   "media": 45.037566,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040173.649819,
+   "t0": 1793040173.6396954,
+   "t1": 1793040173.6599422,
+   "media": 45.267217,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040173.8998966,
+   "t0": 1793040173.8897676,
+   "t1": 1793040173.9100254,
+   "media": 45.53828,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040174.400888,
+   "t0": 1793040174.1398423,
+   "t1": 1793040174.661934,
+   "media": 45.837366,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040174.9029517,
+   "t0": 1793040174.6620903,
+   "t1": 1793040175.1438131,
+   "media": 46.637377,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040175.1639962,
+   "t0": 1793040175.1438854,
+   "t1": 1793040175.1841068,
+   "media": 46.809213,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040175.404072,
+   "t0": 1793040175.3939552,
+   "t1": 1793040175.4141889,
+   "media": 46.907366,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040175.6642244,
+   "t0": 1793040175.6440349,
+   "t1": 1793040175.684414,
+   "media": 47.177533,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040175.9042337,
+   "t0": 1793040175.8941095,
+   "t1": 1793040175.914358,
+   "media": 47.447633,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040176.1543138,
+   "t0": 1793040176.144184,
+   "t1": 1793040176.1644435,
+   "media": 47.714777,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040176.404385,
+   "t0": 1793040176.394258,
+   "t1": 1793040176.414512,
+   "media": 47.977411,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040176.6644623,
+   "t0": 1793040176.6443236,
+   "t1": 1793040176.684601,
+   "media": 48.247633,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040176.9145708,
+   "t0": 1793040176.8943968,
+   "t1": 1793040176.9347448,
+   "media": 48.507488,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040177.1546073,
+   "t0": 1793040177.144475,
+   "t1": 1793040177.1647394,
+   "media": 48.767366,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040177.4046674,
+   "t0": 1793040177.3945456,
+   "t1": 1793040177.4147892,
+   "media": 49.027266,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040177.6547084,
+   "t0": 1793040177.644615,
+   "t1": 1793040177.664802,
+   "media": 49.283155,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040177.9047935,
+   "t0": 1793040177.8946872,
+   "t1": 1793040177.9148998,
+   "media": 49.547411,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040178.1649084,
+   "t0": 1793040178.144758,
+   "t1": 1793040178.185059,
+   "media": 49.807411,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040178.4049354,
+   "t0": 1793040178.3948274,
+   "t1": 1793040178.4150434,
+   "media": 50.031862,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040178.65501,
+   "t0": 1793040178.644897,
+   "t1": 1793040178.665123,
+   "media": 50.309712,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040178.9050796,
+   "t0": 1793040178.8949654,
+   "t1": 1793040178.9151938,
+   "media": 50.569076,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040179.1551418,
+   "t0": 1793040179.145034,
+   "t1": 1793040179.1652493,
+   "media": 50.762259,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040179.4052124,
+   "t0": 1793040179.3951035,
+   "t1": 1793040179.415321,
+   "media": 51.022777,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040179.6552906,
+   "t0": 1793040179.645173,
+   "t1": 1793040179.6654084,
+   "media": 51.310196,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040179.9053636,
+   "t0": 1793040179.895244,
+   "t1": 1793040179.9154832,
+   "media": 51.542526,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040180.1554184,
+   "t0": 1793040180.145315,
+   "t1": 1793040180.1655216,
+   "media": 51.637477,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040180.405515,
+   "t0": 1793040180.3953896,
+   "t1": 1793040180.4156404,
+   "media": 52.057942,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040180.6555858,
+   "t0": 1793040180.6454628,
+   "t1": 1793040180.6657088,
+   "media": 52.322668,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040180.9056988,
+   "t0": 1793040180.8955452,
+   "t1": 1793040180.9158525,
+   "media": 52.407677,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040181.1557326,
+   "t0": 1793040181.1456184,
+   "t1": 1793040181.1658466,
+   "media": 52.6673,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040181.4058237,
+   "t0": 1793040181.395692,
+   "t1": 1793040181.4159555,
+   "media": 52.919911,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040181.6558924,
+   "t0": 1793040181.6457653,
+   "t1": 1793040181.6660197,
+   "media": 53.1774,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040181.9059615,
+   "t0": 1793040181.8958383,
+   "t1": 1793040181.9160845,
+   "media": 53.447522,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040182.156023,
+   "t0": 1793040182.1459088,
+   "t1": 1793040182.166137,
+   "media": 53.717322,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040182.4060898,
+   "t0": 1793040182.3959787,
+   "t1": 1793040182.416201,
+   "media": 53.987577,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040182.6561565,
+   "t0": 1793040182.6460495,
+   "t1": 1793040182.6662638,
+   "media": 54.247444,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040182.906229,
+   "t0": 1793040182.8961182,
+   "t1": 1793040182.91634,
+   "media": 54.514954,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040183.1562967,
+   "t0": 1793040183.1461725,
+   "t1": 1793040183.1664207,
+   "media": 54.777433,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040183.4163787,
+   "t0": 1793040183.3962247,
+   "t1": 1793040183.4365327,
+   "media": 55.047344,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040183.656429,
+   "t0": 1793040183.6462955,
+   "t1": 1793040183.6665626,
+   "media": 55.307322,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040183.9064405,
+   "t0": 1793040183.896324,
+   "t1": 1793040183.916557,
+   "media": 55.533702,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040184.166542,
+   "t0": 1793040184.1463935,
+   "t1": 1793040184.1866903,
+   "media": 55.770489,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040184.406567,
+   "t0": 1793040184.396461,
+   "t1": 1793040184.4166734,
+   "media": 56.01499,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040184.6666799,
+   "t0": 1793040184.6465304,
+   "t1": 1793040184.6868296,
+   "media": 56.295781,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040184.9067414,
+   "t0": 1793040184.8966067,
+   "t1": 1793040184.916876,
+   "media": 56.534105,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040185.1567874,
+   "t0": 1793040185.1466765,
+   "t1": 1793040185.166898,
+   "media": 56.792866,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040185.4068642,
+   "t0": 1793040185.3967478,
+   "t1": 1793040185.4169807,
+   "media": 57.061141,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040185.6569333,
+   "t0": 1793040185.6468196,
+   "t1": 1793040185.6670473,
+   "media": 57.124166,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040185.9070191,
+   "t0": 1793040185.896895,
+   "t1": 1793040185.9171433,
+   "media": 57.387455,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040186.157091,
+   "t0": 1793040186.1469698,
+   "t1": 1793040186.167212,
+   "media": 57.647533,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040186.4071636,
+   "t0": 1793040186.3970447,
+   "t1": 1793040186.4172823,
+   "media": 57.917344,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040186.6572404,
+   "t0": 1793040186.647117,
+   "t1": 1793040186.6673641,
+   "media": 58.187488,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040186.9073243,
+   "t0": 1793040186.8971922,
+   "t1": 1793040186.9174562,
+   "media": 58.442177,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040187.1573935,
+   "t0": 1793040187.1472661,
+   "t1": 1793040187.1675208,
+   "media": 58.707544,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040187.4074714,
+   "t0": 1793040187.39734,
+   "t1": 1793040187.4176028,
+   "media": 58.976011,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040187.6575227,
+   "t0": 1793040187.6474068,
+   "t1": 1793040187.6676383,
+   "media": 59.242933,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040187.9076748,
+   "t0": 1793040187.8974905,
+   "t1": 1793040187.9178588,
+   "media": 59.497611,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040188.1576834,
+   "t0": 1793040188.1475616,
+   "t1": 1793040188.1678054,
+   "media": 59.7575,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040188.4077563,
+   "t0": 1793040188.3976314,
+   "t1": 1793040188.4178815,
+   "media": 60.010411,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040188.6578243,
+   "t0": 1793040188.647705,
+   "t1": 1793040188.6679435,
+   "media": 60.265577,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  },
+  {
+   "t": 1793040188.9078975,
+   "t0": 1793040188.8977766,
+   "t1": 1793040188.9180186,
+   "media": 60.527677,
+   "player_state": "PLAYING",
+   "rate": 1,
+   "session": 2,
+   "idle_reason": null
+  }
+ ]
+}

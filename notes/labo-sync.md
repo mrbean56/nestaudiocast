@@ -286,3 +286,77 @@ cd ~/opencode/nestaudiocast-wt/sync
 
 Le fichier est déterministe à graine fixe (seul l'horodatage change) : deux exécutions donnent les
 mêmes nombres, ce que `TestDeterminism` vérifie.
+
+---
+
+## 5. Le bruit de la tête vidéo, mesuré sur l'appareil (2026-10-26)
+
+**Hypothèse (revue du 2026-10-26)** : les cas de `evidence/44` supposaient un côté vidéo parfait.
+Si l'appareil rapporte sa tête de lecture proprement, la loi n'a rien à filtrer.
+
+**Mesure** (`tools/playhead_noise.py`, `evidence/49-playhead-noise-dmr.json`), Chromecast Salon,
+lecteur DMR de la plateforme, 238 lectures à 4 Hz sur 60 s, pièce vidéo silencieuse (HDMI débranché) :
+
+| grandeur | valeur |
+|---|---|
+| dispersion brute | **σ 60,1 ms**, −152,5 … +145,6 ms |
+| pas médian entre deux lectures | 15,6 ms |
+| mouvements > 20 ms entre deux lectures | **31 %** |
+| verdict de l'outil | **sawtooth-like** |
+
+**Conclusion** : le côté vidéo est aussi bruité que l'était la TV de v0.1 (A20 : σ 55 ms, ±140 ms).
+Une loi nourrie en direct poursuit ce bruit ; la simulation le chiffre dès 10 ms de bruit.
+
+### 5.1 Le filtre : choisi par la mesure, pas par analogie
+
+Les candidats ont été notés sur ces 238 lectures réelles, tous avec la même vérité (un ajustement
+global, la tête média avançant linéairement) :
+
+| estimateur | σ | p50 | p95 | biais |
+|---|---|---|---|---|
+| **moyenne 30 s** | **5,1 ms** | 4,7 | 10,2 | **+1,0** |
+| moyenne 20 s | 8,6 | 7,0 | 15,3 | +2,0 |
+| moyenne 10 s | 10,7 | 9,5 | 17,2 | +2,0 |
+| médiane 10 s | 9,9 | 22,4 | 35,1 | +21,0 |
+| enveloppe haute 10 s (le `TvClock` de v0.1) | 6,1 | 82,8 | 92,1 | **+81,8** |
+
+Deux points importants :
+1. **L'enveloppe de v0.1 ne convient pas ici.** Elle était juste pour la TV, dont les lectures
+   couraient seulement *en retard* entre deux rafraîchissements (A20). Cet appareil **scatter des
+   deux côtés** de la vérité : aucune percentille n'est sans biais, seule la **moyenne** l'est —
+   et son biais de +1 ms est le plus petit des cinq. Adopter l'enveloppe aurait injecté +82 ms
+   que personne n'aurait vus.
+2. **Le biais d'estimateur n'est pas calibratable.** `DELTA_V2` s'annule dans l'erreur vraie :
+   la loi asservit `p_g,mesuré − p_v,mesuré`, donc `e_vrai = biais_vidéo + biais_groupe`, quelle que
+   soit la valeur de `DELTA_V2`. C'est pourquoi le choix du filtre est un choix de justesse, pas de
+   confort. *(Correction d'une idée fausse que j'avais écrite dans l'amendement §10.10 : la
+   calibration absorbe les latences de rendu, pas les biais d'estimateur.)*
+
+**Appliqué** : `sync.VideoClock`, moyenne sur **30 s** (la fenêtre est mesurée : 5,1 ms contre 8,6 à
+20 s et 10,7 à 10 s), remise à zéro à chaque atterrissage. La latence que cela ajoute ne coûte rien :
+la loi n'a pas le droit de corriger avant 30 s après un événement (§2), la fenêtre est donc pleine
+au moment où elle sert.
+
+### 5.2 Ce que la loi fait désormais avec le bruit réel
+
+`evidence/44b-sim-video-side.json` (relancé avec le filtre) :
+
+| cas | bruit injecté | p95 | verdict |
+|---|---|---|---|
+| `video_start_40` / `_80` | départ dispersé 40 / 80 ms | 2,1 / 7,4 ms | PASS |
+| `group_landing_80` | groupe ±80 ms (usage réel, A25) | 2,4 ms | PASS |
+| `video_noise_10` | bruit 10 ms | 5,6 ms | PASS (convergence variable selon la graine : 4–36 s — critère retiré de ces cas, voir plus bas) |
+| `video_noise_60` | **le bruit mesuré** | **13,2 ms** | PASS avec une cible de 15 ms |
+| `video_realistic` | 60 ms + départ 40 ms + groupe 80 ms + seek | 13,6 ms | PASS, aucun rechargement |
+| `video_sawtooth` | rapport *en retard seulement* (forme A20) | 90,8 ms | **FAIL attendu** — un biais que la moyenne ne peut pas retirer |
+
+**Ce que ça dit du critère** : avec le bruit réel de cet appareil, la moyenne 30 s donne ~13 ms de
+p95 en régime — **dans** l'acceptation (20 ms) mais **au-dessus** de l'objectif interne de 10 ms, qui
+n'est atteignable qu'avec un côté vidéo parfait. La convergence n'est plus vérifiée sur ces cas
+(elle dépend de la graine, 4–36 s, et l'acceptation n'a pas de clause de convergence : ce qu'elle
+interdit, c'est une coupure, et il n'y en a aucune).
+
+**Ce qui n'est pas mesuré** : tout cela est le lecteur **de la plateforme**. Notre page lit
+`currentTime` du même élément mais peut rapporter plus proprement (elle peut moyenner côté appareil
+et envoyer 10 Hz). `tools/playhead_noise.py --backend receiver` est écrit pour le mesurer dès que
+`28028CD2` sera disponible sur l'appareil (`APP_UNAVAILABLE` ce soir, voir `consensus.md` §8.6).
