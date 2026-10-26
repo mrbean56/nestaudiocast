@@ -72,7 +72,8 @@ function makeWorld() {
     started: null,
     start(opts) { this.started = opts || {}; },
     getPlayerManager() { return playerManager; },
-    getSenders() { return ['sender-test']; },
+    senders: ['sender-test'],
+    getSenders() { return this.senders; },
     sendCustomMessage(ns, senderId, msg) { sent.push({ ns, senderId, msg }); },
     addCustomMessageListener(ns, fn) { listeners.custom.push({ ns, fn }); },
     addEventListener(type, fn) { (listeners.system[type] = listeners.system[type] || []).push(fn); },
@@ -112,10 +113,13 @@ function load(world) {
     'cast', 'document', 'performance', 'navigator', 'window', 'setInterval', 'setTimeout',
     'clearInterval', code);
   const win = {};
-  // timers run for real (the page schedules a single play() from the target time)
+  // setTimeout runs for real (the page schedules a single play() from the target time);
+  // setInterval is captured instead, so a test can fire the 4 Hz ticker by hand.
+  const ticks = [];
   fn(world.cast, globalDocOf(world), world.performance, world.navigator, win,
-     () => 0, setTimeout, () => 0);
+     (cb) => { ticks.push(cb); return ticks.length; }, setTimeout, () => 0, );
   world.window = win;
+  world.ticks = ticks;
   return win;
 }
 
@@ -235,6 +239,22 @@ async function main() {
   // 13. a JSON string payload is accepted (some senders send text)
   w.emit(NS, JSON.stringify({ type: 'clock', seq: 50 }), 'sender-test');
   check('json_string_payload', w.of('clock_reply').some(m => m.msg.seq === 50), null);
+
+  // 14. a raw CASTv2 controller is not a CAF sender: getSenders() is empty for it, so state,
+  //     error and ended must still reach the sender we last heard from (measured 2026-10-26:
+  //     clock_reply, a direct reply, arrived; state, a broadcast, never did)
+  w.context.senders = [];
+  w.emit(NS, { type: 'load', seq: 51, url: 'http://192.168.2.21:7640/media/b.mp4',
+               content_type: 'video/mp4', media: 0, autoplay: true }, 'raw-controller');
+  w.advance(200);
+  w.ticks.forEach((cb) => cb());          // one 4 Hz tick, with no CAF sender registered
+  const toRaw = w.sent.filter(m => m.senderId === 'raw-controller').map(m => m.msg.type);
+  check('state_reaches_a_non_caf_sender', toRaw.includes('state'), toRaw.slice(0, 8));
+  const errsBefore2 = w.of('error').length;
+  w.emit(NS, { type: 'bogus_after_senders_empty', seq: 52 }, 'raw-controller');
+  check('error_reaches_a_non_caf_sender',
+        w.sent.some(m => m.senderId === 'raw-controller' && m.msg.type === 'error'),
+        w.of('error').length - errsBefore2);
 
   const failed = checks.filter(c => !c.ok);
   const out = { page: 'receiver/receiver.html', checks: checks.length,
