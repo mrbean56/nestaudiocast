@@ -1,0 +1,220 @@
+{
+  "seed": 7,
+  "clock": {
+    "truth_offset_ms": 86400000.0,
+    "rtt_distribution_ms": [
+      0.0,
+      40.0
+    ],
+    "path_asymmetry_ms": {
+      "fixed": 0.0,
+      "jitter": 0.5
+    },
+    "per_trial": [
+      {
+        "trial": 1,
+        "error_ms": -0.2421,
+        "residual_ms": 0.5433,
+        "rtt_ms": 2.1182
+      },
+      {
+        "trial": 2,
+        "error_ms": -0.478,
+        "residual_ms": 0.2306,
+        "rtt_ms": 6.2373
+      },
+      {
+        "trial": 3,
+        "error_ms": -1.0688,
+        "residual_ms": 1.0422,
+        "rtt_ms": 4.1711
+      },
+      {
+        "trial": 4,
+        "error_ms": 0.0274,
+        "residual_ms": 1.0967,
+        "rtt_ms": 2.1152
+      },
+      {
+        "trial": 5,
+        "error_ms": -0.5106,
+        "residual_ms": 0.3653,
+        "rtt_ms": 2.1123
+      },
+      {
+        "trial": 6,
+        "error_ms": -0.5155,
+        "residual_ms": 0.1814,
+        "rtt_ms": 4.1722
+      },
+      {
+        "trial": 7,
+        "error_ms": -0.9197,
+        "residual_ms": 0.6137,
+        "rtt_ms": 2.1203
+      },
+      {
+        "trial": 8,
+        "error_ms": -1.141,
+        "residual_ms": 0.7336,
+        "rtt_ms": 4.18
+      },
+      {
+        "trial": 9,
+        "error_ms": -0.0616,
+        "residual_ms": 1.206,
+        "rtt_ms": 2.1085
+      },
+      {
+        "trial": 10,
+        "error_ms": -0.0128,
+        "residual_ms": 0.8578,
+        "rtt_ms": 2.1084
+      },
+      {
+        "trial": 11,
+        "error_ms": -0.4038,
+        "residual_ms": 0.4979,
+        "rtt_ms": 8.2984
+      },
+      {
+        "trial": 12,
+        "error_ms": -0.5875,
+        "residual_ms": 0.2966,
+        "rtt_ms": 2.115
+      }
+    ],
+    "abs_error_ms": {
+      "n": 12,
+      "median": 0.4943,
+      "min": 0.0128,
+      "max": 1.141
+    },
+    "residual_ms": {
+      "n": 12,
+      "median": 0.5785,
+      "min": 0.1814,
+      "max": 1.206
+    },
+    "min_rtt_ms": {
+      "n": 12,
+      "median": 2.1192,
+      "min": 2.1084,
+      "max": 8.2984
+    },
+    "absolute_bound_rtt_over_2_ms": {
+      "n": 12,
+      "median": 1.0595,
+      "min": 1.054,
+      "max": 4.149
+    },
+    "launch_app_id": "28028CD2",
+    "fixed_6ms_asymmetry": {
+      "errors_ms": [
+        5.6847,
+        5.5456,
+        5.2419,
+        5.9919
+      ],
+      "residuals_ms": [
+        0.1263,
+        0.3193,
+        0.3799,
+        0.6426
+      ],
+      "note": "the estimate follows the asymmetry; residual stays blind to it"
+    },
+    "jump": {
+      "offset_before_ms": 86399999.1615,
+      "offset_reported_ms": 86399999.1615,
+      "jump_ms": 5000.879,
+      "flagged": true,
+      "offset_after_reset_ms": 86404999.4564,
+      "followed_after_reset": true
+    },
+    "synthetic_offline": {
+      "trials": 200,
+      "pings": 8,
+      "abs_error_ms": {
+        "n": 200,
+        "median": 0.2599,
+        "min": 0.0015,
+        "max": 0.4981
+      },
+      "residual_ms": {
+        "n": 200,
+        "median": 0.3547,
+        "min": 0.0598,
+        "max": 1.1058
+      }
+    }
+  },
+  "takeover": {
+    "via_poll": {
+      "returned": false,
+      "polls": 1,
+      "poll_ms": 20.107,
+      "reason": "foreign_app:9A1B2C3D"
+    },
+    "lost_device_raised": true,
+    "via_read": {
+      "detected": true,
+      "reads": 1,
+      "read_ms": 0.056,
+      "reason": "foreign_app:9A1B2C3D"
+    },
+    "stop_by_other_sender": {
+      "detected": true,
+      "reason": "app_not_running"
+    }
+  },
+  "reconnect": {
+    "send_while_down": "LinkDown: link dropped while sending",
+    "reconnect_ms": 24.113,
+    "attempts_used": 1,
+    "transport_before": "transport-0a7674e5",
+    "transport_after": "transport-0a7674e5",
+    "seq_before": 1,
+    "seq_after_send": 2,
+    "hellos_before": 1,
+    "hellos_after": 2,
+    "is_ours_after": true,
+    "reconnects": 1,
+    "restart_transport": {
+      "transport": "transport-229965f0",
+      "hellos": 3,
+      "new_hello": true
+    }
+  },
+  "inbox": {
+    "injected": 1000,
+    "received": 256,
+    "dropped": 744,
+    "drains": 1,
+    "largest_drain": 256,
+    "bound": 256,
+    "ordered": true,
+    "accounted": true
+  },
+  "protocol": {
+    "sample": {
+      "rx_ms": 551515432.786,
+      "media": 10.0,
+      "rate": 1.0,
+      "player_state": "playing",
+      "buffered_end": 40.0
+    },
+    "hellos": 1,
+    "hello": {
+      "ua": "fake_receiver_net/0.2",
+      "version": "0.2.0-fake-net",
+      "seq": 0
+    },
+    "seq": 153,
+    "unknown_type": "ValueError"
+  },
+  "host": "opencode",
+  "python": "3.13.5",
+  "utc": "2026-10-26T02:10:25Z",
+  "where": "127.0.0.1 only: TLS + CASTv2 framing, no device, no audio"
+}

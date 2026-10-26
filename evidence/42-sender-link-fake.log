@@ -1,0 +1,23 @@
+{"ev": "bench_start", "seed": 7, "trials": 12, "pings": 8}
+{"ev": "fake_started", "host": "127.0.0.1", "port": 35915}
+{"ev": "launched", "app_id": "28028CD2", "transport": "transport-eb8e5e96"}
+{"ev": "clock_done", "truth_offset_ms": 86400000.0, "rtt_distribution_ms": [0.0, 40.0], "path_asymmetry_ms": {"fixed": 0.0, "jitter": 0.5}, "abs_error_ms": {"n": 12, "median": 0.4943, "min": 0.0128, "max": 1.141}, "residual_ms": {"n": 12, "median": 0.5785, "min": 0.1814, "max": 1.206}, "min_rtt_ms": {"n": 12, "median": 2.1192, "min": 2.1084, "max": 8.2984}, "absolute_bound_rtt_over_2_ms": {"n": 12, "median": 1.0595, "min": 1.054, "max": 4.149}, "launch_app_id": "28028CD2"}
+{"ev": "asymmetry_done", "errors_ms": [5.6847, 5.5456, 5.2419, 5.9919], "residuals_ms": [0.1263, 0.3193, 0.3799, 0.6426], "note": "the estimate follows the asymmetry; residual stays blind to it"}
+{"ev": "jump_done", "offset_before_ms": 86399999.1615, "offset_reported_ms": 86399999.1615, "jump_ms": 5000.879, "flagged": true, "offset_after_reset_ms": 86404999.4564, "followed_after_reset": true}
+{"ev": "fake_started", "host": "127.0.0.1", "port": 43091}
+{"ev": "launched", "app_id": "28028CD2", "transport": "transport-11e85686"}
+{"ev": "takeover", "app_id": "9A1B2C3D"}
+{"ev": "fake_started", "host": "127.0.0.1", "port": 39075}
+{"ev": "launched", "app_id": "28028CD2", "transport": "transport-33e9c6d6"}
+{"ev": "takeover", "app_id": "9A1B2C3D"}
+{"ev": "fake_started", "host": "127.0.0.1", "port": 33145}
+{"ev": "launched", "app_id": "28028CD2", "transport": "transport-d2f05dbd"}
+{"ev": "stopped_by_other_sender"}
+{"ev": "fake_started", "host": "127.0.0.1", "port": 46229}
+{"ev": "launched", "app_id": "28028CD2", "transport": "transport-0a7674e5"}
+{"ev": "clients_dropped", "n": 1}
+{"ev": "reconnect_done", "send_while_down": "LinkDown: link dropped while sending", "reconnect_ms": 24.113, "attempts_used": 1, "transport_before": "transport-0a7674e5", "transport_after": "transport-0a7674e5", "seq_before": 1, "seq_after_send": 2, "hellos_before": 1, "hellos_after": 2, "is_ours_after": true, "reconnects": 1}
+{"ev": "transport_restarted", "transport": "transport-229965f0"}
+{"ev": "fake_started", "host": "127.0.0.1", "port": 32835}
+{"ev": "launched", "app_id": "28028CD2", "transport": "transport-2e5157fa"}
+{"ev": "inbox_done", "injected": 1000, "received": 256, "dropped": 744, "drains": 1, "largest_drain": 256, "bound": 256, "ordered": true, "accounted": true}
