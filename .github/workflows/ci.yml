@@ -1,0 +1,18 @@
+name: v0.2 offline suite
+
+on:
+  push:
+    branches: [ "v0.2.0", "feat/**", "fix/**" ]
+  pull_request:
+    branches: [ "v0.2.0" ]
+
+jobs:
+  contracts-and-units:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: contracts + units
+        run: python -m unittest discover -s tests/v020 -v
