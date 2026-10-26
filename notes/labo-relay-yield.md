@@ -266,7 +266,7 @@ Ce que ce test prouverait : (a) le crochet d'arrêt ne mute pas sous verrou v0.2
 démarre sans ouvrir le lien groupe ; (c) il reprend seul au relâchement. Ce qu'il ne prouve pas :
 le comportement réel d'une session v0.2 simultanée (il faut la tâche de l'expéditeur).
 
-Pour la reproductibilité hors ligne des §6.3/§6.4, voir `evidence/40-relay-yield-offline.txt`, qui
+Pour la reproductibilité hors ligne des §6.3/§6.4, voir `evidence/45-relay-yield-offline.txt`, qui
 contient les scripts et leurs sorties.
 
 ## 8. Conclusion
