@@ -236,7 +236,8 @@ class TestMediaAndMeasure(ApiCase):
         sid = next(iter(self.fixture.proxy.sessions))
         parsed = self.assert_error("GET", f"{C.PATH_MEDIA_PREFIX}{sid}/audio.m4a", 501)
         self.assertEqual(parsed["error"], "media_stream_unavailable")
-        self.assertIn("serve_http", parsed["detail"])
+        # contracts §10.4: the proxy may expose serve_http(...) or mount itself via handle(...)
+        self.assertIn("byte endpoint", parsed["detail"])
 
     def test_a_proxy_that_speaks_http_is_used(self):
         def serve_http(method, path, headers):
