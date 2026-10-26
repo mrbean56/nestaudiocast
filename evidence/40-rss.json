@@ -1,0 +1,144 @@
+{
+ "budget_mb": 150.0,
+ "ffmpeg": "/usr/bin/ffmpeg",
+ "ffprobe": "/usr/bin/ffprobe",
+ "host": "castrelay",
+ "ok": true,
+ "peak_ps_rss_mb": 58.3,
+ "peak_stats_rss_mb": 58.3,
+ "proxy_stats_final": {
+  "refreshes": 0,
+  "rss_mb": 58.3,
+  "sessions": 1
+ },
+ "python": "3.13.5",
+ "readers": [
+  {
+   "auth": true,
+   "bytes": 33554432,
+   "declared": 33554432,
+   "ok": true,
+   "progress_max": 33554432,
+   "rc": 0,
+   "sha256": "c45566cbcb0b48ec592a074e18c41e60373e265043d2380ad8c3f475df7b29fc"
+  },
+  {
+   "auth": true,
+   "bytes": 33554432,
+   "declared": 33554432,
+   "ok": true,
+   "progress_max": 33554432,
+   "rc": 0,
+   "sha256": "5702197ad691306c26f96548efb09d72d5cab461caf190fbf683408d1c34fba3"
+  }
+ ],
+ "samples": [
+  {
+   "ps_rss_mb": 58.0,
+   "rss_mb": 58.0,
+   "t": 0.0
+  },
+  {
+   "ps_rss_mb": 58.3,
+   "rss_mb": 58.3,
+   "t": 2.99
+  },
+  {
+   "ps_rss_mb": 58.3,
+   "rss_mb": 58.3,
+   "t": 5.97
+  },
+  {
+   "ps_rss_mb": 58.3,
+   "rss_mb": 58.3,
+   "t": 8.95
+  },
+  {
+   "ps_rss_mb": 58.3,
+   "rss_mb": 58.3,
+   "t": 11.93
+  },
+  {
+   "ps_rss_mb": 58.3,
+   "rss_mb": 58.3,
+   "t": 14.91
+  },
+  {
+   "ps_rss_mb": 58.3,
+   "rss_mb": 58.3,
+   "t": 17.89
+  },
+  {
+   "ps_rss_mb": 58.3,
+   "rss_mb": 58.3,
+   "t": 20.87
+  },
+  {
+   "ps_rss_mb": 58.3,
+   "rss_mb": 58.3,
+   "t": 23.85
+  },
+  {
+   "ps_rss_mb": 58.3,
+   "rss_mb": 58.3,
+   "t": 26.83
+  },
+  {
+   "ps_rss_mb": 58.3,
+   "rss_mb": 58.3,
+   "t": 29.8
+  },
+  {
+   "ps_rss_mb": 58.3,
+   "rss_mb": 58.3,
+   "t": 32.78
+  },
+  {
+   "ps_rss_mb": 58.3,
+   "rss_mb": 58.3,
+   "t": 35.76
+  },
+  {
+   "ps_rss_mb": 58.3,
+   "rss_mb": 58.3,
+   "t": 38.74
+  },
+  {
+   "ps_rss_mb": 58.3,
+   "rss_mb": 58.3,
+   "t": 41.72
+  },
+  {
+   "ps_rss_mb": 58.3,
+   "rss_mb": 58.3,
+   "t": 44.7
+  },
+  {
+   "ps_rss_mb": 58.3,
+   "rss_mb": 58.3,
+   "t": 47.68
+  },
+  {
+   "ps_rss_mb": 58.3,
+   "rss_mb": 58.3,
+   "t": 50.66
+  },
+  {
+   "ps_rss_mb": 58.3,
+   "rss_mb": 58.3,
+   "t": 53.64
+  },
+  {
+   "ps_rss_mb": 58.3,
+   "rss_mb": 58.3,
+   "t": 56.62
+  }
+ ],
+ "sid": "aPewf1DmYuTu",
+ "span_bytes_each": 33554432,
+ "video_id": "ai_gI0Jbr_E",
+ "what": "RSS with two concurrent readers (stats() + ps), budget 150 MB",
+ "when": "2026-10-26T02:34:48Z",
+ "where": "192.168.2.21",
+ "yt_dlp": "2026.10.21"
+}

@@ -1,0 +1,13 @@
+# token scan of evidence/40-* — task B
+# when: 2026-10-26T02:36:34Z
+# host: castrelay  own URLs = http://192.168.2.21:7641/media/...
+# scanner self-test (must flag a synthetic token): PASS
+
+40-expiry.json: urls=0 own=0 source=[] other=[] token_params=[]
+40-mpd.json: urls=7 own=7 source=[] other=[] token_params=[]
+40-resolve.json: urls=0 own=0 source=[] other=[] token_params=[]
+40-rss.json: urls=0 own=0 source=[] other=[] token_params=[]
+40-seek-7200.json: urls=2 own=2 source=[] other=[] token_params=[]
+40-summary.json: urls=2 own=2 source=[] other=[] token_params=[]
+
+VERDICT: clean

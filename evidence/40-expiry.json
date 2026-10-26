@@ -1,0 +1,35 @@
+{
+ "expected_bytes": 33554432,
+ "fault_injection": "proxy.faults['drop_upstream_after']=12 MiB: the source connection is closed mid-body, because an already-authorised download does not die of its own expired token",
+ "ffmpeg": "/usr/bin/ffmpeg",
+ "ffprobe": "/usr/bin/ffprobe",
+ "host": "castrelay",
+ "ok": true,
+ "proxy_stats": {
+  "refreshes": 1,
+  "rss_mb": 75.7,
+  "sessions": 1
+ },
+ "python": "3.13.5",
+ "reader": {
+  "auth": true,
+  "bytes": 33554432,
+  "declared": 33554432,
+  "ok": true,
+  "progress_max": 33554432,
+  "rc": 0,
+  "sha256": "c45566cbcb0b48ec592a074e18c41e60373e265043d2380ad8c3f475df7b29fc"
+ },
+ "refreshes": 1,
+ "sid": "cFIl1yDcLQOg",
+ "source": {
+  "bytes": 33554432,
+  "sha256": "c45566cbcb0b48ec592a074e18c41e60373e265043d2380ad8c3f475df7b29fc"
+ },
+ "stale_token_at_reader_bytes": 1048576,
+ "video_id": "ai_gI0Jbr_E",
+ "what": "a forced token expiry in the middle of a body, recovered in the same response",
+ "when": "2026-10-26T02:36:34Z",
+ "where": "192.168.2.21",
+ "yt_dlp": "2026.10.21"
+}
