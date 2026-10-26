@@ -1,0 +1,50 @@
+{
+  "mode": "dry-run",
+  "needs_audio_window": true,
+  "sends": "nothing (no mDNS, no socket, no transport object)",
+  "group": "Cuisine",
+  "media": {
+    "url": "<--url required for a real run>",
+    "content_type": "audio/mp4",
+    "start_s": 0.0
+  },
+  "steps": [
+    {
+      "step": 1,
+      "what": "resolve the group by name over mDNS, then refuse it unless lib/groupguard.require_safe_group accepts every member",
+      "packets": "read-only (mDNS + MULTIZONE_STATUS)"
+    },
+    {
+      "step": 2,
+      "what": "save volume/mute, then mute the group (a mute is silent)",
+      "packets": "SET_VOLUME muted=true"
+    },
+    {
+      "step": 3,
+      "what": "8 landings: PAUSE -> SEEK -> PLAY at 0.0s + n*20.0s, measure where the playhead lands",
+      "packets": "1 LOAD, then per landing 1 PAUSE, 1 SEEK, 1 PLAY"
+    },
+    {
+      "step": 4,
+      "what": "park and release once more, then 10.0 min of playhead reads at 4.0 Hz with no transport event: estimator residual, 5 s medians, drift",
+      "packets": "GET_STATUS only"
+    },
+    {
+      "step": 5,
+      "what": "stop the session this run created, restore the volume, undo the mute we set",
+      "packets": "STOP + SET_VOLUME"
+    }
+  ],
+  "output": "evidence/group-probe-<timestamp>.json",
+  "refuses": [
+    "without --mute",
+    "without --i-have-an-audio-window",
+    "any group that fails groupguard"
+  ],
+  "transport_constructed": 0,
+  "castv2_imported": false
+}
+
+MODE: dry run — the plan above was printed and nothing was sent.
+transport_constructed: 0
+NEEDS AN AUDIO WINDOW: re-run with --run --mute --i-have-an-audio-window to measure, and only then.

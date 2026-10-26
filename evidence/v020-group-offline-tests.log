@@ -1,0 +1,73 @@
+test_frozen_url_and_port (test_contracts.TestConstants.test_frozen_url_and_port) ... ok
+test_receiver_namespace_and_messages (test_contracts.TestConstants.test_receiver_namespace_and_messages) ... ok
+test_states_and_actions (test_contracts.TestConstants.test_states_and_actions) ... ok
+test_timeline (test_contracts.TestConstants.test_timeline) ... ok
+test_fake_group_refuses_unsafe (test_contracts.TestFakes.test_fake_group_refuses_unsafe) ... ok
+test_fake_proxy_roundtrip (test_contracts.TestFakes.test_fake_proxy_roundtrip) ... ok
+test_fake_receiver_rate_gain_idempotent (test_contracts.TestFakes.test_fake_receiver_rate_gain_idempotent) ... ok
+test_controller (test_contracts.TestSignatures.test_controller) ... ok
+test_group (test_contracts.TestSignatures.test_group) ... ok
+test_proxy (test_contracts.TestSignatures.test_proxy) ... ok
+test_resolver (test_contracts.TestSignatures.test_resolver) ... ok
+test_sender_link (test_contracts.TestSignatures.test_sender_link) ... ok
+test_a_configured_endpoint_is_kept_when_mdns_is_silent (test_group.TestConnect.test_a_configured_endpoint_is_kept_when_mdns_is_silent) ... ok
+test_a_new_port_is_used_at_the_next_start (test_group.TestConnect.test_a_new_port_is_used_at_the_next_start)
+A Cast group's port is dynamic (A19): the name, not a cached endpoint, is the address. ... ok
+test_an_unknown_group_is_an_error_not_a_guess (test_group.TestConnect.test_an_unknown_group_is_an_error_not_a_guess) ... ok
+test_an_unsafe_group_is_refused_before_any_link_is_opened (test_group.TestConnect.test_an_unsafe_group_is_refused_before_any_link_is_opened) ... ok
+test_reconnect_adopts_only_our_own_session (test_group.TestConnect.test_reconnect_adopts_only_our_own_session) ... ok
+test_reconnect_re_guards_and_drops_the_old_link (test_group.TestConnect.test_reconnect_re_guards_and_drops_the_old_link) ... ok
+test_resolves_the_group_by_name_at_every_start (test_group.TestConnect.test_resolves_the_group_by_name_at_every_start) ... ok
+test_says_nothing_when_the_members_are_audible (test_group.TestConnect.test_says_nothing_when_the_members_are_audible) ... ok
+test_warns_when_every_member_is_muted (test_group.TestConnect.test_warns_when_every_member_is_muted)
+A37: a group whose members are muted plays happily and is silent — say it once. ... ok
+test_fake_group_and_cast_group_agree (test_group.TestInterfaceParity.test_fake_group_and_cast_group_agree) ... ok
+test_fake_group_drives_the_estimator_too (test_group.TestInterfaceParity.test_fake_group_drives_the_estimator_too)
+A fake group is enough to exercise the playhead path: no device, no socket. ... ok
+test_a_stale_read_is_rejected_by_sample (test_group.TestObservation.test_a_stale_read_is_rejected_by_sample) ... ok
+test_one_non_playing_read_does_not_ask_for_a_restart (test_group.TestObservation.test_one_non_playing_read_does_not_ask_for_a_restart) ... ok
+test_pause_freezes_the_playhead (test_group.TestObservation.test_pause_freezes_the_playhead)
+A paused playhead does not advance: extrapolating it invents an error no loop can see. ... ok
+test_prepare_parks_the_estimator_on_the_parked_position (test_group.TestObservation.test_prepare_parks_the_estimator_on_the_parked_position) ... ok
+test_sample_reports_a_reading_and_the_estimator_tracks_it (test_group.TestObservation.test_sample_reports_a_reading_and_the_estimator_tracks_it) ... ok
+test_sample_without_a_transport_says_nothing (test_group.TestObservation.test_sample_without_a_transport_says_nothing) ... ok
+test_two_read_errors_ask_for_a_reconnect (test_group.TestObservation.test_two_read_errors_ask_for_a_reconnect) ... ok
+test_a_flat_series_reports_no_significant_drift (test_group.TestPlayheadEstimator.test_a_flat_series_reports_no_significant_drift) ... ok
+test_a_seek_gap_is_not_eaten_by_the_median (test_group.TestPlayheadEstimator.test_a_seek_gap_is_not_eaten_by_the_median)
+A seek moves the group by seconds: the window must not average the two timelines. ... ok
+test_drift_on_the_probes_ten_minute_window (test_group.TestPlayheadEstimator.test_drift_on_the_probes_ten_minute_window)
+The probe's real window: 10 min of 5 s medians resolves a 180 ms/10 min drift. ... ok
+test_empty_estimator_says_nothing (test_group.TestPlayheadEstimator.test_empty_estimator_says_nothing) ... ok
+test_five_sample_median_and_one_stale_read_rejected (test_group.TestPlayheadEstimator.test_five_sample_median_and_one_stale_read_rejected) ... ok
+test_paused_reads_do_not_extrapolate (test_group.TestPlayheadEstimator.test_paused_reads_do_not_extrapolate) ... ok
+test_residual_on_a_synthetic_drift (test_group.TestPlayheadEstimator.test_residual_on_a_synthetic_drift) ... ok
+test_resume_starts_a_new_window (test_group.TestPlayheadEstimator.test_resume_starts_a_new_window) ... ok
+test_two_contradicting_reads_in_a_row_are_a_real_jump (test_group.TestPlayheadEstimator.test_two_contradicting_reads_in_a_row_are_a_real_jump) ... ok
+test_dry_run_is_the_default_and_constructs_no_transport (test_group.TestProbeScript.test_dry_run_is_the_default_and_constructs_no_transport) ... ok
+test_dry_run_plan_has_the_eight_landings_and_the_minutes (test_group.TestProbeScript.test_dry_run_plan_has_the_eight_landings_and_the_minutes) ... ok
+test_redacts_the_media_url (test_group.TestProbeScript.test_redacts_the_media_url) ... ok
+test_refuses_to_run_without_an_explicit_audio_window (test_group.TestProbeScript.test_refuses_to_run_without_an_explicit_audio_window) ... ok
+test_refuses_to_run_without_media (test_group.TestProbeScript.test_refuses_to_run_without_media) ... ok
+test_refuses_to_run_without_mute (test_group.TestProbeScript.test_refuses_to_run_without_mute) ... ok
+test_a_parked_group_is_never_restarted (test_group.TestRestartGate.test_a_parked_group_is_never_restarted) ... ok
+test_a_playing_read_resets_the_streak (test_group.TestRestartGate.test_a_playing_read_resets_the_streak) ... ok
+test_no_read_counts_during_the_settle_window (test_group.TestRestartGate.test_no_read_counts_during_the_settle_window) ... ok
+test_one_non_playing_read_is_not_a_restart (test_group.TestRestartGate.test_one_non_playing_read_is_not_a_restart) ... ok
+test_a_foreign_session_is_noticed_and_ours_is_forgotten (test_group.TestTransport.test_a_foreign_session_is_noticed_and_ours_is_forgotten) ... ok
+test_commands_need_a_session_we_created (test_group.TestTransport.test_commands_need_a_session_we_created) ... ok
+test_one_play_and_no_reload_after_the_start (test_group.TestTransport.test_one_play_and_no_reload_after_the_start)
+Acceptance: no gaps after start — one LOAD, one PLAY, no SEEK in steady state. ... ok
+test_prepare_parks_in_pause_and_never_starts (test_group.TestTransport.test_prepare_parks_in_pause_and_never_starts) ... ok
+test_prepare_twice_reparks_with_a_seek_not_a_reload (test_group.TestTransport.test_prepare_twice_reparks_with_a_seek_not_a_reload) ... ok
+test_stop_does_nothing_when_we_created_nothing (test_group.TestTransport.test_stop_does_nothing_when_we_created_nothing) ... ok
+test_stop_never_touches_a_foreign_session (test_group.TestTransport.test_stop_never_touches_a_foreign_session) ... ok
+test_stop_stops_our_session (test_group.TestTransport.test_stop_stops_our_session) ... ok
+test_a_mute_is_idempotent (test_group.TestVolume.test_a_mute_is_idempotent) ... ok
+test_mirror_is_a_front_not_a_resend (test_group.TestVolume.test_mirror_is_a_front_not_a_resend) ... ok
+test_mirror_sends_a_level_and_unmutes (test_group.TestVolume.test_mirror_sends_a_level_and_unmutes) ... ok
+test_zero_is_muted_never_sent (test_group.TestVolume.test_zero_is_muted_never_sent) ... ok
+
+----------------------------------------------------------------------
+Ran 61 tests in 0.192s
+
+OK
