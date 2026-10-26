@@ -1,0 +1,134 @@
+{
+  "suite": "sender offline self-test (brief G)",
+  "stamp": "2026-10-25T22:06:01",
+  "host": "opencode",
+  "offline": true,
+  "audible": false,
+  "http_matrix": {
+    "ok": true,
+    "cases": 43,
+    "passed": 43,
+    "failed": [],
+    "checks": {
+      "healthz_body": true,
+      "status_has_all_5_fields": true,
+      "ui_is_self_contained": true,
+      "receiver_served_from_receiver_dir": true,
+      "share_reply_shape": true,
+      "stop_leaves_idle_or_ended": true,
+      "non_lan_refused": true
+    },
+    "session_id": "sccbb0dd73f"
+  },
+  "no_reload": {
+    "hostile_controller": {
+      "controller": "HostileController",
+      "session_id": "sa8e7f5e238",
+      "state_after_share": "playing",
+      "state_after_10_min": "playing",
+      "ticks": 2400,
+      "simulated_seconds": 600.0,
+      "start_commands": {
+        "load": 1,
+        "seek": 0,
+        "play_at": 1,
+        "rate": 0
+      },
+      "group_start_calls": [
+        "prepare",
+        "play"
+      ],
+      "load_after_start": 0,
+      "seek_after_start": 0,
+      "play_at_after_start": 0,
+      "group_playhead_moves_after_start": {
+        "prepare": 0,
+        "seek": 0
+      },
+      "rate_commands_after_start": 0,
+      "controller_requests": {
+        "loads": 2400,
+        "seeks": 2400,
+        "play_at": 2400
+      },
+      "stepped": 2400,
+      "refusal_events": 60,
+      "digital_error_ms": 0.0,
+      "p95_ms": 0.0,
+      "rate": 1.0,
+      "position_video": 600.0,
+      "position_group": 600.0,
+      "lock_held": true,
+      "ok": true
+    },
+    "trim_controller": {
+      "controller": "TrimController",
+      "session_id": "sb8ec838d4d",
+      "state_after_share": "playing",
+      "state_after_10_min": "playing",
+      "ticks": 2400,
+      "simulated_seconds": 600.0,
+      "start_commands": {
+        "load": 1,
+        "seek": 0,
+        "play_at": 1,
+        "rate": 0
+      },
+      "group_start_calls": [
+        "prepare",
+        "play"
+      ],
+      "load_after_start": 0,
+      "seek_after_start": 0,
+      "play_at_after_start": 0,
+      "group_playhead_moves_after_start": {
+        "prepare": 0,
+        "seek": 0
+      },
+      "rate_commands_after_start": 2399,
+      "controller_requests": {
+        "loads": null,
+        "seeks": null,
+        "play_at": null
+      },
+      "stepped": 2400,
+      "refusal_events": 0,
+      "digital_error_ms": -600.0,
+      "p95_ms": -594.8,
+      "rate": 1.001,
+      "position_video": 600.6,
+      "position_group": 600.0,
+      "lock_held": true,
+      "ok": true
+    }
+  },
+  "boot_cleanup": {
+    "record": {
+      "session_id": "s97fc1247c3",
+      "sid": "s1",
+      "group_prepared": true,
+      "receiver_launched": true
+    },
+    "actions": [
+      "group_stopped",
+      "receiver_stopped",
+      "proxy_closed",
+      "mute_undone:Cuisine"
+    ],
+    "group_calls": [
+      "stop",
+      "volume"
+    ],
+    "receiver_calls": [
+      "stop"
+    ],
+    "proxy_sessions_left": 0,
+    "record_removed": true,
+    "foreign_record_actions": [],
+    "foreign_group_calls": [],
+    "foreign_record_kept": true,
+    "ok": true
+  },
+  "log": "/home/mrbean/opencode/nestaudiocast-wt/sender/evidence/sender-2026-10-25.jsonl",
+  "ok": true
+}
