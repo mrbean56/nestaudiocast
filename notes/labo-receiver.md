@@ -400,3 +400,36 @@ Trois contraintes découvertes en chemin, chacune mesurée :
 build antérieur : `hello.build` = `3023f08a2eed`, serveur = `04321c0419e4`) : dispersion de départ
 de `play_at` (10 essais), premier frame après un partage (objectif ≤ 15 s), cadence via MSE, puis
 la matrice de transport.
+
+## C10 — Mesures sur l'appareil, page au build courant (2026-10-27 00:45)
+
+Redémarrage fait : `hello.build` = `04321c0419e4` = le tampon du serveur → le chargeur
+« chemins par build » fonctionne, et une mise à jour de page ne coûte désormais qu'un relancement.
+Tout a été mesuré **en silence** (banc `video_only`, appareil muet au niveau près, médias muets).
+`evidence/50-service-bench-night.json` :
+
+| Mesure | Résultat | Critère |
+|---|---|---|
+| **premier frame** après partage | **4,5 s** (page chaude), **13,1–13,7 s** (relance à froid) | ≤ 15 s → **PASS** |
+| **atterrissage de `play_at`** (10 essais) | la page démarre l'élément **112 ms en retard**, σ 35 ms, pire 196 ms | à re-tenter par atterrissage + trim |
+| **cadence via la page** | 1,002 → +0,002003 ; 0,998 → −0,002684 | l'élément obéit (le 0,998 sort 34 % fort) |
+| **pause / reprise / arrêt / nouveau partage** | vérifiés par `/api/control` | ✓ |
+| **seek +600 s** | vérifié deux fois (position 600,0–600,2) | ✓ |
+| côté **groupe** | **non mesuré** : le banc est en `video_only`, le groupe n'est jamais chargé | porte audible |
+
+**Trois bugs de plus, trouvés par la mesure** :
+1. une **libération `play_at` en attente survivait à une pause** : le lecteur repartait tout seul
+   (le service affichait `playing` alors qu'on venait de mettre en pause) → un jeton d'annulation,
+   toute commande de transport invalide la libération programmée ;
+2. la page **rappelait nos propres seeks comme des intentions utilisateur** (deux `seeked` par
+   parquage), donc le contrôleur miroitait nos seeks vers le groupe → suppression par type
+   d'événement (`seeked` 2,5 s, `play` 2 s, `pause` 700 ms, 120 ms pour le parquage), une vraie
+   pause utilisateur restant rapportée ;
+3. **la première mesure d'atterrissage mesurait la valeur parquée** (0,0 ms neuf fois sur neuf) :
+   le critère juste compare la position à l'instant demandé **sur l'horloge du récepteur**, et
+   seulement une fois la tête de lecture en mouvement.
+
+**Défaut ouvert, mesuré** : le **premier partage après une session précédente** échoue parfois
+(3 fois sur 6 essais) — l'app reste lancée mais inactive et la session finit en `receiver_failed`
+ou ne démarre pas. Le recyclage ajouté ce soir couvre la forme « pas de hello » ; celle-ci est
+différente et reste à instruire.
