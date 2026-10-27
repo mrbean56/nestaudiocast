@@ -249,11 +249,18 @@ class _Handler(BaseHTTPRequestHandler):
             # /r/<build>/receiver.js. Measured 2026-10-26: the device caches by PATH and ignores
             # query strings, so these must be served here too, or the page never boots.
             if path in ("/build.txt", "/receiver.js"):
-                # the first loader generation asked for these; a device that cached it (it caches
-                # until boot) must still be able to boot, so both schemes are served
-                return self._loader_asset(
-                    path.replace("/build.txt", "/x/build.txt").replace("/receiver.js", "/x/receiver.js")
+                # The first loader generation asked for these *paths*; the device caches by path
+                # and ignores the query, so serving current bytes there does not reach it. A
+                # redirect does: the target is a path the device has never seen (measured
+                # 2026-10-26: it stayed on an old build across four relaunches until this).
+                stamp = self.api.build_stamp()
+                target = (
+                    ("/b/" + stamp + "/build.txt")
+                    if path == "/build.txt"
+                    else ("/r/" + stamp + "/receiver.js")
                 )
+                self._redirect(target)
+                return
             if _is_loader_path(path):
                 return self._loader_asset(path)
             if path.startswith(MEASURE_PREFIX):
@@ -311,6 +318,13 @@ class _Handler(BaseHTTPRequestHandler):
             body = handle.read()
         # the path carries the build, so the response may be cached for ever
         self._send(200, "text/javascript; charset=utf-8", body, cache="max-age=31536000")
+
+    def _redirect(self, location: str) -> None:
+        self.send_response(302)
+        self.send_header("Location", location)
+        self.send_header("Cache-Control", "no-store")
+        self.send_header("Content-Length", "0")
+        self.end_headers()
 
     def _h_ui(self) -> None:
         self._send(
