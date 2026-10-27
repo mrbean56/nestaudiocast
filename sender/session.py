@@ -55,7 +55,9 @@ TRANSITION_BUDGET = 2  # one group re-landing + one play_at, per window (§1)
 ENDED_LINGER_S = 2.0  # how long `ended` is visible before `idle`
 REFUSE_LOG_EVERY_S = 10.0
 #: how long the start sequence waits for the parallel app launch before giving up on it
-RECEIVER_LAUNCH_JOIN_S = 40.0  # throttle for the guard's own log lines (a hostile controller)
+RECEIVER_LAUNCH_JOIN_S = 40.0
+#: how often the ownership of the device is checked while a session runs (§3.3: within one poll)
+OWNER_POLL_S = 1.0  # throttle for the guard's own log lines (a hostile controller)
 START_LEAD_S = 0.2  # only used by the stopgap plan, never by the real controller
 #: How long the *parked* group takes from PLAY to actually playing. Evidence/27 (C): the
 #: PAUSE->SEEK->PLAY landing lands -44 ms from the instant it was told, so the group is told
@@ -196,6 +198,9 @@ class SessionManager:
         #: the same socket, the tick read the wrong reply, and a healthy session was declared
         #: "foreign app" 4 s in.
         self._starting = False
+        #: the last ownership verdict, and when it was taken (one GET_STATUS per second, §3.3)
+        self._owner_verdict = True
+        self._owner_checked_at = float("-inf")
         self._clock_offset_ms = 0.0  # receiver-clock minus controller-clock (§3)
         self._clock_residual_ms: float | None = None
         self._clock_at = -1e9
@@ -592,12 +597,19 @@ class SessionManager:
             if not session.receiver_launched or self._starting:
                 return
             self._refresh_clock()  # throttled by CLOCK_REFRESH_S (§3.1)
-            try:
-                ours = self._link.is_ours()
-            except NotImplementedError:
-                ours = True
-            except Exception as exc:  # noqa: BLE001
-                return self._on_lost(session, f"is_ours: {type(exc).__name__}: {exc}")
+            # §3.3 asks for a takeover seen "within one poll (≤ 1 s)". Asking at 4 Hz meant four
+            # GET_STATUS a second on a device already decoding 1080p — measured 2026-10-27:
+            # replies began to time out under that load, and a healthy session died twice.
+            ours = self._owner_verdict
+            if now - self._owner_checked_at >= OWNER_POLL_S:
+                self._owner_checked_at = now
+                try:
+                    ours = self._link.is_ours()
+                except NotImplementedError:
+                    ours = True
+                except Exception as exc:  # noqa: BLE001
+                    return self._on_lost(session, f"is_ours: {type(exc).__name__}: {exc}")
+                self._owner_verdict = ours
             if not ours:
                 return self._on_lost(session, "foreign_app")
 

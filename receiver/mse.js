@@ -120,9 +120,9 @@
 
   // ---- the player ---------------------------------------------------------------------------
   //: how far ahead of the playhead we keep the buffer full, in seconds
-  var LOOKAHEAD = 20;
+  var LOOKAHEAD = 12;
   //: never let the buffer run further than this (memory on a Chromecast is small)
-  var HORIZON = 60;
+  var HORIZON = 30;
 
   function MsePlayer(el, opts) {
     this.el = el;
@@ -219,6 +219,7 @@
   };
 
   function pumpTrack(self, spec, now) {
+    if (self.stopped || spec.buffer === null) { return Promise.resolve(); }
     var table = spec.table;
     if (spec.next >= table.length) { return Promise.resolve(); }
     if (spec.next > 0) {
@@ -229,8 +230,15 @@
     var frag = table[spec.next];
     spec.next += 1;
     return fetchRange(spec.sidxUrl, frag.start, frag.end).then(function (bytes) {
-      return appendBuffer(spec.buffer, bytes);
+      if (self.stopped) { return null; }        // a stop during the fetch must not append
+      return appendBuffer(spec.buffer, bytes).catch(function (err) {
+        // "This SourceBuffer has been removed" is what a stop racing a pump looks like; it is
+        // not a session failure (measured 2026-10-27, and it aborted a share).
+        if (self.stopped) { return null; }
+        throw err;
+      });
     }).then(function () {
+      if (self.stopped) { return null; }
       // a seek that is waiting for its position to become buffered gets released here
       if (spec.next === 1 && self.pendingSeek !== null) { /* handled in _afterPump */ }
       return pumpTrack(self, spec, now);
@@ -315,6 +323,7 @@
 
   MsePlayer.prototype.stop = function () {
     this.stopped = true;
+    (this.tracks || []).forEach(function (spec) { spec.buffer = null; });
     this.playing = false;
     var self = this;
     this._elements().forEach(function (el) {
