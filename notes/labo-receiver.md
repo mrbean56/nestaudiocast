@@ -369,3 +369,34 @@ Décision du propriétaire : remplacer la lecture DASH par un lecteur MSE dans l
 **Ce qui est déjà prouvé pour le service** : le service sert `/b/<now>/build.txt`,
 `/r/<build>/receiver.js` et `/r/<build>/mse.js`, et son `build_stamp` couvre **les deux** fichiers
 (sinon un `mse.js` modifié gardait l'ancien chemin).
+
+## C9 — Le lecteur MSE joue (2026-10-27 00:40) et les trois pièges de cache
+
+**Résultat** : avec `receiver/mse.js`, un flux YouTube **joue** sur le Chromecast : `playing`,
+`buffered_end` à **23,4 s** vingt secondes après le `load`, tête de lecture qui avance. C'est le
+premier son-image de v0.2 obtenu par notre propre code.
+
+Trois contraintes découvertes en chemin, chacune mesurée :
+1. **Un seul `SourceBuffer` par `MediaSource`** sur cet appareil : le tampon vidéo s'ajoute, celui
+   de l'audio est refusé (« This MediaSource has reached the limit of SourceBuffer objects it can
+   handle »). D'où **un élément par piste** (`#nac-media` et `#nac-audio`), chacun avec son
+   `MediaSource`, l'audio asservi à l'horloge vidéo (tolérance 60 ms).
+2. **Une instance d'app « coincée »** : après plusieurs sessions, l'app est toujours la nôtre mais
+   sa page ne répond plus au namespace — chaque partage échouait sur `no hello` jusqu'à arrêt manuel.
+   `SenderLink.launch()` donne maintenant **6 s** à une instance adoptée pour dire bonjour, puis
+   l'arrête et la relance **une fois** (testé hors ligne avec un faux récepteur qui retient son
+   premier `hello`).
+3. **Le cache de l'appareil est un labyrinthe** : il met en cache **par chemin**, ignore les chaînes
+   de requête, et garde tout (page, `receiver.js`, `build.txt`) jusqu'au redémarrage. Trois
+   générations de chargeur ont été nécessaires :
+   - `?v=<stamp>` → mort (un seul chemin, jamais re-essayé) ;
+   - `/r/<build>/receiver.js` → bon, **sauf** si `build.txt` lui-même est en cache ;
+   - le service **redirige** désormais les deux chemins de la première génération
+     (`/receiver.js`, `/build.txt`) vers `/r/<stamp>/…`, ce qui débloque un appareil resté sur la
+     première génération **sans** redémarrage — sauf si son `build.txt` est en cache, auquel cas un
+     dernier redémarrage reste nécessaire.
+
+**Ce qui reste à mesurer dès que l'appareil exécute le build courant** (là, il tourne encore un
+build antérieur : `hello.build` = `3023f08a2eed`, serveur = `04321c0419e4`) : dispersion de départ
+de `play_at` (10 essais), premier frame après un partage (objectif ≤ 15 s), cadence via MSE, puis
+la matrice de transport.
