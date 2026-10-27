@@ -340,3 +340,33 @@ class TestStaleAppRecovery(unittest.TestCase):
         status = link.launch(timeout=8.0)
         self.assertTrue(status)
         self.assertGreaterEqual(link.hellos, 1, "the relaunched app must greet us")
+
+
+class TestStatusOnADeadLink(unittest.TestCase):
+    """A status read must not keep retrying a socket that died.
+
+    Measured on CT 121 (2026-10-27): after an app restart the device drops the TLS session, our
+    link stays dead, and every later GET_STATUS times out on it — three retries burned 6.5 s and
+    the share failed. The retry now reopens the link first, which turned 4/8 failing share cycles
+    into 8/8 passing.
+    """
+
+    def test_a_dropped_link_is_reopened_before_the_next_read(self):
+        from v020.chromecast import SenderLink
+
+        receiver = FakeReceiverNet()
+        receiver.start()
+        self.addCleanup(receiver.stop)
+        link = SenderLink(receiver.host, receiver.app_id, port=receiver.port, log=lambda *a, **k: None)
+        self.addCleanup(link.close)
+        link.launch(timeout=8.0)
+        self.assertTrue(link.is_ours())
+
+        dropped = receiver.drop_clients()
+        self.assertGreaterEqual(dropped, 1, "the fake must actually drop the session")
+
+        verdict = link.is_ours()
+        self.assertTrue(verdict, "a reopened link must answer, not pile up timeouts")
+        # and the session keeps working afterwards: a second verdict, and a real launch path
+        self.assertTrue(link.is_ours())
+        self.assertEqual(link.lost_reason, None)

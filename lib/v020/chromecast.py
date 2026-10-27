@@ -536,6 +536,16 @@ class SenderLink:
                 last = exc
                 if attempt + 1 < STATUS_ATTEMPTS:
                     self._emit("status_retry", attempt=attempt + 1, error=str(exc)[:80])
+                    # Retrying on the same socket is useless when the socket is what died: an
+                    # app restart (or the device dropping an idle TLS session) leaves our link
+                    # dead, and every later read times out on it (measured 2026-10-27: that is
+                    # exactly the 15 s hole the failing shares showed).
+                    try:
+                        self._close_link()
+                        self.closed = False
+                        self._open(timeout)
+                    except Exception as reopen_exc:  # noqa: BLE001
+                        self._emit("status_reopen_failed", error=str(reopen_exc)[:80])
                     time.sleep(STATUS_RETRY_S)
         raise cv.CastError(f"{last}")
 
