@@ -68,6 +68,12 @@ START_LEAD_S = 0.2  # only used by the stopgap plan, never by the real controlle
 GROUP_LEAD_S = 0.044
 #: The receiver's clock estimate is refreshed this often (contracts §3.1); the landing needs it.
 CLOCK_REFRESH_S = 30.0
+#: The page reports its state at 4 Hz (§3.2). This long without a new one, the link is deaf: measured
+#: 2026-10-27, the video kept playing while the controller heard nothing for 6 minutes.
+RECEIVER_SILENT_S = 3.0
+#: after a failed clock refresh, try again this soon — not on every tick (each try holds the
+#: session lock for up to five 2 s pings)
+CLOCK_RETRY_S = 10.0
 #: How long to wait for the receiver to report a buffered parked position before starting anyway.
 RECEIVER_READY_TIMEOUT_S = 10.0
 #: A scheduled instant further than this in the future is not honoured (the loop keeps breathing).
@@ -213,6 +219,9 @@ class SessionManager:
         #: group itself, so an HTTP request never does device I/O behind the session's back
         self._last_group_sample = None
         self._last_video = None
+        #: the receiver clock stamp of the last state heard, and when (controller clock)
+        self._last_rx_ms: float | None = None
+        self._last_rx_at = 0.0
         #: the last ownership verdict, and when it was taken (one GET_STATUS per second, §3.3)
         self._owner_verdict = True
         self._owner_checked_at = float("-inf")
@@ -266,6 +275,8 @@ class SessionManager:
                 created=self._clock(),
             )
             self._session = session
+            self._last_rx_ms = None
+            self._last_rx_at = self._clock()
             self._last_video = None
             self._last_group_sample = None
             self._ended_at = None
@@ -456,6 +467,7 @@ class SessionManager:
             if self._aborted(session):
                 return
             self._start_done = True
+            self._last_rx_at = now
             self._reload_budget = 0
             self._transition_until = 0.0
             session.started_at = now
@@ -567,6 +579,7 @@ class SessionManager:
             return
         except Exception as exc:  # noqa: BLE001 - a clock hiccup is not a session failure
             self._log("clock_failed", error=f"{type(exc).__name__}: {exc}")
+            self._clock_at = now - CLOCK_REFRESH_S + CLOCK_RETRY_S
             return
         self._clock_at = now
         self._clock_offset_ms = float(getattr(estimate, "offset_ms", 0.0) or 0.0)
@@ -657,6 +670,12 @@ class SessionManager:
 
             video = self._safe_latest()
             self._last_video = video
+            rx = getattr(video, "rx_ms", None)
+            if rx is not None and rx != self._last_rx_ms:
+                self._last_rx_ms = rx
+                self._last_rx_at = now
+            elif self._start_done and now - self._last_rx_at > RECEIVER_SILENT_S:
+                return self._recover_link(session, now)
             group_sample = None
             if session.audible and session.group_prepared:
                 try:
@@ -688,6 +707,22 @@ class SessionManager:
                     )
                     commands = []
             self._apply(session, commands, now, phase="steady")
+
+    def _recover_link(self, session: Session, now: float) -> None:
+        """The page stopped talking: reconnect once, or end the session (§3.3, never relaunch)."""
+        silent = round(now - self._last_rx_at, 2)
+        self._log("receiver_silent", session_id=session.id, silent_s=silent)
+        reconnect = getattr(self._link, "reconnect", None)
+        if reconnect is None:
+            return self._on_lost(session, f"receiver_silent: {silent} s")
+        try:
+            reconnect(attempts=2)
+        except Exception as exc:  # noqa: BLE001 - LostDevice included: both end the session
+            kind = "foreign_app" if type(exc).__name__ == "LostDevice" else "receiver_silent"
+            return self._on_lost(session, f"{kind}: {type(exc).__name__}: {exc}")
+        self._last_rx_at = now
+        self._log("receiver_reconnected", session_id=session.id, silent_s=silent)
+        self._refresh_clock(force=True)
 
     def _handle_message(self, session: Session, message, now: float) -> None:
         if not isinstance(message, dict):

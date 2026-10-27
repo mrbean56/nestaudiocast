@@ -122,6 +122,8 @@ HELLO_TIMEOUT_S = 10.0
 #: The google receiver namespace. Same string as ``castv2.NS_RECEIVER``; repeated here so the
 #: presence logic can run (and be tested) without importing the pychromecast-backed module.
 NS_CAST_RECEIVER = "urn:x-cast:com.google.cast.receiver"
+#: the virtual-connection namespace (CONNECT / CLOSE), same string as ``castv2.NS_CONNECTION``
+NS_CONNECTION = "urn:x-cast:com.google.cast.tp.connection"
 
 #: Fields §3.1 requires, checked before anything reaches the wire.
 REQUIRED_FIELDS = {
@@ -787,6 +789,13 @@ class SenderLink:
         if ns == NS_CAST_RECEIVER:  # the google receiver namespace: presence only
             if payload.get("type") == "RECEIVER_STATUS":
                 self._note_status(payload.get("status") or {}, rec.get("t"))
+            return
+        if ns == NS_CONNECTION and payload.get("type") == "CLOSE":
+            # The receiver closing our virtual connection is silent on the wire otherwise: the
+            # platform channel keeps answering GET_STATUS while our page no longer hears us
+            # (measured 2026-10-27: 6 minutes of silence 244 s into a session). Say so; the
+            # session's silence watchdog reconnects.
+            self._emit("transport_closed", source=rec.get("source"), transport=self.transport)
             return
         if ns != C.NS_RECEIVER:  # media/heartbeat/connection noise: not ours
             return

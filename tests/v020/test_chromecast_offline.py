@@ -290,5 +290,18 @@ class TestProbe(unittest.TestCase):
         self.assertNotIn("name", res)
 
 
+class TestTransportClose(unittest.TestCase):
+    """A CLOSE on our virtual connection is said out loud, never queued as a page message."""
+
+    def test_close_is_logged_not_queued(self):
+        events = []
+        link = X.SenderLink("127.0.0.1", "28028CD2", 8009, log=lambda ev, **f: events.append((ev, f)))
+        link.transport = "t-1"
+        link._on_message({"namespace": X.NS_CONNECTION, "source": "t-1", "payload": {"type": "CLOSE"}})
+        self.assertEqual([e for e, _f in events], ["transport_closed"])
+        self.assertEqual(events[0][1]["transport"], "t-1")
+        self.assertEqual(list(link.inbox), [])
+
+
 if __name__ == "__main__":
     unittest.main()
