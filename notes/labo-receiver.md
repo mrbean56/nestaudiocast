@@ -338,3 +338,34 @@ cela supprime d'un coup la dépendance au manifeste et permet un seek exact par 
   l'API de l'élément, à refaire sur le build courant.
 - **non mesuré** : dispersion de départ de `play_at` (les 10 essais ont tous mesuré la page
   d'avant le correctif, qui parquait à 0).
+
+## C8 — Le lecteur MSE, et les deux obstacles qu'il reste (2026-10-26, 23:00)
+
+Décision du propriétaire : remplacer la lecture DASH par un lecteur MSE dans la page. Fait
+(`receiver/mse.js`, `receiver/mse_selftest.js`) :
+
+- lecture du `sidx` (version 0 et 1, offsets absolus), table de fragments, `appendBuffer` par
+  plage, **20 s** d'avance, seek exact par fragment, cadence et pause passées à l'élément que la
+  page possède déjà ;
+- **harnais hors ligne sur les octets réels** d'une session vivante
+  (`tests/v020/fixtures/video-sidx.bin`, 15 940 octets de `sidx`, 1 594 fragments, timescale
+  12 800, durée totale **8 630 s** = la vidéo). Il a attrapé un vrai bug : la table donnait le
+  premier fragment à **19 160** au lieu de **19 902** (les offsets étaient relatifs au tampon du
+  `sidx`, pas au fichier). Après correctif, la table couvre le fichier **exactement** : premier
+  fragment à 19 902, dernier octet **2 507 362 727** sur 2 507 362 728.
+
+**Ce qui bloque encore, mesuré** :
+1. `addSourceBuffer` → *« This MediaSource has reached the limit of SourceBuffer objects it can
+   handle »*. Deux pistes, non départagées : la limite du Chrome 90 embarqué est peut-être **1**
+   tampon, ou deux `addSourceBuffer` concurrents se marchent dessus (le code ajoute les pistes en
+   parallèle). Test suivant, déjà en place : le journal `add <mime> #n` de `mse.js` dira combien de
+   tampons existent et à quel moment le refus tombe. Si la limite est 1, la sortie propre est un
+   **deuxième élément** (`<audio>` avec son propre MediaSource), synchronisé sur l'élément vidéo.
+2. L'appareil exécute encore un **build de page antérieur** au chargeur « chemins par build » : son
+   chargeur en cache demande `/receiver.js?v=<stamp>`, un seul chemin, donc caché pour toujours.
+   `hello.build` le prouve (appareil `ceddec214b03`, serveur `3023f08a2eed`). Un redémarrage rend
+   le chargeur actuel ; après quoi une mise à jour de page ne coûte plus qu'un relancement.
+
+**Ce qui est déjà prouvé pour le service** : le service sert `/b/<now>/build.txt`,
+`/r/<build>/receiver.js` et `/r/<build>/mse.js`, et son `build_stamp` couvre **les deux** fichiers
+(sinon un `mse.js` modifié gardait l'ancien chemin).
