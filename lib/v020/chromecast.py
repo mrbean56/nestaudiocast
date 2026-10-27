@@ -54,7 +54,7 @@ _CASTV2 = None
 
 
 #: how long an adopted app instance gets to answer `hello` before it is recycled
-HELLO_PROBE_S = 6.0
+HELLO_PROBE_S = 3.0
 IDLE_APP_ID = "E8C28D3C"  # Backdrop: the screen a device shows when nobody owns it
 
 
@@ -111,6 +111,11 @@ RECONNECT_DELAYS_S = (0.05, 0.10, 0.20, 0.40, 0.80)
 
 #: Timeouts, deliberately short: this is a LAN device and a control loop must not block.
 STATUS_TIMEOUT_S = 2.0
+#: A Chromecast busy decoding 1080p sometimes misses one GET_STATUS. Measured on the device
+#: (2026-10-27): 2 of 6 share cycles died on that single timeout, reported as a takeover. A
+#: timeout is not evidence of anything, so reads are retried before a verdict is drawn.
+STATUS_ATTEMPTS = 3
+STATUS_RETRY_S = 0.5
 CLOCK_TIMEOUT_S = 2.0
 HELLO_TIMEOUT_S = 10.0
 
@@ -219,6 +224,7 @@ class SenderLink:
         self.inbox: collections.deque[dict] = collections.deque(maxlen=self.INBOX_MAX)
         self.dropped = 0
         self._hello_pending = False
+        self._status_misses = 0
         self._media_loaded = False
         self._last_send_at = 0.0
         self.last_send_ms = 0.0  # controller clock at the write of the last message
@@ -261,7 +267,7 @@ class SenderLink:
             self.closed = False
             self._open(timeout)
         try:
-            status = self.link.receiver_status(timeout=min(timeout, STATUS_TIMEOUT_S * 3))
+            status = self._status_with_retry(min(timeout, STATUS_TIMEOUT_S * 3))
         except cv.CastError as exc:
             raise LinkDown(f"status check before LAUNCH failed on {self.host}: {exc}") from exc
 
@@ -519,6 +525,20 @@ class SenderLink:
             raise LinkDown(f"no clock_reply from {self.host} in {n} pings")
         return self._accept_clock(*estimate_clock(samples))
 
+    def _status_with_retry(self, timeout: float) -> dict:
+        """``GET_STATUS`` with retries: one missed reply is a busy device, not a takeover."""
+        cv = _castv2()
+        last: Exception | None = None
+        for attempt in range(STATUS_ATTEMPTS):
+            try:
+                return self.link.receiver_status(timeout=timeout)
+            except cv.CastError as exc:
+                last = exc
+                if attempt + 1 < STATUS_ATTEMPTS:
+                    self._emit("status_retry", attempt=attempt + 1, error=str(exc)[:80])
+                    time.sleep(STATUS_RETRY_S)
+        raise cv.CastError(f"{last}")
+
     def is_ours(self) -> bool:
         """True when the app running on the device is ours (§3.3).
 
@@ -532,13 +552,20 @@ class SenderLink:
             return False
         cv = _castv2()
         try:
-            status = self.link.receiver_status(timeout=STATUS_TIMEOUT_S)
+            status = self._status_with_retry(STATUS_TIMEOUT_S)
         except cv.CastError as exc:
+            # a read that never arrives says nothing about who owns the device: keep the session
+            # and let the next poll decide (two misses in a row are a real loss)
+            self._status_misses += 1
+            if self._status_misses < 2:
+                self._emit("status_missed", error=str(exc)[:80])
+                return True
             self._mark_lost(f"status_failed:{type(exc).__name__}")
             return False
         except Exception as exc:  # noqa: BLE001
             self._mark_lost(f"status_failed:{type(exc).__name__}")
             return False
+        self._status_misses = 0
 
         apps = status.get("applications") or []
         if not apps:
@@ -767,6 +794,7 @@ class SenderLink:
         self.hellos += 1
         self.hello = dict(payload)
         self._hello_pending = False
+        self._status_misses = 0
         # A new page has a new performance.timeOrigin: every earlier timestamp is meaningless.
         self._last_rx_ms = None
         self.clock = None

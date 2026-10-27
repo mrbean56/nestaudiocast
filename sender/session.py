@@ -53,7 +53,9 @@ DEFAULT_TICK_S = 0.25  # ≤ 1 s poll, so a foreign takeover is seen within one 
 TRANSITION_S = 5.0  # a re-landing window after a user transport action
 TRANSITION_BUDGET = 2  # one group re-landing + one play_at, per window (§1)
 ENDED_LINGER_S = 2.0  # how long `ended` is visible before `idle`
-REFUSE_LOG_EVERY_S = 10.0  # throttle for the guard's own log lines (a hostile controller)
+REFUSE_LOG_EVERY_S = 10.0
+#: how long the start sequence waits for the parallel app launch before giving up on it
+RECEIVER_LAUNCH_JOIN_S = 40.0  # throttle for the guard's own log lines (a hostile controller)
 START_LEAD_S = 0.2  # only used by the stopgap plan, never by the real controller
 #: How long the *parked* group takes from PLAY to actually playing. Evidence/27 (C): the
 #: PAUSE->SEEK->PLAY landing lands -44 ms from the instant it was told, so the group is told
@@ -296,7 +298,38 @@ class SessionManager:
         with self._lock:
             self._starting = True
         try:
-            resolved = self._resolve(session)
+            # The device work and the media work are independent, and both are slow: yt-dlp takes
+            # 2-7 s, the app launch 3-10 s. Running them in parallel is what keeps the first frame
+            # inside the 15 s budget when the device is slow (measured 2026-10-27: sequential runs
+            # spent 13.1-13.7 s, and a stale app pushed past 25 s).
+            device = {"done": False, "error": None}
+
+            def launch_device() -> None:
+                try:
+                    self._link.launch()
+                    self._link.connect()
+                    device["done"] = True
+                except NotImplementedError:
+                    device["error"] = ("sender_link_unavailable", "the receiver link is a stub (task D)")
+                except Exception as exc:  # noqa: BLE001 - LostDevice included, on purpose
+                    device["error"] = ("receiver_failed", f"{type(exc).__name__}: {exc}")
+
+            starter = threading.Thread(target=launch_device, name="receiver-launch", daemon=True)
+            starter.start()
+            try:
+                resolved = self._resolve(session)
+            finally:
+                starter.join(timeout=RECEIVER_LAUNCH_JOIN_S)
+            if not device["done"] and device["error"] is None:
+                # the launch is still running after the media work: wait for it properly
+                starter.join(timeout=RECEIVER_LAUNCH_JOIN_S)
+            if device["error"] is not None:
+                code, why = device["error"]
+                return self._fail(session, code, why)
+            if not device["done"]:
+                return self._fail(session, "receiver_failed", "the app launch did not finish")
+            session.receiver_launched = True
+
             if resolved is None or self._aborted(session):
                 return
             session.video_id = getattr(resolved, "video_id", None)
@@ -317,18 +350,6 @@ class SessionManager:
                 if session.live:
                     session.state = C.STATE_STARTING
 
-            # The receiver first: this is the task allowed to launch an app on .80, and it
-            # does its own read-only status check before launching (brief's tonight rule).
-            try:
-                self._link.launch()
-                self._link.connect()
-                session.receiver_launched = True
-            except NotImplementedError:
-                return self._fail(
-                    session, "sender_link_unavailable", "the receiver link is a stub (task D)"
-                )
-            except Exception as exc:  # noqa: BLE001 - LostDevice included, on purpose
-                return self._fail(session, "receiver_failed", f"{type(exc).__name__}: {exc}")
             self._log(
                 "receiver_ready",
                 session_id=session.id,
