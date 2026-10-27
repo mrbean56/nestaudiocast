@@ -1,0 +1,10 @@
+{
+ "source": "live session on 192.168.2.80 / CT 121 proxy",
+ "video_init_bytes": 742,
+ "video_sidx_bytes": 19160,
+ "sidx_first_box": "sidx",
+ "init_first_box": "ftyp",
+ "mpd": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<MPD xmlns=\"urn:mpeg:dash:schema:mpd:2011\" profiles=\"urn:mpeg:dash:profile:isoff-on-demand:2011\" type=\"static\" mediaPresentationDuration=\"PT8630.000S\" minBufferTime=\"PT2.000S\">\n <Period id=\"p0\" start=\"PT0.000S\">\n  <AdaptationSet id=\"1\" contentType=\"video\" mimeType=\"video/mp4\" segmentAlignment=\"true\" startWithSAP=\"1\" subsegmentAlignment=\"true\" subsegmentStartsWithSAP=\"1\" maxWidth=\"1920\" maxHeight=\"1080\" frameRate=\"25\">\n   <Representation id=\"v\" codecs=\"avc1.640028\" width=\"1920\" height=\"1080\" frameRate=\"25\" bandwidth=\"2324322\">\n   <BaseURL>0</BaseURL>\n   <SegmentBase indexRange=\"742-19901\">\n    <Initialization range=\"0-741\"/>\n   </SegmentBase>\n  </Representation>\n </AdaptationSet>\n  <AdaptationSet id=\"2\" contentType=\"audio\" mimeType=\"audio/mp4\" segmentAlignment=\"true\" startWithSAP=\"1\" subsegmentAlignment=\"true\" subsegmentStartsWithSAP=\"1\">\n   <Representation id=\"a\" codecs=\"mp4a.40.2\" bandwidth=\"129478\">\n   <BaseURL>1</BaseURL>\n   <SegmentBase indexRange=\"723-11134\">\n    <Initialization range=\"0-722\"/>\n   </SegmentBase>\n  </Representation>\n </AdaptationSet>\n </Period>\n</MPD>\n",
+ "sidx_start": 742,
+ "file_bytes": 2507362728
+}

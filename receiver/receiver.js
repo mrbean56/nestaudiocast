@@ -3,6 +3,15 @@
 
   var NS = 'urn:x-cast:com.beansden.nestaudiocast.v1';
   var VERSION = '0.2.0';
+  //: the build stamp from our own script URL (/r/<stamp>/receiver.js): without it there is no
+  //: way to tell which build a cached device is running, and we paid for that twice tonight
+  var BUILD = (function () {
+    try {
+      var m = /\/r\/([^\/]+)\//.exec(document.currentScript && document.currentScript.src);
+      if (m) { return m[1]; }
+    } catch (e) {}
+    return 'dev';
+  })();
   var APP_NAME = 'VideoNetCaster';
   var STATE_PERIOD_MS = 250;          // contracts §3.2: state at 4 Hz (+ on every transition)
 
@@ -20,6 +29,8 @@
   var loadedContentType = '';
   var endedSent = false;
   var ticker = null;
+  var msePlayer = null;      // the MSE reader (receiver/mse.js), used for DASH sources
+  var mseLoading = false;
   var expect = null;           // {kind, until}: an element event we caused ourselves
   var lastJumpAt = 0;
   var lastError = null;
@@ -59,10 +70,9 @@
   var dashMode = false;
 
   function mediaEl() {
-    if (dashMode) {
-      var caf = document.querySelector('cast-media-player video');
-      if (caf) { return caf; }
-    }
+    // The page drives exactly one element: its own. CAF keeps a <video> of its own in the DOM
+    // (measured 2026-10-26: 'cast-media-player' exists), and handing our MediaSource to *that*
+    // element made CAF report error 905 and refuse to load — so it is never picked implicitly.
     return ownElement();
   }
 
@@ -121,7 +131,7 @@
     var s = sample();
     var body = {
       rx_ms: s.rx_ms, ua: navigator.userAgent, codecs: codecClaims(),
-      version: VERSION, app: APP_NAME, app_id: '28028CD2', element: elementInfo(),
+      version: VERSION, build: BUILD, app: APP_NAME, app_id: '28028CD2', element: elementInfo(),
       apis: apiSurface()
     };
     if (senderId) { sendTo(senderId, envelope('hello', body)); }
@@ -250,12 +260,14 @@
     markExpect('load');
     try {
       if (isDash) {
-        dashMode = true;   // from here CAF owns the media pipeline and its element
-        playerManager.load(new cast.framework.messages.LoadRequestData({
-          media: new cast.framework.messages.MediaInformation({ contentId: url, contentType: ct, streamType: 'BUFFERED' }),
-          currentTime: start,
-          autoplay: !!m.autoplay
-        }));
+        // Measured 2026-10-26 (lab note C6): neither CAF's DASH player nor the platform DMR will
+        // play the manifest we generate, while its byte ranges are provably correct. So the page
+        // reads the sidx and feeds SourceBuffers itself (receiver/mse.js), on the same element it
+        // already owns — which keeps playbackRate and the playhead under our control.
+        dashMode = false;              // our own element stays the one we drive
+        startMse(url, start, !!m.autoplay, m).catch(function (e) {
+          sendError('mse_failed', (e && e.message) || String(e));
+        });
       } else {
         var v = mediaEl();
         if (!v) { sendError('no_media_element', 'no <video> element could be obtained'); return; }
@@ -270,6 +282,79 @@
     }
     log('load ' + ct + ' at ' + start);
     setTimeout(function () { sendState(true); }, 50);
+  }
+
+  function loadScriptOnce(src) {
+    return new Promise(function (resolve, reject) {
+      var s = document.createElement('script');
+      s.src = src;
+      s.onload = function () { resolve(); };
+      s.onerror = function () { reject(new Error('could not load ' + src)); };
+      document.head.appendChild(s);
+    });
+  }
+
+  function mpdTracks(mpdText, mpdUrl) {
+    var doc = new DOMParser().parseFromString(mpdText, 'application/xml');
+    var sets = doc.getElementsByTagName('AdaptationSet');
+    var out = [];
+    for (var i = 0; i < sets.length; i++) {
+      var reps = sets[i].getElementsByTagName('Representation');
+      if (!reps.length) { continue; }
+      var rep = reps[0];
+      var base = rep.getElementsByTagName('BaseURL')[0];
+      var seg = rep.getElementsByTagName('SegmentBase')[0];
+      var init = seg && seg.getElementsByTagName('Initialization')[0];
+      if (!base || !seg || !init) { continue; }
+      var idx = seg.getAttribute('indexRange').split('-');
+      var ini = init.getAttribute('range').split('-');
+      var mime = sets[i].getAttribute('mimeType') || (sets[i].getAttribute('contentType') === 'audio' ? 'audio/mp4' : 'video/mp4');
+      var codecs = rep.getAttribute('codecs');
+      var url = new URL(base.textContent.trim(), mpdUrl).href;
+      out.push({
+        mime: mime + (codecs ? '; codecs="' + codecs + '"' : ''),
+        initUrl: url, sidxUrl: url,
+        initStart: Number(ini[0]), initEnd: Number(ini[1]),
+        sidxStart: Number(idx[0]), sidxEnd: Number(idx[1])
+      });
+    }
+    return out;
+  }
+
+  function startMse(mpdUrl, atTime, autoplay, m) {
+    if (mseLoading) { return Promise.resolve(); }
+    mseLoading = true;
+    // The reader lives behind the same cache-proof scheme as the page: the device caches by
+    // path, so ask for a stamp fetched *now*, not the path this page was loaded from (measured:
+    // mse.js was served from cache for a whole hour because only it had changed).
+    var ready = (typeof NacMse !== 'undefined')
+      ? Promise.resolve()
+      : fetch('/b/' + Date.now() + '/build.txt', { cache: 'no-store' })
+          .then(function (r) { return r.text(); })
+          .then(function (t) { return loadScriptOnce('/r/' + (t.trim() || BUILD) + '/mse.js'); });
+    return ready.then(function () {
+      return fetch(mpdUrl, { cache: 'no-store' });
+    }).then(function (r) {
+      if (!r.ok) { throw new Error('manifest ' + r.status); }
+      return r.text();
+    }).then(function (text) {
+      var tracks = mpdTracks(text, mpdUrl);
+      if (!tracks.length) { throw new Error('the manifest has no usable track'); }
+      if (msePlayer) { try { msePlayer.stop(); } catch (e) {} }
+      msePlayer = new NacMse.MsePlayer(mediaEl(), {
+        log: function (line) { log('mse ' + line); },
+        onUpdate: function () { sendState(true); },
+        onError: function (code, why) { sendError('mse_' + code, why); }
+      });
+      return msePlayer.start(tracks, atTime);
+    }).then(function () {
+      if (autoplay) { msePlayer.play(); }
+      mseLoading = false;
+      sendState(true);
+    }).catch(function (err) {
+      mseLoading = false;
+      sendError('mse_start_failed', (err && err.message) || String(err));
+    });
   }
 
   function doPlayAt(m) {
@@ -311,6 +396,7 @@
       released = true;
       markExpect('play');
       try {
+        if (msePlayer) { msePlayer.play(); sendState(true); return; }
         var p = v.play();
         if (p && p.catch) { p.catch(function (e) { sendError('play_failed', (e && e.name) || e); }); }
       } catch (e) { sendError('play_failed', (e && e.message) || e); }
@@ -347,7 +433,7 @@
     var v = mediaEl();
     if (!v) { return; }
     markExpect('pause');
-    try { v.pause(); } catch (e) {}
+    if (msePlayer) { msePlayer.pause(); } else { try { v.pause(); } catch (e) {} }
     sendState(true);
   }
 
@@ -356,7 +442,11 @@
     var pos = Number(m.media);
     if (!v || !isFinite(pos)) { sendError('bad_seek', 'media is required'); return; }
     markExpect('seek');
-    try { v.currentTime = Math.max(0, pos); } catch (e) { sendError('seek_failed', (e && e.message) || e); }
+    if (msePlayer) {
+      msePlayer.seek(Math.max(0, pos)).then(function () { sendState(true); });
+    } else {
+      try { v.currentTime = Math.max(0, pos); } catch (e) { sendError('seek_failed', (e && e.message) || e); }
+    }
     sendState(true);
   }
 
@@ -369,11 +459,13 @@
       return;
     }
     setElementRate(v, value);
+    if (msePlayer) { msePlayer.setRate(value); }
     sendState(true);
   }
 
   function doStop(tellReady) {
     var v = mediaEl();
+    if (msePlayer) { try { msePlayer.stop(); } catch (e) {} msePlayer = null; }
     markExpect('pause');
     if (v) {
       try { v.pause(); } catch (e) {}

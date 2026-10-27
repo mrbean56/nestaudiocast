@@ -134,6 +134,9 @@ class Handler(BaseHTTPRequestHandler):
         if path.startswith("/r/") and path.endswith("/receiver.js"):
             self._file(os.path.join(ROOT, "receiver.js"), "text/javascript; charset=utf-8")
             return
+        if path.startswith("/r/") and path.endswith("/mse.js"):
+            self._file(os.path.join(ROOT, "mse.js"), "text/javascript; charset=utf-8")
+            return
         if path.startswith("/b/") and path.endswith("/build.txt"):
             self._file(os.path.join(ROOT, "build.txt"), "text/plain; charset=utf-8")
             return

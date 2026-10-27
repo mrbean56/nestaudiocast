@@ -257,6 +257,12 @@ class TestReceiverLoader(ApiCase):
         stamp = body.decode().strip()
         self.assertEqual(len(stamp), 12)
 
+        with open(os.path.join(page_dir, "mse.js"), "w") as handle:
+            handle.write("// mse\n")
+        status, _parsed, mse_body, _ctype = self.call("GET", f"/r/{stamp}/mse.js")
+        self.assertEqual(status, 200)
+        self.assertIn(b"mse", mse_body)
+
         status, _parsed, script, ctype = self.call("GET", f"/r/{stamp}/receiver.js")
         self.assertEqual(status, 200)
         self.assertIn(b"page", script)

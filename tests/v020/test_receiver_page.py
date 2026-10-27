@@ -74,6 +74,35 @@ class TestPageExists(unittest.TestCase):
         self.assertIn("192.168.2.", src)
 
 
+class TestMseReader(unittest.TestCase):
+    """The page reads the sidx itself (lab note C6); the reader has its own harness."""
+
+    MSE = os.path.join(ROOT, "receiver", "mse.js")
+    SELFTEST = os.path.join(ROOT, "receiver", "mse_selftest.js")
+
+    def test_reader_exists_and_is_wired(self):
+        self.assertTrue(os.path.isfile(self.MSE))
+        with open(self.MSE, encoding="utf-8") as fh:
+            reader = fh.read()
+        self.assertIn("parseSidx", reader)
+        self.assertIn("addSourceBuffer", reader)
+        self.assertIn("appendBuffer", reader)
+        with open(PAGE_PATH, encoding="utf-8") as fh:
+            page = fh.read()
+        self.assertIn("NacMse", page)
+        self.assertIn("mpdTracks", page)
+        self.assertIn("mse_failed", page)
+
+    @unittest.skipUnless(shutil.which("node"), "node is not installed")
+    def test_the_reader_parses_real_sidx_bytes(self):
+        proc = subprocess.run(
+            [shutil.which("node"), self.SELFTEST], capture_output=True, text=True, timeout=180
+        )
+        self.assertEqual(proc.returncode, 0, proc.stdout[-800:] + proc.stderr[-400:])
+        doc = json.loads(proc.stdout)
+        self.assertEqual(doc["failed"], 0, [c for c in doc["results"] if not c["ok"]])
+
+
 class TestProtocolSurface(unittest.TestCase):
     def test_namespace(self):
         src = page()
