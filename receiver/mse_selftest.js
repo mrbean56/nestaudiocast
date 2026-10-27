@@ -71,28 +71,97 @@ if (sidx) {
         { picked_time: Math.round(at.time), duration: +at.duration.toFixed(2) });
 }
 
-// ---- 2. the player, with a fake MediaSource and a fake fetch --------------------------------
-function fakeWorld() {
-  const requests = [];
-  const appends = [];
+// ---- 2. the player, with a faithful fake MediaSource and a fake fetch ------------------------
+// The fake SourceBuffer behaves like Chrome's on the points the player depends on: any operation
+// while `updating` throws InvalidStateError, `updateend` fires asynchronously, `buffered` is the
+// union of the appended fragments' time ranges (looked up from the real sidx table by byte
+// offset), `remove()` trims it, and `endOfStream()` moves the MediaSource to `ended`.
+function makeEventTarget(obj) {
+  obj._on = {};
+  obj.addEventListener = function (name, fn, opts) {
+    const once = !!(opts && opts.once);
+    (this._on[name] = this._on[name] || []).push({ fn, once });
+  };
+  obj.removeEventListener = function (name, fn) {
+    this._on[name] = (this._on[name] || []).filter(h => h.fn !== fn);
+  };
+  obj.fire = function (name) {
+    const hs = (this._on[name] || []).slice();
+    this._on[name] = (this._on[name] || []).filter(h => !h.once);
+    hs.forEach(h => h.fn());
+  };
+  return obj;
+}
+
+function ranges(list) {
+  return { length: list.length, start: i => list[i][0], end: i => list[i][1] };
+}
+
+function addRange(list, a, b) {
+  const all = list.concat([[a, b]]).sort((x, y) => x[0] - y[0]);
+  const out = [];
+  for (const r of all) {
+    const last = out[out.length - 1];
+    if (last && r[0] <= last[1] + 1e-6) { last[1] = Math.max(last[1], r[1]); } else { out.push(r.slice()); }
+  }
+  return out;
+}
+
+function cutRange(list, a, b) {
+  const out = [];
+  for (const [s, e] of list) {
+    if (e <= a || s >= b) { out.push([s, e]); continue; }
+    if (s < a) { out.push([s, a]); }
+    if (e > b) { out.push([b, e]); }
+  }
+  return out;
+}
+
+function fakeWorld(table) {
+  const byStart = new Map(table.map(f => [f.start, f]));
+  const world = { requests: [], appends: [], invalid: 0, quota: 0, eos: 0, fetchGate: null };
   class FakeBuffer {
-    constructor(mime) { this.mime = mime; this.updating = false; this.buffered = { length: 1, start: () => 0, end: () => 0 }; }
-    addEventListener(name, fn) { this._on = this._on || {}; (this._on[name] = this._on[name] || []).push(fn); if (name === 'updateend') { setTimeout(() => fn(), 0); } }
-    appendBuffer(bytes) { appends.push({ mime: this.mime, bytes: bytes.byteLength }); }
-    abort() {}
-    remove() {}
+    constructor(mime, ms) {
+      makeEventTarget(this);
+      this.mime = mime; this.ms = ms; this.updating = false; this.list = [];
+      this.quotaS = Infinity;            // seconds this buffer may hold, for the quota test
+    }
+    get buffered() { return ranges(this.list); }
+    _busy() { if (this.updating) { world.invalid += 1; const e = new Error('InvalidStateError: updating'); e.name = 'InvalidStateError'; throw e; } }
+    _later(fn) { this.updating = true; setImmediate(() => { fn(); this.updating = false; this.fire('updateend'); }); }
+    appendBuffer(bytes) {
+      this._busy();
+      const frag = byStart.get(bytes.__start);
+      if (frag) {
+        const held = this.list.reduce((a, r) => a + r[1] - r[0], 0);
+        if (held + frag.duration > this.quotaS) {
+          world.quota += 1; const e = new Error('QuotaExceededError'); e.name = 'QuotaExceededError'; throw e;
+        }
+      }
+      if (this.ms.readyState === 'ended') { this.ms.readyState = 'open'; }
+      world.appends.push({ mime: this.mime, start: bytes.__start, bytes: bytes.byteLength });
+      this._later(() => { if (frag) { this.list = addRange(this.list, frag.time, frag.time + frag.duration); } });
+    }
+    remove(a, b) { this._busy(); this._later(() => { this.list = cutRange(this.list, a, b); }); }
+    abort() { this.updating = false; }
   }
   class FakeMediaSource {
     constructor() {
-      this.handlers = {}; this.sourceBuffers = []; this.readyState = 'open';
-      setTimeout(() => (this.handlers.sourceopen || []).forEach(f => f()), 0);
+      makeEventTarget(this); this.sourceBuffers = []; this.readyState = 'open';
+      setImmediate(() => this.fire('sourceopen'));
     }
-    addEventListener(name, fn) { (this.handlers[name] = this.handlers[name] || []).push(fn); }
-    addSourceBuffer(mime) { const b = new FakeBuffer(mime); this.sourceBuffers.push(b); return b; }
+    addSourceBuffer(mime) {
+      if (this.sourceBuffers.length) { throw new Error('limit of SourceBuffer objects'); }
+      const b = new FakeBuffer(mime, this); this.sourceBuffers.push(b); world.buffer = b; return b;
+    }
+    endOfStream() {
+      if (this.sourceBuffers.some(b => b.updating)) { throw new Error('InvalidStateError'); }
+      this.readyState = 'ended'; world.eos += 1;
+    }
   }
   const el = {
-    currentTime: 0, playbackRate: 1, paused: true, readyState: 4,
-    buffered: { length: 1, start: () => 0, end: () => 30 },
+    currentTime: 0, playbackRate: 1, paused: true, readyState: 4, tagName: 'VIDEO',
+    get buffered() { return world.buffer ? world.buffer.buffered : ranges([]); },
     play() { this.paused = false; return Promise.resolve(); },
     pause() { this.paused = true; },
     removeAttribute() {}, load() {},
@@ -100,63 +169,177 @@ function fakeWorld() {
   };
   const fetch = (url, opts) => {
     const range = (opts.headers || {}).Range || '';
-    requests.push({ url, range });
-    return Promise.resolve({
-      ok: true, status: 206,
-      arrayBuffer: () => Promise.resolve(new ArrayBuffer(16))
-    });
+    const [, a, b] = /bytes=(\d+)-(\d+)/.exec(range).map(Number);
+    world.requests.push({ url, range, a });
+    let bytes;
+    if (a === 0) { bytes = toArrayBuffer(initBytes); }
+    else if (a === 742) { bytes = toArrayBuffer(sidxBytes.slice(0, b - a + 1)); }
+    else { bytes = new ArrayBuffer(Math.min(64, b - a + 1)); bytes.__start = a; }
+    const reply = { ok: true, status: 206, arrayBuffer: () => Promise.resolve(bytes) };
+    if (world.fetchGate && a > 742) { return world.fetchGate.then(() => reply); }
+    return Promise.resolve(reply);
   };
-  return { requests, appends, el, FakeMediaSource, fetch };
+  world.el = el; world.FakeMediaSource = FakeMediaSource; world.fetch = fetch;
+  return world;
 }
 
-async function playTest() {
-  const world = fakeWorld();
+const TRACKS = [
+  { mime: 'video/mp4; codecs="avc1.640028"', sidxUrl: 'http://x/media/0',
+    initUrl: 'http://x/media/0', initStart: 0, initEnd: 741, sidxStart: 742, sidxEnd: 19901 },
+];
+
+function install(world) {
   global.MediaSource = world.FakeMediaSource;
   global.URL = { createObjectURL: () => 'blob:test', revokeObjectURL: () => {} };
   global.fetch = world.fetch;
   global.window = { fetch: world.fetch };
-  mse = loadMse();
+  return loadMse();
+}
 
-  const tracks = [
-    { mime: 'video/mp4; codecs="avc1.640028"', sidxUrl: 'http://x/media/0',
-      initUrl: 'http://x/media/0', initStart: 0, initEnd: 741, sidxStart: 742, sidxEnd: 19901 },
-  ];
-  const player = new mse.MsePlayer(world.el, {});
-  // the fake fetch returns 16 bytes, so the parser will refuse them: that is the check that a
-  // bad source fails loudly instead of silently playing nothing
-  let failed = false;
-  try { await player.start(tracks, 0); } catch (e) { failed = true; }
-  check('bad_bytes_fail_loudly', failed, player.tracks.length);
+const settle = async () => { for (let i = 0; i < 20; i++) { await new Promise(r => setImmediate(r)); } };
 
-  // now serve the real fixture bytes: init for the init range, the sidx for the index range
-  const real = (url, opts) => {
-    const range = (opts.headers || {}).Range || '';
-    const [, a, b] = /bytes=(\d+)-(\d+)/.exec(range).map(Number);
-    const bytes = a === 0 ? initBytes : sidxBytes.slice(0, b - a + 1);
-    world.requests.push({ url, range });
-    return Promise.resolve({ ok: true, status: 206,
-      arrayBuffer: () => Promise.resolve(toArrayBuffer(bytes)) });
-  };
-  global.fetch = real; global.window = { fetch: real };
-  mse = loadMse();
-  const p2 = new mse.MsePlayer(world.el, {});
-  world.el.currentTime = 0;
-  await p2.start(tracks, 0);
-  check('start_appends_init_then_one_fragment', world.appends.length >= 2, world.appends.length);
-  check('init_was_the_first_append', world.appends[0] && world.appends[0].bytes === initBytes.byteLength,
-        world.appends[0]);
-  // with the playhead at 0 and a 20 s lookahead, several fragments must be prefetched
-  // the lookahead is 12 s and a fragment is ~5.4 s: init + two fragments is what one pump fills
-  check('prefetches_inside_the_lookahead', world.appends.length >= 2, world.appends.length);
-  const first = p2.tracks[0].table[0];
-  check('first_fragment_range_is_the_table_entry',
-        world.requests.some(r => r.range === `bytes=${first.start}-${first.end}`),
-        { asked: `bytes=${first.start}-${first.end}` });
+function fragmentsInOrder(world) {
+  const starts = world.appends.filter(x => x.start !== undefined).map(x => x.start);
+  for (let i = 1; i < starts.length; i++) { if (starts[i] <= starts[i - 1]) { return { at: i, starts: starts.slice(i - 2, i + 2) }; } }
+  return null;
+}
+
+async function playTest(table) {
+  // a source whose bytes are not a sidx must fail loudly, not play nothing
+  {
+    const world = fakeWorld(table);
+    const m = install(world);
+    global.fetch = global.window.fetch = () => Promise.resolve({ ok: true, status: 206,
+      arrayBuffer: () => Promise.resolve(new ArrayBuffer(16)) });
+    const player = new m.MsePlayer(world.el, { setInterval: null });
+    let failed = false;
+    try { await player.start(TRACKS, 0); } catch (e) { failed = true; }
+    check('bad_bytes_fail_loudly', failed, player.tracks.length);
+  }
+
+  // ten minutes of playback, the page's interval replaced by a hand-driven tick
+  {
+    const world = fakeWorld(table);
+    const m = install(world);
+    const player = new m.MsePlayer(world.el, { setInterval: null });
+    await player.start(TRACKS, 0);
+    check('init_was_the_first_append', world.appends[0] && world.appends[0].bytes === initBytes.byteLength,
+          world.appends[0]);
+    const first = table[0];
+    check('first_fragment_range_is_the_table_entry',
+          world.requests.some(r => r.range === `bytes=${first.start}-${first.end}`),
+          { asked: `bytes=${first.start}-${first.end}` });
+    player.play();
+    let starved = null, hoarded = null, maxHeld = 0;
+    for (let t = 0; t <= 600; t += 0.5) {
+      world.el.currentTime = t;
+      await player.tick(); await settle();
+      const b = world.el.buffered;
+      const end = b.length ? b.end(b.length - 1) : 0;
+      const start = b.length ? b.start(0) : 0;
+      if (end < t + 5 && starved === null) { starved = { t, end }; }
+      if (t > 60 && start < t - 30 && hoarded === null) { hoarded = { t, start }; }
+      maxHeld = Math.max(maxHeld, end - start);
+    }
+    check('ten_minutes_never_starve', starved === null, starved || { last_end: world.el.buffered.end(0) });
+    check('played_data_is_evicted', hoarded === null && maxHeld < 45,
+          { hoarded, max_held_s: +maxHeld.toFixed(1) });
+    check('fragments_appended_in_order_once', fragmentsInOrder(world) === null, fragmentsInOrder(world));
+    check('no_operation_while_updating', world.invalid === 0, world.invalid);
+    player.stop();
+  }
+
+  // a seek while a fetch is in flight: the stale fragment must never be appended
+  {
+    const world = fakeWorld(table);
+    const m = install(world);
+    const player = new m.MsePlayer(world.el, { setInterval: null });
+    await player.start(TRACKS, 0);
+    player.play();
+    let open; world.fetchGate = new Promise(r => { open = r; });
+    world.el.currentTime = 10;
+    const inflight = player.tick();               // fetch for the fragment after the lookahead
+    await settle();
+    const before = world.appends.length;
+    const seekTo = 3600;
+    const seeking = player.seek(seekTo);
+    open(); world.fetchGate = null;
+    await inflight; await seeking; await settle();
+    const after = world.appends.slice(before).filter(x => x.start !== undefined);
+    const target = table[m.fragmentAt(table, seekTo)];
+    check('seek_drops_the_stale_fetch', after.length > 0 && after[0].start === target.start,
+          { first_after_seek: after[0] && after[0].start, expected: target.start });
+    check('seek_lands_on_the_target', Math.abs(world.el.currentTime - seekTo) < 0.01, world.el.currentTime);
+    check('seek_never_collides', world.invalid === 0, world.invalid);
+    player.stop();
+  }
+
+  // the end of the stream: endOfStream once, after the last fragment
+  {
+    const world = fakeWorld(table);
+    const m = install(world);
+    const player = new m.MsePlayer(world.el, { setInterval: null });
+    await player.start(TRACKS, 0);
+    const lastT = table[table.length - 1].time;
+    await player.seek(lastT - 20); await settle();
+    for (let t = lastT - 20; t <= lastT + 10; t += 0.5) {
+      world.el.currentTime = t; await player.tick(); await settle();
+    }
+    const lastStart = table[table.length - 1].start;
+    check('last_fragment_appended', world.appends.some(x => x.start === lastStart), lastStart);
+    check('end_of_stream_signalled_once', world.eos === 1, world.eos);
+    player.stop();
+  }
+
+  // a full buffer: evict what is behind the playhead and append again, no error
+  {
+    const world = fakeWorld(table);
+    const m = install(world);
+    const errors = [];
+    const player = new m.MsePlayer(world.el, { setInterval: null, onError: (c, w) => errors.push([c, w]) });
+    await player.start(TRACKS, 0);
+    world.buffer.quotaS = 26;
+    for (let t = 0; t <= 120; t += 0.5) { world.el.currentTime = t; await player.tick(); await settle(); }
+    const b = world.el.buffered;
+    check('quota_recovers_by_eviction', errors.length === 0 && b.end(b.length - 1) > 125,
+          { errors, quota_hits: world.quota, end: b.end(b.length - 1) });
+    player.stop();
+  }
+
+  // the interval is started by start() and cleared by stop()
+  {
+    const world = fakeWorld(table);
+    const m = install(world);
+    const timers = { set: 0, cleared: 0 };
+    const player = new m.MsePlayer(world.el, {
+      setInterval: () => { timers.set += 1; return 7; },
+      clearInterval: (id) => { if (id === 7) { timers.cleared += 1; } } });
+    await player.start(TRACKS, 0);
+    player.stop();
+    check('refill_timer_started_and_cleared', timers.set === 1 && timers.cleared === 1, timers);
+  }
+
+  // the audio element follows the video by rate; only a large error re-seats it
+  {
+    const world = fakeWorld(table);
+    const m = install(world);
+    const player = new m.MsePlayer(world.el, { setInterval: null });
+    const audio = { currentTime: 100.05, playbackRate: 1, paused: false, play() { this.paused = false; }, pause() { this.paused = true; } };
+    player.groups = [{ el: world.el }, { el: audio }];
+    world.el.paused = false; world.el.currentTime = 100; world.el.playbackRate = 1.002;
+    player.sync();
+    check('audio_nudged_not_seeked', audio.currentTime === 100.05 && audio.playbackRate < 1.002,
+          { t: audio.currentTime, rate: audio.playbackRate });
+    audio.currentTime = 100.01; player.sync();
+    check('audio_back_on_the_video_rate', audio.playbackRate === 1.002, audio.playbackRate);
+    audio.currentTime = 101; player.sync();
+    check('audio_reseated_on_a_large_error', audio.currentTime === 100, audio.currentTime);
+  }
 }
 
 (async () => {
   try {
-    await playTest();
+    await playTest(mse.fragmentTable(sidx));
   } catch (e) {
     check('harness_completed', false, (e && e.message) || String(e));
   }

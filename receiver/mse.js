@@ -11,7 +11,9 @@
  * So the page reads the `sidx` itself and feeds `SourceBuffer`s, one per track:
  *   init range  → appended once
  *   sidx range  → parsed, gives the size and duration of every subsegment
- *   fragments   → fetched by byte range, appended in order, kept `lookahead` seconds ahead
+ *   fragments   → fetched by byte range, appended in order, kept `LOOKAHEAD` seconds ahead
+ *                 by a 2 Hz refill, and removed once they are `BEHIND` seconds behind
+ *   last fragment → `endOfStream()`, so the element fires `ended`
  * Seeking is exact: the fragment that contains the requested time is found in the sidx table and
  * the buffer restarts from there.
  *
@@ -121,23 +123,35 @@
   // ---- the player ---------------------------------------------------------------------------
   //: how far ahead of the playhead we keep the buffer full, in seconds
   var LOOKAHEAD = 12;
-  //: never let the buffer run further than this (memory on a Chromecast is small)
-  var HORIZON = 30;
+  //: what we keep behind the playhead; older data is removed (a 2 h stream on a Chromecast
+  //: would otherwise run into the SourceBuffer quota)
+  var BEHIND = 20;
+  //: how often the buffers are refilled and the audio element is checked against the video
+  var TICK_MS = 500;
+  //: audio-on-video: below this the audio is left alone, above it the audio is nudged by rate,
+  //: and beyond HARD it is re-seated (a seek is an audible glitch, so it is the last resort)
+  var AUDIO_DEAD_S = 0.02;
+  var AUDIO_NUDGE = 0.005;
+  var AUDIO_HARD_S = 0.25;
 
   function MsePlayer(el, opts) {
     this.el = el;
     this.opts = opts || {};
-    //: extra elements, one per additional track (this device allows one SourceBuffer each)
-    this.flock = [];
     this.log = this.opts.log || function () {};
-    this.mediaSource = null;
     this.tracks = [];
+    this.groups = [];
     this.playing = false;
     this.rate = 1;
     this.stopped = false;
     this.pendingSeek = null;
+    this.timer = null;
     this.onUpdate = this.opts.onUpdate || function () {};
     this.onError = this.opts.onError || function () {};
+    //: tests drive tick() by hand; the page uses the real interval
+    this.setInterval = 'setInterval' in this.opts ? this.opts.setInterval
+      : (typeof setInterval === 'function' ? setInterval : null);
+    this.clearInterval = this.opts.clearInterval
+      || (typeof clearInterval === 'function' ? clearInterval : function () {});
   }
 
   MsePlayer.prototype.supported = function () {
@@ -164,7 +178,9 @@
       self.groups = groups;
       return self._loadTracks(groups);
     }).then(function () {
+      if (self.stopped) { return null; }
       self.pendingSeek = atTime || 0;
+      self._startTimer();
       return self.pump();
     }).catch(function (err) {
       self.onError('mse_start', (err && err.message) || String(err));
@@ -186,7 +202,7 @@
         spec.table = fragmentTable(sidx);
         if (!spec.table.length) { throw new Error('empty fragment table for ' + spec.mime); }
         var buffer;
-        self.log('add ' + spec.mime + ' state=' + g.ms.readyState);
+        self.log('add ' + spec.mime + ' #' + bufferCount(g.ms) + ' state=' + g.ms.readyState);
         try {
           buffer = g.ms.addSourceBuffer(spec.mime);
         } catch (e) {
@@ -195,7 +211,11 @@
         }
         buffer.mode = 'segments';
         spec.buffer = buffer;
+        spec.ms = g.ms;
         spec.next = 0;
+        spec.epoch = 0;          // bumped by every seek: work started before it is dropped
+        spec.busy = null;        // the epoch whose fetch loop is running, if any
+        spec.eos = false;
         spec.el = g.el;
         self.tracks.push(spec);
         return appendBuffer(buffer, spec.init);
@@ -203,14 +223,25 @@
     }));
   };
 
-  //: Keep both tracks about LOOKAHEAD seconds ahead of the playhead.
+  MsePlayer.prototype._startTimer = function () {
+    var self = this;
+    if (this.timer !== null || !this.setInterval) { return; }
+    this.timer = this.setInterval(function () { self.tick(); }, TICK_MS);
+  };
+
+  //: One refill + one audio check. The page's interval calls it; nothing else has to.
+  MsePlayer.prototype.tick = function () {
+    if (this.stopped) { return Promise.resolve(); }
+    return this.pump();
+  };
+
+  //: Keep every track LOOKAHEAD seconds ahead of the playhead and BEHIND seconds behind it.
+  //: One fetch loop per track at a time: a second call while one runs is a no-op, so the page's
+  //: interval and a seek can never append the same track concurrently.
   MsePlayer.prototype.pump = function () {
     var self = this;
     if (this.stopped || !this.tracks.length) { return Promise.resolve(); }
-    var now = this.el.currentTime;
-    var jobs = this.tracks.map(function (spec) {
-      return pumpTrack(self, spec, now);
-    });
+    var jobs = this.tracks.map(function (spec) { return pumpTrack(self, spec); });
     return Promise.all(jobs).then(function () {
       self._afterPump();
     }).catch(function (err) {
@@ -218,38 +249,56 @@
     });
   };
 
-  function pumpTrack(self, spec, now) {
-    if (self.stopped || spec.buffer === null) { return Promise.resolve(); }
-    var table = spec.table;
-    if (spec.next >= table.length) { return Promise.resolve(); }
-    if (spec.next > 0) {
-      var last = table[spec.next - 1];
-      if (last.time + last.duration > now + HORIZON) { return Promise.resolve(); }
-      if (last.time + last.duration > now + LOOKAHEAD) { return Promise.resolve(); }
-    }
-    var frag = table[spec.next];
-    spec.next += 1;
-    return fetchRange(spec.sidxUrl, frag.start, frag.end).then(function (bytes) {
-      if (self.stopped) { return null; }        // a stop during the fetch must not append
-      return appendBuffer(spec.buffer, bytes).catch(function (err) {
-        // "This SourceBuffer has been removed" is what a stop racing a pump looks like; it is
-        // not a session failure (measured 2026-10-27, and it aborted a share).
-        if (self.stopped) { return null; }
-        throw err;
+  function pumpTrack(self, spec) {
+    if (self.stopped || spec.buffer === null || spec.busy === spec.epoch) { return Promise.resolve(); }
+    var epoch = spec.epoch;
+    spec.busy = epoch;
+    var live = function () { return !self.stopped && spec.buffer !== null && spec.epoch === epoch; };
+    var done = function () { if (spec.busy === epoch) { spec.busy = null; } };
+
+    function step() {
+      if (!live()) { return null; }
+      var now = self._playhead();
+      var table = spec.table;
+      if (spec.next >= table.length) { return endOfStream(spec); }
+      if (spec.next > 0) {
+        var last = table[spec.next - 1];
+        if (last.time + last.duration > now + LOOKAHEAD) { return null; }
+      }
+      var frag = table[spec.next];
+      return evict(spec.buffer, now - BEHIND).then(function () {
+        if (!live()) { return null; }
+        return fetchRange(spec.sidxUrl, frag.start, frag.end);
+      }).then(function (bytes) {
+        if (bytes === null || !live()) { return null; }   // a seek or a stop during the fetch
+        return appendWithRoom(spec, bytes, now).then(function () {
+          if (!live()) { return null; }
+          spec.next += 1;                                 // only once the bytes are in
+          return step();
+        });
       });
-    }).then(function () {
-      if (self.stopped) { return null; }
-      // a seek that is waiting for its position to become buffered gets released here
-      if (spec.next === 1 && self.pendingSeek !== null) { /* handled in _afterPump */ }
-      return pumpTrack(self, spec, now);
+    }
+
+    return Promise.resolve().then(step).then(done, function (err) {
+      done();
+      // "This SourceBuffer has been removed" is what a stop racing a pump looks like; it is
+      // not a session failure (measured 2026-10-27, and it aborted a share).
+      if (!live()) { return null; }
+      throw err;
     });
   }
+
+  //: The position the buffers are filled around: a pending seek target counts as the playhead.
+  MsePlayer.prototype._playhead = function () {
+    return this.pendingSeek !== null ? this.pendingSeek : this.el.currentTime;
+  };
 
   MsePlayer.prototype._afterPump = function () {
     if (this.pendingSeek !== null) {
       var self = this;
       var want = this.pendingSeek;
-      if (this.bufferedStart() <= want + 0.25) {
+      var ready = this.tracks.every(function (spec) { return hasTime(spec.buffer, want); });
+      if (ready) {
         this._elements().forEach(function (el) {
           try { el.currentTime = want; } catch (e) { /* the buffer will catch up */ }
         });
@@ -258,7 +307,6 @@
       }
     }
     this.sync();
-    this.onUpdate();
   };
 
   MsePlayer.prototype.bufferedStart = function () {
@@ -307,14 +355,21 @@
 
   MsePlayer.prototype.seek = function (t) {
     var self = this;
+    var target = Math.max(0, t);
     this.tracks.forEach(function (spec) {
-      var i = fragmentAt(spec.table, Math.max(0, t));
-      spec.next = i;
-      try { spec.buffer.abort(); } catch (e) {}
-      removeBuffered(spec.buffer);
+      spec.epoch += 1;                 // any fetch still in flight is dropped when it lands
+      spec.busy = null;
+      spec.eos = false;
+      spec.next = fragmentAt(spec.table, target);
+      // (an `ended` MediaSource reopens by itself on the next append)
+      try { if (spec.buffer.updating) { spec.buffer.abort(); } } catch (e) {}
     });
-    this.pendingSeek = Math.max(0, t);
-    return this.pump().then(function () { self.onUpdate(); });
+    this.pendingSeek = target;
+    return Promise.all(this.tracks.map(function (spec) {
+      return removeAll(spec.buffer);
+    })).then(function () {
+      return self.pump();
+    }).then(function () { self.onUpdate(); });
   };
 
   MsePlayer.prototype.position = function () {
@@ -323,6 +378,7 @@
 
   MsePlayer.prototype.stop = function () {
     this.stopped = true;
+    if (this.timer !== null) { try { this.clearInterval(this.timer); } catch (e) {} this.timer = null; }
     (this.tracks || []).forEach(function (spec) { spec.buffer = null; });
     this.playing = false;
     var self = this;
@@ -338,18 +394,29 @@
   };
 
   //: Keep the extra elements on the master clock (this device needs one SourceBuffer per
-  //: MediaSource, so the audio lives on its own element).
+  //: MediaSource, so the audio lives on its own element). Small errors are taken out by rate,
+  //: so the TV's sound never jumps; only a large one (a stall, a seek) re-seats the audio.
   MsePlayer.prototype.sync = function () {
     var self = this;
     var master = this.el;
     var other = this._elements().filter(function (el) { return el !== master; });
     other.forEach(function (el) {
       try {
-        if (!el.paused && Math.abs(el.currentTime - master.currentTime) > 0.06) {
-          el.currentTime = master.currentTime;
+        if (master.paused) {
+          if (!el.paused) { el.pause(); }
+          return;
         }
-        if (master.paused && !el.paused) { el.pause(); }
-        if (!master.paused && el.paused) { self._play(); }
+        var base = master.playbackRate || self.rate || 1;
+        var d = el.currentTime - master.currentTime;      // > 0: audio ahead
+        if (Math.abs(d) > AUDIO_HARD_S) {
+          el.currentTime = master.currentTime;
+          el.playbackRate = base;
+        } else if (Math.abs(d) > AUDIO_DEAD_S) {
+          el.playbackRate = base * (d > 0 ? 1 - AUDIO_NUDGE : 1 + AUDIO_NUDGE);
+        } else if (el.playbackRate !== base) {
+          el.playbackRate = base;
+        }
+        if (el.paused) { self._play(); }
       } catch (e) { /* the sync must never throw into the caller */ }
     });
   };
@@ -375,24 +442,85 @@
     });
   }
 
-  function appendBuffer(buffer, bytes) {
-    return new Promise(function (resolve, reject) {
-      if (buffer.updating) {
-        buffer.addEventListener('updateend', resolve, { once: true });
-        return;
-      }
-      buffer.addEventListener('updateend', resolve, { once: true });
-      buffer.addEventListener('error', function () { reject(new Error('append failed')); }, { once: true });
-      try { buffer.appendBuffer(bytes); } catch (e) { reject(e); }
+  //: Resolves once the buffer is idle. A SourceBuffer refuses any operation while `updating`.
+  function idle(buffer) {
+    return new Promise(function (resolve) {
+      if (!buffer || !buffer.updating) { resolve(); return; }
+      buffer.addEventListener('updateend', function () { resolve(); }, { once: true });
     });
   }
 
-  function removeBuffered(buffer) {
+  //: Run one SourceBuffer operation and resolve on its own `updateend` — never drops the work
+  //: when the buffer happens to be busy (it waits, then does it).
+  function operate(buffer, op) {
+    return idle(buffer).then(function () {
+      return new Promise(function (resolve, reject) {
+        var onEnd = function () { buffer.removeEventListener('error', onErr); resolve(); };
+        var onErr = function () {
+          buffer.removeEventListener('updateend', onEnd);
+          reject(new Error('sourcebuffer error'));
+        };
+        buffer.addEventListener('updateend', onEnd, { once: true });
+        buffer.addEventListener('error', onErr, { once: true });
+        try { op(buffer); } catch (e) {
+          buffer.removeEventListener('updateend', onEnd);
+          buffer.removeEventListener('error', onErr);
+          reject(e);
+        }
+      });
+    });
+  }
+
+  function appendBuffer(buffer, bytes) {
+    return operate(buffer, function (b) { b.appendBuffer(bytes); });
+  }
+
+  //: Append, and on a full buffer free what is behind the playhead once and try again.
+  function appendWithRoom(spec, bytes, now) {
+    return appendBuffer(spec.buffer, bytes).catch(function (err) {
+      if (!err || err.name !== 'QuotaExceededError') { throw err; }
+      return evict(spec.buffer, now - 1).then(function () {
+        return appendBuffer(spec.buffer, bytes);
+      });
+    });
+  }
+
+  //: Remove everything buffered before `until` (seconds). No-op when there is nothing to free.
+  function evict(buffer, until) {
     try {
-      if (buffer.buffered && buffer.buffered.length && buffer.updating === false) {
-        buffer.remove(0, buffer.buffered.end(buffer.buffered.length - 1));
+      var b = buffer.buffered;
+      if (!b || !b.length || until <= 0 || b.start(0) >= until - 0.5) { return Promise.resolve(); }
+    } catch (e) { return Promise.resolve(); }
+    return operate(buffer, function (sb) { sb.remove(0, until); });
+  }
+
+  function removeAll(buffer) {
+    try {
+      var b = buffer && buffer.buffered;
+      if (!b || !b.length) { return Promise.resolve(); }
+      var end = b.end(b.length - 1);
+      return operate(buffer, function (sb) { sb.remove(0, end + 1); });
+    } catch (e) { return Promise.resolve(); }
+  }
+
+  function hasTime(buffer, t) {
+    try {
+      var b = buffer.buffered;
+      for (var i = 0; i < b.length; i++) {
+        if (b.start(i) <= t + 0.25 && t < b.end(i)) { return true; }
       }
-    } catch (e) { /* nothing buffered */ }
+    } catch (e) { /* removed */ }
+    return false;
+  }
+
+  //: Every fragment of the track is in: tell the MediaSource, so the element can fire `ended`.
+  function endOfStream(spec) {
+    if (spec.eos) { return null; }
+    return idle(spec.buffer).then(function () {
+      if (spec.eos || !spec.ms || spec.ms.readyState !== 'open') { return null; }
+      try { spec.ms.endOfStream(); spec.eos = true; } catch (e) { /* retried next tick */ }
+      return null;
+    });
   }
 
   return { parseSidx: parseSidx, fragmentTable: fragmentTable, fragmentAt: fragmentAt,
