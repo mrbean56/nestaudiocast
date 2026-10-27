@@ -82,6 +82,9 @@ TV_WINDOW_S = 10.0   # TV playhead estimator window (evidence/19)
 TV_WARM_S = 2.5      # minimum history before the estimate is trusted (two sawtooth refreshes)
 TV_JUMP_S = 0.40     # a read this far from the estimate is a seek, not noise
 
+#: two step errors inside this window rebuild the group link (see Relay.run)
+ERROR_WINDOW_S = 30.0
+
 # ------------------------------------------------- group ownership (contracts §7)
 OWNER_FILE = os.path.join(ROOT, "state", "group.owner")
 OWNER_SENDER = "cast-sender"   # v0.2's name; the relay reads it and never writes it
@@ -1002,8 +1005,14 @@ class Relay:
                 except (CastError, OSError) as exc:
                     self._log({"ev": "step_error", "error": f"{type(exc).__name__}: {exc}"[:160]})
                     self._errors += 1
-                    if self.sink is not None and not self.dry_run and self._errors >= 2:
-                        # Two failures in a row: assume the group link is dead and rebuild it.
+                    now = time.time()
+                    self._error_times = [t for t in getattr(self, "_error_times", []) if now - t < ERROR_WINDOW_S]
+                    self._error_times.append(now)
+                    # Two failures *within the window*, not two in a row: an idle group link that
+                    # died fails only on its 5 s keepalive, every step in between succeeds, and
+                    # "in a row" never came — the relay sat deaf for 38 h on CT 121 (2026-10-26/27).
+                    if self.sink is not None and not self.dry_run and len(self._error_times) >= 2:
+                        self._error_times = []
                         try:
                             self.sink.reconnect()
                             self.need_start = True
