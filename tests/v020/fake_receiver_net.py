@@ -151,6 +151,7 @@ class FakeReceiverNet:
         state_hz: float = 4.0,
         seed: int = 1,
         log=None,
+        mute_hello: bool = False,
     ) -> None:
         self.app_id = app_id
         self.host, self.port = host, port
@@ -162,6 +163,9 @@ class FakeReceiverNet:
         self.state_hz = float(state_hz)
         self.rng = random.Random(seed)
         self.log = log or (lambda *a, **k: None)
+        #: a wedged app instance: the transport connects but the first hello never comes
+        self.mute_hello = bool(mute_hello)
+        self._hello_muted_once = False
 
         # app / session
         self.app: dict | None = None
@@ -376,6 +380,10 @@ class FakeReceiverNet:
         if dst == "receiver-0":
             self._send(client, NS_RECEIVER, self._status_payload(), dest=src)
         elif self.app and dst == self.app["transportId"]:
+            if self.mute_hello and not self._hello_muted_once:
+                self._hello_muted_once = True
+                self.log("mute_hello: first hello withheld")
+                return
             self.hellos_sent += 1
             self._send(
                 client,

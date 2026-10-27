@@ -320,3 +320,23 @@ class TestProtocol(WireCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestStaleAppRecovery(unittest.TestCase):
+    """A wedged app instance (ours, but silent) must be recycled, not adopted for ever.
+
+    Measured on CT 121 (2026-10-26): after several sessions the app was still running, the page
+    never answered the namespace, and every share failed with 'no hello' until the app was stopped.
+    """
+
+    def test_launch_relaunches_a_silent_app_once(self):
+        from v020.chromecast import SenderLink
+
+        receiver = FakeReceiverNet(mute_hello=True)
+        receiver.start()
+        self.addCleanup(receiver.stop)
+        link = SenderLink(receiver.host, receiver.app_id, port=receiver.port, log=lambda *a, **k: None)
+        self.addCleanup(link.close)
+        status = link.launch(timeout=8.0)
+        self.assertTrue(status)
+        self.assertGreaterEqual(link.hellos, 1, "the relaunched app must greet us")

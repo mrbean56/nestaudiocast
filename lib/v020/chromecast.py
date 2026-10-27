@@ -53,6 +53,8 @@ if _LIB not in sys.path:  # lib/ holds castv2.py; CI imports this module on a ba
 _CASTV2 = None
 
 
+#: how long an adopted app instance gets to answer `hello` before it is recycled
+HELLO_PROBE_S = 6.0
 IDLE_APP_ID = "E8C28D3C"  # Backdrop: the screen a device shows when nobody owns it
 
 
@@ -291,7 +293,17 @@ class SenderLink:
 
         self.lost_reason = None
         self._adopt_app(status, attach=True)
-        self._wait_hello(timeout)
+        try:
+            self._wait_hello(min(timeout, HELLO_PROBE_S))
+        except LinkDown:
+            # Measured on CT 121 (2026-10-26): an app instance left over from earlier sessions can
+            # be wedged — the app is ours, the page never answers the namespace. Adopting it would
+            # fail every share until somebody recycles the device, so recycle the *app* instead:
+            # stop it and launch once more, which is what a fresh launch does reliably.
+            if app_id != self.app_id:
+                raise
+            self._emit("stale_app", app_id=app_id, note="no hello: relaunching once")
+            self._restart_app(status, timeout)
         self._emit(
             "launched",
             app_id=self.app_id,
@@ -300,6 +312,37 @@ class SenderLink:
             hellos=self.hellos,
         )
         return status
+
+    def _restart_app(self, status: dict, timeout: float) -> None:
+        """Stop our wedged app instance and launch a fresh one (one attempt, then give up)."""
+        cv = _castv2()
+        if self.link is None or self.closed:
+            # the failed hello path closed the link and marked us closed; reopening is cheap and
+            # beats failing a share because of a bookkeeping detail
+            self.closed = False
+            self._open(timeout)
+        session_id = None
+        body = (status.get("payload") if isinstance(status, dict) else None) or status or {}
+        for app in body.get("applications") or []:
+            if app.get("appId") == self.app_id:
+                session_id = app.get("sessionId")
+        if session_id:
+            try:
+                self.link.stop_app(session_id, timeout=8)
+            except cv.CastError as exc:
+                raise LinkDown(f"could not stop the stale app on {self.host}: {exc}") from exc
+            time.sleep(1.0)
+        try:
+            payload = self.link.launch(self.app_id, timeout=timeout)
+        except cv.CastError as exc:
+            raise LinkDown(f"relaunch of {self.app_id} failed on {self.host}: {exc}") from exc
+        fresh = (payload or {}).get("status") or {}
+        app_id, _name, _transport = cv.receiver_app(fresh)
+        if app_id != self.app_id:
+            raise LinkDown(f"relaunch returned app {app_id!r}, expected {self.app_id}")
+        self.hellos = 0
+        self._adopt_app(fresh, attach=True)
+        self._wait_hello(timeout)
 
     def connect(self, timeout: float = 10.0) -> None:
         """Attach to the running app's transport; must survive a receiver reconnect."""
@@ -326,7 +369,17 @@ class SenderLink:
             self._emit("lost_cleared", reason=self.lost_reason)
         self.lost_reason = None
         self._adopt_app(status, attach=True)
-        self._wait_hello(timeout)
+        try:
+            self._wait_hello(min(timeout, HELLO_PROBE_S))
+        except LinkDown:
+            # Measured on CT 121 (2026-10-26): an app instance left over from earlier sessions can
+            # be wedged — the app is ours, the page never answers the namespace. Adopting it would
+            # fail every share until somebody recycles the device, so recycle the *app* instead:
+            # stop it and launch once more, which is what a fresh launch does reliably.
+            if app_id != self.app_id:
+                raise
+            self._emit("stale_app", app_id=app_id, note="no hello: relaunching once")
+            self._restart_app(status, timeout)
         self._emit(
             "connected",
             transport=self.transport,
