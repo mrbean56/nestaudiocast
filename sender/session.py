@@ -534,7 +534,7 @@ class SessionManager:
             if session is None:
                 return
             now = self._clock()
-            self._refresh_clock()  # throttled by CLOCK_REFRESH_S (§3.1)
+
             if session.state == C.STATE_ENDED:
                 if self._ended_at is not None and now - self._ended_at >= ENDED_LINGER_S:
                     self._session = None
@@ -555,6 +555,12 @@ class SessionManager:
 
             if not session.live:
                 return
+            # Nothing may touch the link before the start sequence has launched and connected
+            # it: measured on CT 121 (2026-10-26) an idle tick pinged a link that did not exist,
+            # and the LinkDown was read as a foreign takeover, aborting the share in 100 ms.
+            if not session.receiver_launched:
+                return
+            self._refresh_clock()  # throttled by CLOCK_REFRESH_S (§3.1)
             try:
                 ours = self._link.is_ours()
             except NotImplementedError:
