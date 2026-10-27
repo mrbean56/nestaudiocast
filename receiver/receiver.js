@@ -66,6 +66,20 @@
     return ownElement();
   }
 
+  function apiSurface() {
+    // what CAF actually offers here (measured 2026-10-26: a custom page has no
+    // <cast-media-player>, so the DASH path needs to know how to reach CAF's element)
+    var pm = playerManager;
+    return {
+      getMediaElement: typeof pm.getMediaElement,
+      setMediaElement: typeof pm.setMediaElement,
+      getPlaybackConfig: typeof pm.getPlaybackConfig,
+      getPlayerData: typeof pm.getPlayerData,
+      mse: (typeof window.MediaSource !== 'undefined') ? 'yes' : 'no',
+      cafMediaPlayer: !!document.querySelector('cast-media-player')
+    };
+  }
+
   function elementInfo() {
     var caf = document.querySelector('cast-media-player video') || document.querySelector('video');
     return { caf: !!caf, own: ownEl ? 'created' : (caf ? 'not-needed' : 'lazy') };
@@ -107,7 +121,8 @@
     var s = sample();
     var body = {
       rx_ms: s.rx_ms, ua: navigator.userAgent, codecs: codecClaims(),
-      version: VERSION, app: APP_NAME, app_id: '28028CD2', element: elementInfo()
+      version: VERSION, app: APP_NAME, app_id: '28028CD2', element: elementInfo(),
+      apis: apiSurface()
     };
     if (senderId) { sendTo(senderId, envelope('hello', body)); }
     else { broadcast('hello', body); }
@@ -471,6 +486,18 @@
     onSystemEvent('SENDER_DISCONNECTED', function (e) {
       if (e && e.senderId) { delete helo[e.senderId]; }
     });
+    // CAF reports media problems as events, not as exceptions (measured 2026-10-26: a DASH load
+    // never reached metadata and the page said nothing, so the controller could not know why).
+    try {
+      playerManager.addEventListener(cast.framework.events.EventType.ERROR, function (e) {
+        var code = (e && (e.detailedErrorCode || (e.error && e.error.code))) || 'unknown';
+        sendError('caf_error', String(code));
+      });
+      playerManager.addEventListener(cast.framework.events.EventType.LOAD, function () {
+        log('caf load');
+      });
+    } catch (e) { log('no caf events'); }
+
     context.addCustomMessageListener(NS, function (ev) {
       attachElement(mediaEl());
       onMessage(ev.senderId, ev.data);

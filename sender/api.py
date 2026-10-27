@@ -238,6 +238,12 @@ class _Handler(BaseHTTPRequestHandler):
             # The frozen receiver URL is a stable loader; it asks for /b/<now>/build.txt and
             # /r/<build>/receiver.js. Measured 2026-10-26: the device caches by PATH and ignores
             # query strings, so these must be served here too, or the page never boots.
+            if path in ("/build.txt", "/receiver.js"):
+                # the first loader generation asked for these; a device that cached it (it caches
+                # until boot) must still be able to boot, so both schemes are served
+                return self._loader_asset(
+                    path.replace("/build.txt", "/x/build.txt").replace("/receiver.js", "/x/receiver.js")
+                )
             if _is_loader_path(path):
                 return self._loader_asset(path)
             if path.startswith(MEASURE_PREFIX):

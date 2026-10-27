@@ -1,0 +1,76 @@
+{
+ "task": "C on our own receiver page (night of 2026-10-26)",
+ "when": "2026-10-26T21:03:33",
+ "device": "192.168.2.80 Chromecast Salon, app 28028CD2 (VideoNetCaster, unpublished)",
+ "how": [
+  "tools/receiver_measure.py (clock, noise, rate) against the page as deployed that night",
+  "tools/playhead_noise.py --backend dmr for the platform player, evidence/49"
+ ],
+ "clock": {
+  "ok": true,
+  "pings": 200,
+  "replies": 200,
+  "rtt_ms": {
+   "median": 10.23,
+   "p95": 10.66,
+   "min": 10.17
+  },
+  "offset_from_min_rtt_ms": {
+   "median": 1792515512646.54,
+   "sigma": 0.82,
+   "samples": 20
+  },
+  "note": "offset_from_min_rtt is monotonic-domain (perf_counter) minus rx_ms: only its scatter matters here; the absolute offset is what SenderLink.ping() reports"
+ },
+ "page_playhead_noise": {
+  "samples": 271,
+  "state_hz": 4.05,
+  "sigma_ms": 55.94,
+  "p95_abs_ms": 105.88,
+  "shape": "sawtooth-like",
+  "source": "measure_noise run at 16:5x (nocci/page-ns.json), archived here for the record",
+  "verdict": "the page's own reporting is as noisy as the platform player's (sigma 55.9 vs 60.1): the 30 s mean filter of sync.VideoClock is the right shape for both"
+ },
+ "platform_playhead_noise": {
+  "sigma_ms": 60.09,
+  "p95_abs_ms": 111.78,
+  "shape": "sawtooth-like"
+ },
+ "rate_through_the_page": {
+  "ok": true,
+  "runs": [
+   {
+    "asked": 1.0,
+    "ok": true,
+    "samples": 245,
+    "measured_ratio": 1.000275,
+    "ratio_sigma": 0.000202,
+    "measured_gain": 0.000275,
+    "asked_gain": 0.0
+   },
+   {
+    "asked": 0.998,
+    "ok": true,
+    "samples": 246,
+    "measured_ratio": 0.997316,
+    "ratio_sigma": 0.000212,
+    "measured_gain": -0.002684,
+    "asked_gain": -0.002
+   },
+   {
+    "asked": 1.002,
+    "ok": true,
+    "samples": 246,
+    "measured_ratio": 1.002003,
+    "ratio_sigma": 0.0002,
+    "measured_gain": 0.002003,
+    "asked_gain": 0.002
+   }
+  ]
+ },
+ "rate_verdict": "the page honours playbackRate: 1.002 -> +0.002003, 0.998 -> -0.002684 (the -0.002 ask came back 34 % strong, the +0.002 within 0.2 %). Measured on the OLD page build, before the element fix: valid for the element API, not yet repeated on the current build.",
+ "not_measured_tonight": {
+  "play_at_start_dispersion": "blocked: every attempt measured the pre-element-fix page, which parked at 0 instead of the asked position. Needs the current page build on the device (a reboot picks it up) and 10 tries.",
+  "dash_playback": "the platform DMR and our page both refuse the generated manifest: see notes/labo-receiver.md \u00a7C6"
+ }
+}

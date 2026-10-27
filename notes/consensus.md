@@ -280,3 +280,29 @@ par le propriétaire** (onglet *Devices*, numéro de série comparé à celui de
 Conséquence : tout ce qui demande **notre page** reste non mesuré (horloge, dispersion de départ,
 bruit de `currentTime` côté page, gain de cadence via la page). Ce qui ne la demande pas a été mesuré
 (lecteur de la plateforme, `evidence/49`).
+
+### 8.7 Première mise en service réelle de v0.2.0 (2026-10-26 soir) — ce que le matériel a dit
+
+Déployé sur CT 121 (`/opt/castsender`, unité `cast-sender`, port 7640, v0.1 intacte sur 8099).
+Mode **muet de banc** : fenêtre calme placée hors de l'heure courante avec `video_only`, donc le
+groupe « Cuisine » n'est **jamais** chargé ; le volume de l'appareil a été mis en sourdine pendant
+les essais et restauré ensuite (niveau inchangé) ; les médias de test n'ont pas de piste audio.
+
+Ce qui a marché : résolution (yt-dlp), service HTTP, lancement de l'app sur l'appareil, horloge
+(σ 0,82 ms), `playbackRate` via la page, session qui **survit** et atteint `playing`.
+
+Ce qui a cassé, et que seule une mise en service réelle pouvait montrer (détail : `labo-receiver.md`
+§C5) : quatre bugs de la page (diffusion qui n'atteignait personne, pas d'élément `<video>`, élément
+piloté ≠ élément écouté, `play_at` qui joue avant les métadonnées) et deux du service (l'écran de
+veille « Backdrop » pris pour une prise de contrôle ; le ticker qui interrogeait la liaison pendant
+que la séquence de départ la possédait, ce qui déclarait « app étrangère » une session saine).
+
+**Découverte qui change un choix** : le manifeste DASH généré n'est joué par **aucun** des deux
+lecteurs de l'appareil (ni notre page, ni le DMR de la plateforme) alors que les plages sont
+correctes (206, `sidx`, `ftyp`/`moov`). Le contrat §4 disait « scheme frozen, implementation free » :
+il faut donc rouvrir l'implémentation du manifeste, ou remplacer la lecture DASH par un lecteur MSE
+dans la page (`labo-receiver.md` §C6). **Non tranché.**
+
+**Reste hors de portée sans le propriétaire** : tout ce qui est audible (calibration `DELTA_V2`,
+3 points acoustiques, matrice de transport complète, prise de contrôle étrangère en vrai, rollback
+exécuté) — c'est la porte matérielle de l'objectif.

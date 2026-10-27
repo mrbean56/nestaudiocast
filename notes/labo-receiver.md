@@ -271,3 +271,70 @@ One small thing the integrator may want to freeze: the receiver echoes the **con
 on replies, and stamps unsolicited messages (`state`, `ended`, `error`) with the last `seq` it saw,
 which is the only coherent reading of "the receiver never sends a message without `seq`" (§3). It
 is implemented that way in `receiver.html` and worth a sentence in the contract.
+
+---
+
+## C5 — L'app tourne enfin : quatre bugs que seule la mesure a montrés (2026-10-26, 15:30–21:10)
+
+`APP_AVAILABLE` obtenu à 15:31 après correction du numéro de série (console) et redémarrage. À
+partir de là, tout ce qui suit a été **mesuré sur l'appareil**, en silence (HDMI sur une entrée
+éteinte, volume de l'appareil muet, médias **sans piste audio**).
+
+| # | Symptôme mesuré | Cause | Correctif |
+|---|---|---|---|
+| 1 | `clock_reply` arrive, **`state`/`error`/`ended` jamais** | `broadcast()` passe par CAF `getSenders()`, qui ne liste pas un contrôleur CASTv2 brut | renvoyer aussi au **dernier expéditeur entendu** (`lastSender`) |
+| 2 | premier `load` → `no_media_element` | une page custom n'a **pas** de `<video>` (le Styled Receiver en fournit un) | la page crée et possède son élément (`#nac-media`) |
+| 3 | `load` à 20 s joue à **0** | `mediaEl()` renvoyait l'élément vide de CAF alors que les événements étaient liés au nôtre | un seul élément piloté = un seul élément écouté (`dashMode` explicite) |
+| 4 | `play_at` joue depuis la mauvaise position | la libération partait même sans métadonnées | attente bornée puis `metadata_timeout` (dire la vérité plutôt que mentir) |
+
+**Et le coût caché** : l'appareil **met en cache par chemin** et ignore les chaînes de requête
+(`/receiver.js?v=A` récupéré une fois, jamais re-essayé pour deux builds suivants), et il ne
+rafraîchit tout son bundle qu'au **redémarrage**. Trois redémarrages ont été nécessaires pour
+trois corrections de page. Solution retenue : l'URL gelée sert un **chargeur stable** qui lit
+`/b/<now>/build.txt` et charge `/r/<build>/receiver.js` — chemins différents à chaque build, donc
+plus de redémarrage pour une mise à jour de page. Le service sert ces deux chemins, et aussi les
+deux chemins de la première génération (`/build.txt`, `/receiver.js`) pour qu'un appareil qui a
+l'ancien chargeur en cache puisse encore démarrer.
+
+## C6 — Le manifeste DASH ne joue sur aucun des deux lecteurs (21:05)
+
+**Hypothèse** : le MPD synthétisé par la tâche B est jouable ; si notre page échoue, c'est notre
+usage de CAF.
+
+**Mesure**, session vivante (`tools/receiver_measure.py` + inspection directe) :
+- MPD servi par le service, structure correcte : `type="static"`, `SegmentBase indexRange` +
+  `Initialization`, `BaseURL` relatifs `0`/`1` ;
+- les plages répondent **206** avec `Content-Range` exact ; l'init contient `ftyp`+`moov`, l'index
+  commence par un **`sidx`** ; taille totale 2 507 362 728 octets ;
+- **notre page** avec `load{content_type: application/dash+xml}` → `player_state: loading`,
+  `ready: 0`, `metadata_timeout` au bout de 5 s, aucun `caf_error` ;
+- **le DMR de la plateforme** (le même appareil, autre lecteur) chargé sur le même MPD → réponse
+  `IDLE`, puis plus aucune session : il refuse aussi.
+
+**Conclusion** : le problème n'est ni notre page ni CAF, c'est **le manifeste** — deux lecteurs
+indépendants le refusent. Ce qui reste à établir : quelle contrainte DASH manque (hypothèses non
+départagées : `SegmentBase@timescale`, contenu du `sidx` YouTube vs attentes Shaka, `Period`
+unique + `startWithSAP`, ou le fait que Shaka veut un `sidx` par représentation avec des offsets
+relatifs à la fin du `sidx`).
+**Ce que ça ne remet pas en cause** : le proxy et le service des plages sont corrects (206, sha256
+identique, reprise après expiration, `evidence/40-*`). C'est le **manifeste** qu'il faut revoir.
+
+**Piste pour la suite (à décider, pas décidée)** : écrire un lecteur MSE minimal dans la page
+(init + fragments par plages lues dans le `sidx`, ajoutés à `SourceBuffer`) au lieu de dépendre du
+lecteur DASH de CAF. La page possède déjà son élément et `playbackRate` y est honoré (mesuré) ;
+cela supprime d'un coup la dépendance au manifeste et permet un seek exact par fragment. Coût :
+~150 lignes de JS et son harnais hors ligne.
+
+## C7 — Ce qui a été mesuré ce soir, sur notre page (à comparer à 41a-c, lecteur de la plateforme)
+
+`evidence/41d-page-measure-night.json` :
+- **horloge** : 200/200 réponses, RTT médian 10,2 ms (p95 10,7), dispersion de l'offset **σ 0,82 ms**
+  sur les 20 meilleurs RTT → l'estimateur de la tâche D tient sur le vrai appareil ;
+- **tête de lecture de notre page** : σ **55,9 ms**, p95 106 ms, **sawtooth** — même forme que le
+  lecteur de la plateforme (σ 60,1). Autrement dit la page n'est pas plus propre : le filtre
+  moyenne 30 s de `sync.VideoClock` est justifié pour les deux ;
+- **cadence via la page** : 1,002 → **+0,002003**, 0,998 → **−0,002684** (le 0,998 sort 34 % trop
+  fort, le 1,002 à 0,2 %). Mesuré sur le build **avant** le correctif d'élément : valable pour
+  l'API de l'élément, à refaire sur le build courant.
+- **non mesuré** : dispersion de départ de `play_at` (les 10 essais ont tous mesuré la page
+  d'avant le correctif, qui parquait à 0).
