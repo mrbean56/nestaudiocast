@@ -147,11 +147,14 @@
     this.timer = null;
     this.onUpdate = this.opts.onUpdate || function () {};
     this.onError = this.opts.onError || function () {};
-    //: tests drive tick() by hand; the page uses the real interval
+    //: tests drive tick() by hand; the page uses the real interval. Wrapped, never stored bare:
+    //: `this.setInterval(...)` on a stored window method throws "Illegal invocation" in Chrome
+    //: (measured on the device, 2026-10-27).
     this.setInterval = 'setInterval' in this.opts ? this.opts.setInterval
-      : (typeof setInterval === 'function' ? setInterval : null);
+      : (typeof setInterval === 'function'
+        ? function (fn, ms) { return setInterval(fn, ms); } : null);
     this.clearInterval = this.opts.clearInterval
-      || (typeof clearInterval === 'function' ? clearInterval : function () {});
+      || function (id) { if (typeof clearInterval === 'function') { clearInterval(id); } };
   }
 
   MsePlayer.prototype.supported = function () {

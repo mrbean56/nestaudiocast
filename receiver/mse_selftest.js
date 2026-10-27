@@ -319,6 +319,32 @@ async function playTest(table) {
     check('refill_timer_started_and_cleared', timers.set === 1 && timers.cleared === 1, timers);
   }
 
+  // the page's own interval: the real setInterval is a window method, and Chrome refuses it
+  // when called on anything but the window ("Illegal invocation", measured on the device)
+  {
+    const world = fakeWorld(table);
+    const m = install(world);
+    const real = { set: global.setInterval, clear: global.clearInterval };
+    const seen = { set: 0, cleared: 0, illegal: 0 };
+    global.setInterval = function (fn, ms) {
+      if (this !== undefined && this !== globalThis) { seen.illegal += 1; throw new TypeError('Illegal invocation'); }
+      seen.set += 1; return 99;
+    };
+    global.clearInterval = function (id) {
+      if (this !== undefined && this !== globalThis) { seen.illegal += 1; throw new TypeError('Illegal invocation'); }
+      if (id === 99) { seen.cleared += 1; }
+    };
+    let failed = null;
+    try {
+      const player = new m.MsePlayer(world.el, {});
+      await player.start(TRACKS, 0);
+      player.stop();
+    } catch (e) { failed = e.message; }
+    global.setInterval = real.set; global.clearInterval = real.clear;
+    check('window_timers_called_as_window_methods', !failed && seen.illegal === 0 && seen.set === 1 && seen.cleared === 1,
+          { failed, ...seen });
+  }
+
   // the audio element follows the video by rate; only a large error re-seats it
   {
     const world = fakeWorld(table);
