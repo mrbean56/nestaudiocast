@@ -1,4 +1,13 @@
-# nestaudiocast — v0.1
+# nestaudiocast — v0.1 (v0.2.0 in progress)
+
+> **v0.2.0** (branch `v0.2.0`, not released) replaces "follow the TV" with an **owner app**: the
+> phone shares a YouTube URL to CT 121, which plays the video on the Chromecast through our own
+> receiver page and the audio on the speaker group, held together by rate trims. Proven so far
+> on the device, silently: first frame 9.4–13.7 s, 10/10 reliable starts, rate trims honoured,
+> pause/resume/seek/stop/new share on the video side. Not yet proven: anything with sound
+> (calibration, the three acoustic points, the group side of the transport matrix), a foreign
+> cast, the rollback run. State and evidence: [`notes/ACCEPTANCE.md`](notes/ACCEPTANCE.md) §v0.2,
+> contracts: [`docs/v020-contracts.md`](docs/v020-contracts.md).
 
 Play the audio of a YouTube video on a Google Cast **speaker group**, in sync with the video
 playing on a TV in the same room, with a **measured** A/V offset under 150 ms.

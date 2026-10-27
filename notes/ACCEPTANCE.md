@@ -93,3 +93,27 @@ Ce qui **n'est pas** prouvé et doit rester dit : les publicités (jamais rencon
 stabilité de `delta` selon le format du contenu et le mode image de la TV, et la mesure
 acoustique sur du contenu **arbitraire** (elle exige un marqueur ; deux méthodes essayées et
 documentées comme non concluantes, `notes/00-labo.md` A29).
+
+---
+
+## v0.2.0 — l'expéditeur maison (état au 2026-10-27, branche `v0.2.0`, **non livré**)
+
+Chaque ligne cite sa preuve ; « non mesuré » veut dire qu'aucune preuve n'existe.
+
+| Critère (objectif v0.2.0) | État | Preuve |
+|---|---|---|
+| Premier cadre ≤ 15 s après le partage | **atteint** : 9,4–13,7 s, 10/10 démarrages fiables | `evidence/50-service-bench-night.json`, `evidence/51-first-share-flakiness.json` |
+| Pas de trou après le départ (trims, jamais de rechargement) | **garanti par le code** (0 `load`/`seek` sur 2 400 demandes hostiles) ; **non mesuré** sur le matériel | `evidence/47-sender-selftest.json` |
+| Lecture continue ≥ 10 min côté vidéo | **non mesuré** — le lecteur MSE ne rechargeait pas après le départ (corrigé le 2026-10-27, harnais 28/28) ; aucune lecture > 25 s sur l'appareil à ce jour | `receiver/mse_selftest.js` |
+| Erreur numérique ≤ 20 ms en régime | **simulée seulement** : p95 13,6 ms avec le bruit mesuré du lecteur (σ 56–60 ms) | `evidence/44b-sim-video-side.json`, `evidence/49-playhead-noise-dmr.json`, `evidence/41d-page-measure-night.json` |
+| Offset perçu ≤ 15 ms, 3 points acoustiques ≥ 10 min, sans dérive | **non mesuré** (`DELTA_V2` = 0, non calibré) | — |
+| Transport : lecture/pause/reprise/seek/stop/nouvelle vidéo | **côté vidéo seulement** ; côté groupe non mesuré | `evidence/50-service-bench-night.json` |
+| Volume, fin de vidéo | **non mesuré** (`ended` n'était jamais émis par le lecteur MSE, corrigé le 2026-10-27) | — |
+| Fin propre si un autre cast prend le Chromecast | outil auto-testé, **non exécuté** | `evidence/48-foreign-takeover-v020-selftest.json` |
+| Redémarrage sûr | **non mesuré** | — |
+| Heures calmes | **abandonné** par le propriétaire (2026-10-26) | `notes/consensus.md` §8 |
+| Rollback écrit et testé | écrit (`notes/rollback.md` §v0.2), outil auto-testé, **non exécuté** | `evidence/48-rollback-v020-selftest.json` |
+| v0.1 ne se bat pas avec v0.2 | testé hors ligne ; **déployé sur CT 121 le 2026-10-27** | `evidence/45-relay-yield-offline.txt` |
+
+Conclusion provisoire : la moitié vidéo est mesurée et silencieuse ; tout ce qui demande du son
+reste à faire, et le tag `v0.2.0` attend la porte matérielle.

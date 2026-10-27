@@ -126,3 +126,32 @@ Autres leçons du 2026-10-25 :
   commande du shell distant). Toujours ancrer : `pkill -f "^.venv/bin/python -u relay"`.
 - Un `adb kill-server` coupe le débogage sans fil du téléphone (port changé) : ne jamais
   relancer le serveur adb pendant une session.
+
+---
+
+## v0.2 — `cast-sender` (CT 121, `/opt/castsender`)
+
+**Non exécuté de bout en bout à ce jour** (outil `tools/rollback_v020.py`, auto-test seulement :
+`evidence/48-rollback-v020-selftest.json`). L'ordre ci-dessous est celui que la porte matérielle
+exécutera.
+
+```sh
+# 1. arrêter la session (groupe arrêté, récepteur sur sa page d'attente, verrou libéré)
+python3 -c 'import json,urllib.request as u;print(u.urlopen(u.Request("http://192.168.2.21:7640/api/control",json.dumps({"action":"stop"}).encode(),{"Content-Type":"application/json"})).read())'
+# 2. arrêter le service ; son ExecStopPost (`python -m sender.service --cleanup`) arrête la
+#    session qu'il a enregistrée et rien d'autre
+ssh root@192.168.2.21 systemctl stop cast-sender
+ssh root@192.168.2.21 systemctl disable cast-sender
+# 3. v0.1 reprend seule le groupe : le verrou absent, le relais suit de nouveau la TV
+ssh root@192.168.2.21 'ls /opt/castsender/state/; systemctl is-active cast-relay'
+```
+
+- Le verrou `group.owner` est **déplacé**, jamais effacé, s'il reste après un arrêt brutal :
+  `mv /opt/castsender/state/group.owner /opt/castsender/state/group.owner.stale-$(date +%s)`
+  (le relais le considère périmé après 15 s de toute façon, contrats §7).
+- Le Chromecast : `stop` le laisse sur la page d'attente de notre récepteur ; un appui sur
+  « Arrêter la diffusion » dans Google Home le rend à Backdrop. Son volume n'est jamais modifié
+  par v0.2 (seul le mute sert pendant les bancs, et il est rendu).
+- Le relais v0.1 : depuis le 2026-10-27 son `ExecStopPost` passe par `tools/relay-stop-post.sh`,
+  qui ne coupe pas le son de la cuisine tant que v0.2 la possède ; sans propriétaire v0.2 il
+  lance `lib/emergency.py` comme avant.

@@ -270,3 +270,23 @@ what was ambiguous.
     the reasoning are in `notes/labo-sync.md` §5. The consequence is recorded honestly: with the
     measured noise the steady p95 is ~13 ms — inside the acceptance's 20 ms, above the 10 ms the
     simulation met with a perfect video side.
+
+12. **§4/§3 — the receiver plays the stream with its own MSE reader, not CAF's player**
+    (2026-10-26/27, `notes/labo-receiver.md` §C6–C11). The manifest of §4 is unchanged and still
+    the input, but only for its two byte ranges per track (`Initialization@range`,
+    `SegmentBase@indexRange`): `receiver/mse.js` parses the `sidx` itself and appends fragments by
+    byte range. Measured on the device: the synthesised MPD played on neither CAF's player nor
+    the platform DMR, and the MediaSource accepts **one** SourceBuffer, so each track has its own
+    element and MediaSource (audio element kept on the video's clock by rate, re-seated only past
+    250 ms). The reader refills from a 2 Hz timer, keeps 12 s ahead and 20 s behind, and calls
+    `endOfStream()` after the last fragment so the element fires `ended`.
+13. **§5 — the receiver page is a stable loader.** The device caches by **path** and ignores
+    query strings and `Cache-Control` until it reboots (measured). `/receiver.html` (frozen) reads
+    `/b/<now>/build.txt` (`no-store`) and loads `/r/<build>/receiver.js` and `/r/<build>/mse.js`;
+    `<build>` is the first 12 hex of the script's sha1. The first loader generation's paths
+    (`/build.txt`, `/receiver.js`) are answered with a 302 to the current build.
+14. **§7 — one lock file, one path.** cast-sender writes `<STATE_DIR>/group.owner`
+    (`/opt/castsender/state/group.owner` on CT 121); the relay reads the path named by
+    `OWNER_FILE` in `/etc/castrelay.conf`, for both `run-relay.sh` and its `ExecStopPost` wrapper.
+    Two checkouts with two relative defaults had them reading different files (review
+    2026-10-27); `tools/safety_guards.sh` now checks the example configuration.
