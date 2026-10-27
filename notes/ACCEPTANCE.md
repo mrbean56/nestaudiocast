@@ -104,7 +104,7 @@ Chaque ligne cite sa preuve ; « non mesuré » veut dire qu'aucune preuve n'exi
 |---|---|---|
 | Premier cadre ≤ 15 s après le partage | **atteint** : 9,4–13,7 s, 10/10 démarrages fiables | `evidence/50-service-bench-night.json`, `evidence/51-first-share-flakiness.json` |
 | Pas de trou après le départ (trims, jamais de rechargement) | **garanti par le code** (0 `load`/`seek` sur 2 400 demandes hostiles) ; **non mesuré** sur le matériel | `evidence/47-sender-selftest.json` |
-| Lecture continue ≥ 10 min côté vidéo | **non mesuré** — le lecteur MSE ne rechargeait pas après le départ (corrigé le 2026-10-27, harnais 28/28) ; aucune lecture > 25 s sur l'appareil à ce jour | `receiver/mse_selftest.js` |
+| Lecture continue ≥ 10 min côté vidéo | **atteint** (silencieux) : 600,5 s de média en 600,5 s, premier cadre 6,0 s. Le lien de contrôle devient sourd toutes les 4–6 min (cause inconnue) ; le chien de garde le reconnecte en 7,4 s, sans effet sur la lecture | `evidence/52b-long-play-mse.json`, `evidence/52a-long-play-deaf-link.json` |
 | Erreur numérique ≤ 20 ms en régime | **simulée seulement** : p95 13,6 ms avec le bruit mesuré du lecteur (σ 56–60 ms) | `evidence/44b-sim-video-side.json`, `evidence/49-playhead-noise-dmr.json`, `evidence/41d-page-measure-night.json` |
 | Offset perçu ≤ 15 ms, 3 points acoustiques ≥ 10 min, sans dérive | **non mesuré** (`DELTA_V2` = 0, non calibré) | — |
 | Transport : lecture/pause/reprise/seek/stop/nouvelle vidéo | **côté vidéo seulement** ; côté groupe non mesuré | `evidence/50-service-bench-night.json` |
@@ -113,7 +113,7 @@ Chaque ligne cite sa preuve ; « non mesuré » veut dire qu'aucune preuve n'exi
 | Redémarrage sûr | **non mesuré** | — |
 | Heures calmes | **abandonné** par le propriétaire (2026-10-26) | `notes/consensus.md` §8 |
 | Rollback écrit et testé | écrit (`notes/rollback.md` §v0.2), outil auto-testé, **non exécuté** | `evidence/48-rollback-v020-selftest.json` |
-| v0.1 ne se bat pas avec v0.2 | testé hors ligne ; **déployé sur CT 121 le 2026-10-27** | `evidence/45-relay-yield-offline.txt` |
+| v0.1 ne se bat pas avec v0.2 | testé hors ligne ; **déployé sur CT 121 le 2026-10-27** (même fichier de verrou des deux côtés) ; la cession en direct demande une session audible, **non exécutée** | `evidence/45-relay-yield-offline.txt`, `evidence/53-ct121-relay-deploy.txt` |
 
 Conclusion provisoire : la moitié vidéo est mesurée et silencieuse ; tout ce qui demande du son
 reste à faire, et le tag `v0.2.0` attend la porte matérielle.

@@ -8,6 +8,8 @@ reading and never reconnected. The session now watches the page's 4 Hz state: no
 
 from __future__ import annotations
 
+import threading
+import time
 import unittest
 
 from test_sender_support import YOUTUBE, C, TempDir, events_named, make_sender
@@ -88,6 +90,32 @@ class TestSilence(WatchdogCase):
         fx.sender.control(C.ACTION_PAUSE)
         self.run_for(fx, 20.0)
         self.assertEqual(deaf.reconnects, 0)
+
+
+class TestStatusNeverWaitsOnADevice(WatchdogCase):
+    def test_status_answers_from_its_snapshot_while_the_tick_is_stuck(self):
+        fx = self.started()
+        fresh = fx.sender.status()
+        self.assertNotIn("stale", fresh)
+        held, release = threading.Event(), threading.Event()
+
+        def stuck_tick():  # a GET_STATUS retry on a dead socket, holding the session lock
+            with fx.sender._lock:
+                held.set()
+                release.wait(5)
+
+        worker = threading.Thread(target=stuck_tick, daemon=True)
+        worker.start()
+        held.wait(2)
+        t0 = time.monotonic()
+        stale = fx.sender.status()
+        waited = time.monotonic() - t0
+        release.set()
+        worker.join(2)
+        self.assertLess(waited, 0.5)
+        self.assertTrue(stale.get("stale"))
+        self.assertEqual(stale["session_id"], fresh["session_id"])
+        self.assertNotIn("stale", fx.sender.status())
 
 
 class TestClockBackoff(WatchdogCase):

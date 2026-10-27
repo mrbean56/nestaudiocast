@@ -466,3 +466,18 @@ tentative brûlait son propre délai (2 s) sur une liaison morte, soit 6,5 s per
 `tests/v020/test_chromecast_net.py::TestStatusOnADeadLink` (le faux récepteur coupe la session et la
 liaison doit répondre quand même). **Réserve** : tout cela est le côté vidéo ; le côté groupe de
 chaque ligne de transport exige une fenêtre audible.
+
+## C12 — 2026-10-27 : dix minutes de lecture, et le lien qui devient sourd
+
+**Hypothèse** (revue du 2026-10-27) : le lecteur MSE ne recharge rien après le départ ; aucune
+lecture n'a dépassé ~25 s. **Mesure hors ligne** : le harnais reproduit la famine à 7,5 s sur
+l'ancien code ; le nouveau (recharge à 2 Hz, une boucle par piste, éviction, `endOfStream`)
+passe 29/29. **Sur l'appareil** : premier essai, `Illegal invocation` (un `setInterval` stocké puis
+appelé comme méthode : Chrome 90 le refuse, node non) — le harnais le reproduit désormais.
+Deuxième essai, 10 min : la vidéo a joué jusqu'à 623,6 s, mais le contrôleur n'entendait plus la
+page depuis 244 s (`evidence/52a`) et personne ne s'en apercevait. **Correction** : chien de garde
+de silence (3 s → une reconnexion bornée, sinon fin de session). **Troisième essai** : 600,5 s
+en 600,5 s, une surdité à 385 s réparée en 7,4 s sans effet sur la lecture (`evidence/52b`).
+**Ouvert** : pourquoi le socket devient sourd toutes les 4–6 min (pas de CLOSE reçu ; le
+`GET_STATUS` expire d'abord). Hypothèse suivante, avec une nouvelle variable : le battement de
+cœur CASTv2 côté contrôleur pendant que le tick est bloqué.

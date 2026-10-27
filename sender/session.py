@@ -74,6 +74,8 @@ RECEIVER_SILENT_S = 3.0
 #: after a failed clock refresh, try again this soon — not on every tick (each try holds the
 #: session lock for up to five 2 s pings)
 CLOCK_RETRY_S = 10.0
+#: how long /api/status waits for the session lock before answering from its last snapshot
+STATUS_LOCK_WAIT_S = 0.25
 #: How long to wait for the receiver to report a buffered parked position before starting anyway.
 RECEIVER_READY_TIMEOUT_S = 10.0
 #: A scheduled instant further than this in the future is not honoured (the loop keeps breathing).
@@ -222,6 +224,7 @@ class SessionManager:
         #: the receiver clock stamp of the last state heard, and when (controller clock)
         self._last_rx_ms: float | None = None
         self._last_rx_at = 0.0
+        self._last_status: dict | None = None
         #: the last ownership verdict, and when it was taken (one GET_STATUS per second, §3.3)
         self._owner_verdict = True
         self._owner_checked_at = float("-inf")
@@ -1198,49 +1201,63 @@ class SessionManager:
     # status (§5)
     # =====================================================================================
     def status(self) -> dict:
-        with self._lock:
-            session = self._session
-            now = self._clock()
-            # The last readings the ticker took, never a fresh device read: an HTTP request must
-            # not do I/O on a socket the start worker or the ticker may be using (review
-            # 2026-10-27), and a slow speaker must not hold /api/status hostage.
-            live = session is not None and session.live
-            video = self._last_video if live else None
-            group_sample = (
-                self._last_group_sample if live and session.audible and session.group_prepared else None
-            )
-            position_video = None if video is None else round(float(video.media), 3)
-            position_group = None if group_sample is None else round(float(group_sample.media), 3)
-            error_ms = None
-            if position_video is not None and position_group is not None:
-                error_ms = _no_negative_zero(
-                    round(
-                        C.digital_error(position_group, position_video, self._config.delta_v2) * 1000.0,
-                        1,
-                    )
+        """§5 status. Never waits on a device: if the ticker holds the lock (a GET_STATUS retry
+        on a dead socket held it 8 s on the Salon, 2026-10-27), the last status is returned with
+        ``"stale": true`` rather than blocking the phone."""
+        if not self._lock.acquire(timeout=STATUS_LOCK_WAIT_S):
+            if self._last_status is not None:
+                return dict(self._last_status, stale=True)
+            self._lock.acquire()
+        try:
+            out = self._status_locked()
+            self._last_status = out
+            return out
+        finally:
+            self._lock.release()
+
+    def _status_locked(self) -> dict:
+        session = self._session
+        now = self._clock()
+        # The last readings the ticker took, never a fresh device read: an HTTP request must
+        # not do I/O on a socket the start worker or the ticker may be using (review
+        # 2026-10-27), and a slow speaker must not hold /api/status hostage.
+        live = session is not None and session.live
+        video = self._last_video if live else None
+        group_sample = (
+            self._last_group_sample if live and session.audible and session.group_prepared else None
+        )
+        position_video = None if video is None else round(float(video.media), 3)
+        position_group = None if group_sample is None else round(float(group_sample.media), 3)
+        error_ms = None
+        if position_video is not None and position_group is not None:
+            error_ms = _no_negative_zero(
+                round(
+                    C.digital_error(position_group, position_video, self._config.delta_v2) * 1000.0,
+                    1,
                 )
-            steady_since = self._steady_since(now)
-            try:
-                group_owner = self._group_lock.owner_name()
-            except Exception:  # noqa: BLE001
-                group_owner = None
-            state = C.STATE_IDLE if session is None else session.state
-            return {
-                "state": state,
-                "session_id": None if session is None else session.id,
-                "video_id": None if session is None else session.video_id,
-                "position_video": position_video,
-                "position_group": position_group,
-                "digital_error_ms": error_ms,
-                "p95_ms": self._p95(),
-                "rate": None if video is None or not video.rate else round(float(video.rate), 6),
-                "steady_since": steady_since,
-                "quiet": self._quiet.describe(self._wall()),
-                "group_owner": group_owner,
-                "delta_v2": self._config.delta_v2,
-                "last_event": getattr(self._log, "last_event", None),
-                "last_error": self._last_error,
-            }
+            )
+        steady_since = self._steady_since(now)
+        try:
+            group_owner = self._group_lock.owner_name()
+        except Exception:  # noqa: BLE001
+            group_owner = None
+        state = C.STATE_IDLE if session is None else session.state
+        return {
+            "state": state,
+            "session_id": None if session is None else session.id,
+            "video_id": None if session is None else session.video_id,
+            "position_video": position_video,
+            "position_group": position_group,
+            "digital_error_ms": error_ms,
+            "p95_ms": self._p95(),
+            "rate": None if video is None or not video.rate else round(float(video.rate), 6),
+            "steady_since": steady_since,
+            "quiet": self._quiet.describe(self._wall()),
+            "group_owner": group_owner,
+            "delta_v2": self._config.delta_v2,
+            "last_event": getattr(self._log, "last_event", None),
+            "last_error": self._last_error,
+        }
 
     def _p95(self) -> float | None:
         if not self._errors:

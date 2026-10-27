@@ -292,3 +292,10 @@ what was ambiguous.
     `OWNER_FILE` in `/etc/castrelay.conf`, for both `run-relay.sh` and its `ExecStopPost` wrapper.
     Two checkouts with two relative defaults had them reading different files (review
     2026-10-27); `tools/safety_guards.sh` now checks the example configuration.
+15. **§5 — `GET /api/status` never waits on a device.** It answers from the ticker's last readings,
+    and if the session lock is busy for more than 250 ms it returns its previous answer with
+    `"stale": true` (measured 2026-10-27: a `GET_STATUS` retry on a dead socket held the lock 8 s).
+16. **§3.3 — a silent page is a link fault, handled.** No new `state` for 3 s while a session runs
+    → one bounded `reconnect()`; failure ends the session as `device_lost` (never a relaunch). On
+    the Salon the controller's socket goes deaf every 4–6 min (cause unknown, no transport CLOSE
+    seen); recovery measured at 7.4 s with playback unaffected (`evidence/52b`).

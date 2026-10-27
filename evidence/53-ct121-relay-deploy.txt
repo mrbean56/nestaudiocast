@@ -1,0 +1,41 @@
+# CT 121 relay deployment, review 2026-10-27 (collected 2026-10-27T17:58:18-04:00)
+
+## backup of every file replaced (moved copies, nothing deleted)
+total 60
+-rw-r--r-- 1 root root   572 Oct 25 13:27 cast-relay.service
+-rw-rw-r-- 1 1000 1000 45292 Oct 25 17:07 cast_relay.py
+-rw-r--r-- 1 root root   440 Oct 25 15:43 castrelay.conf
+-rwxrwxr-x 1 1000 1000   656 Oct 25 15:43 run-relay.sh
+
+## /etc/castrelay.conf (non-comment lines)
+GROUP=Cuisine
+TV=192.168.2.80
+DELTA=0.265
+POLL=0.25
+MIRROR_VOLUME=1
+VOLUME_GAIN=1.0
+VOLUME_MAX=1.0
+OWNER_FILE=/opt/castsender/state/group.owner
+
+## unit
+ExecStart=/opt/castrelay/tools/run-relay.sh
+ExecStopPost=-/opt/castrelay/tools/relay-stop-post.sh
+
+## the relay before: dead group link, never rebuilt
+step_error: 26516  sink_reconnected: 0
+{"wall": 1793000339.0417, "ev": "step_error", "error": "BrokenPipeError: [Errno 32] Broken pipe"}
+{"wall": 1793136808.6947, "ev": "step_error", "error": "BrokenPipeError: [Errno 32] Broken pipe"}
+
+## stops and starts through the wrapper
+Oct 27 17:33:33 castrelay relay-stop-post.sh[35449]: v0.1 stop path: owner=None reason=absent age_s=None
+Oct 27 17:33:40 castrelay systemd[1]: Stopped cast-relay.service - Cast relay PoC: kitchen Nest Audio group synced to the living-room TV.
+Oct 27 17:33:40 castrelay systemd[1]: Started cast-relay.service - Cast relay PoC: kitchen Nest Audio group synced to the living-room TV.
+Oct 27 17:33:54 castrelay run-relay.sh[35459]: group_unmuted (undoing our own stop-mute): 5/5 members
+Oct 27 17:57:39 castrelay relay-stop-post.sh[36332]: v0.1 stop path: owner=None reason=absent age_s=None
+Oct 27 17:57:47 castrelay systemd[1]: Stopped cast-relay.service - Cast relay PoC: kitchen Nest Audio group synced to the living-room TV.
+Oct 27 17:57:47 castrelay systemd[1]: Started cast-relay.service - Cast relay PoC: kitchen Nest Audio group synced to the living-room TV.
+Oct 27 17:57:59 castrelay run-relay.sh[36342]: group_unmuted (undoing our own stop-mute): 5/5 members
+
+## lock path read by the relay vs written by cast-sender
+--owner-file /opt/castsender/state/group.owner
+cast-sender: default state dir /opt/castsender/state
