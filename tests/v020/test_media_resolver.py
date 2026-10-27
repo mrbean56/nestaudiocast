@@ -113,11 +113,11 @@ class TestRedact(unittest.TestCase):
     def test_token_never_survives(self):
         url = (
             "https://rr4---sn-cxaaj5o5q5-t0ay.googlevideo.com/videoplayback?expire=1793000373"
-            "&ei=Va_eaqaf&ip=184.146.252.246&id=o-AH&itag=140&sig=SECRETSIGNATURE&lsig=X"
+            "&ei=Va_eaqaf&ip=203.0.113.7&id=o-AH&itag=140&sig=SECRETSIGNATURE&lsig=X"
         )
         out = R.redact(url)
         self.assertEqual(out, "https://rr4---sn-cxaaj5o5q5-t0ay.googlevideo.com/videop…")
-        for leak in ("expire", "sig", "SECRET", "184.146", "videoplayback"):
+        for leak in ("expire", "sig", "SECRET", "203.0.113", "videoplayback"):
             self.assertNotIn(leak, out)
 
     def test_unparsable(self):
