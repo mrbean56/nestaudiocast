@@ -222,7 +222,10 @@ async function main() {
   check('play_at_single_play', w.video.paused === false, w.video.paused);
   check('play_at_emits_state', afterPlay.length >= 1, afterPlay.length);
 
-  // 9. a foreign pause (the Google Home app) is reported as an intent, not acted on silently
+  // 9. a foreign pause (the Google Home app) is reported as an intent, not acted on silently.
+  //    The harness clock is frozen, so move it past the park's own suppression window first:
+  //    on the device, performance.now() moves and that window is 120 ms.
+  w.advance(400);
   w.video.fire('pause');
   const intents = w.of('intent');
   check('foreign_pause_intent', intents.length === 1 && intents[0].msg.action === 'pause', intents.map(i => i.msg));
@@ -247,6 +250,16 @@ async function main() {
   // 13. a JSON string payload is accepted (some senders send text)
   w.emit(NS, JSON.stringify({ type: 'clock', seq: 50 }), 'sender-test');
   check('json_string_payload', w.of('clock_reply').some(m => m.msg.seq === 50), null);
+
+  // 13b. a pause before the scheduled release must win (measured 2026-10-27: the release fired
+  //      after the pause and playback resumed, so the service reported 'playing' while paused)
+  w.advance(5000);
+  w.emit(NS, { type: 'play_at', seq: 48.5, rx_ms: (1.7e12 + 3000), media: 12.0 }, 'sender-test');
+  w.emit(NS, { type: 'pause', seq: 48.6 }, 'sender-test');
+  const beforeCancelled = w.video.paused;
+  await new Promise((r) => setTimeout(r, 120));
+  check('pause_cancels_a_pending_release', beforeCancelled === true && w.video.paused === true,
+        { at_pause: beforeCancelled, after: w.video.paused });
 
   // 14. a raw CASTv2 controller is not a CAF sender: getSenders() is empty for it, so state,
   //     error and ended must still reach the sender we last heard from (measured 2026-10-26:

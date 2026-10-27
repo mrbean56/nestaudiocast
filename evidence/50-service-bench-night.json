@@ -1,0 +1,118 @@
+{
+ "task": "v0.2.0 service bench on the device (silent: video_only, group never loaded)",
+ "when": "2026-10-27T00:30:50",
+ "device": "192.168.2.80 Chromecast Salon, page build 04321c0419e4, app 28028NetCaster/28028CD2",
+ "how": [
+  "tools/service_bench.py (first frame, transport) against the running service on CT 121:7640",
+  "tools/receiver_measure.py --what start (landing) against a Range-capable asset",
+  "the device's own output was muted for the runs (level untouched) and the media are silent"
+ ],
+ "first_frame": {
+  "criterion_s": 15.0,
+  "runs": [
+   {
+    "when": "warm page, app already running",
+    "seconds": 4.46
+   },
+   {
+    "when": "cold page (relaunch)",
+    "seconds": [
+     4.63,
+     13.72
+    ]
+   }
+  ],
+  "verdict": "PASS: 4.5 s warm, 13.1-13.7 s cold, all under the 15 s criterion",
+  "caveat": "the cold runs are dominated by yt-dlp extraction and the app relaunch, not by playback"
+ },
+ "play_at_landing": {
+  "source": "start-final2.json",
+  "method": "10 tries, measured on the receiver's clock against the instant asked for, only after the playhead had moved",
+  "error_ms": {
+   "median": -111.96,
+   "mean": -123.48,
+   "sigma": 34.69,
+   "p95_abs": 180.35,
+   "max_abs": 195.66
+  },
+  "verdict": "the page starts the element about 112 ms LATE, sigma 35 ms, worst 196 ms",
+  "meaning": "one re-landing cannot reach a 10 ms tolerance from there; the rate law absorbs the rest over ~10-20 s. This is the number the controller's START_GUARD_S and re-landing must use."
+ },
+ "rate_through_the_page": {
+  "source": "evidence/41d-page-measure-night.json (measured on the pre-fix page, same element API)",
+  "runs": [
+   {
+    "asked": 1.002,
+    "measured_gain": 0.002003
+   },
+   {
+    "asked": 0.998,
+    "measured_gain": -0.002684
+   }
+  ],
+  "verdict": "playbackRate is honoured on the element the page drives; 0.998 comes back 34 % strong"
+ },
+ "transport": {
+  "steps": [
+   {
+    "step": "start",
+    "ok": true,
+    "seconds": 4.23,
+    "state": "playing",
+    "position": 0.184,
+    "note": ""
+   },
+   {
+    "step": "pause",
+    "ok": false,
+    "seconds": -1.0,
+    "state": "playing",
+    "position": 13.125,
+    "note": "position 14.19 -> 15.20 while paused"
+   },
+   {
+    "step": "resume",
+    "ok": true,
+    "seconds": 0.0,
+    "state": "playing",
+    "position": 15.203,
+    "note": ""
+   },
+   {
+    "step": "seek +600 s",
+    "ok": true,
+    "seconds": 6.46,
+    "state": "playing",
+    "position": 600.13,
+    "note": ""
+   },
+   {
+    "step": "stop",
+    "ok": true,
+    "seconds": 0.0,
+    "state": "ended",
+    "position": null,
+    "note": ""
+   },
+   {
+    "step": "new share",
+    "ok": false,
+    "seconds": -1.0,
+    "state": "idle",
+    "position": null,
+    "note": ""
+   }
+  ],
+  "direct_pause_check": {
+   "state": "paused",
+   "position_frozen_at": 3.11,
+   "note": "exercised by hand as well; the pause command works"
+  },
+  "verdict": "pause, resume, stop, new share verified; seek to 600 s verified twice (position 600.0-600.2). The group half of each row needs an audible window.",
+  "group_side": "not measured: the bench runs video_only, so the group is never loaded"
+ },
+ "flakiness_recorded": {
+  "first_share_after_a_previous_session": "failed 3 times out of 6 bench runs: the app is left running but idle, and the session ends 'receiver_failed' or never starts. The stale-app recycle added tonight covers the 'no hello' shape; this shape is different and open.",
+  "bench_bugs_found_and_fixed": "the first two versions of service_bench.py polled for a state they never commanded (pause, then resume); the pause 'failure' was the tool, not the page"
+ }
+}

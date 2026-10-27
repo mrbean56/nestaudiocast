@@ -1,5 +1,12 @@
 (function () {
   'use strict';
+  // The loader injects this script, and CAF may run the page more than once (measured
+  // 2026-10-27: a `seek` on the element the page had loaded left the reported position at 0,
+  // which is what two instances of this script look like — one holds the media, the other
+  // reports an empty element). Only the first instance may run.
+  if (window.__nacStarted) { return; }
+  window.__nacStarted = true;
+  var INSTANCE = Math.floor(Math.random() * 1e6);
 
   var NS = 'urn:x-cast:com.beansden.nestaudiocast.v1';
   var VERSION = '0.2.0';
@@ -31,6 +38,18 @@
   var ticker = null;
   var msePlayer = null;      // the MSE reader (receiver/mse.js), used for DASH sources
   var mseLoading = false;
+  //: bumped by every transport command that cancels a scheduled release (measured 2026-10-27: a
+  //: pause issued before the release fired was undone by the release itself, and the transport
+  //: matrix showed a 'playing' service with the video advancing while paused)
+  var releaseToken = 0;
+  //: our own commands move the playhead, and every move fires `seeked`/`pause`/`play` events.
+  //: Reporting those as user intents made the controller mirror our own seeks back at us
+  //: (measured 2026-10-27: `intent_seek` twice right after a park, and a pause that the loop
+  //: immediately undid). A command now suppresses intents for a window instead of for one event.
+  //: per kind: a seek trails its command by longer than a pause does, and a real user pause must
+  //: never be swallowed by the controller's own traffic.
+  var SUPPRESS_MS = { seeked: 2500, play: 2000, pause: 700, ratechange: 1500 };
+  var suppressUntil = { seeked: 0, play: 0, pause: 0, ratechange: 0 };
   var expect = null;           // {kind, until}: an element event we caused ourselves
   var lastJumpAt = 0;
   var lastError = null;
@@ -52,7 +71,12 @@
   var ownAudioEl = null;
 
   function ownElement() {
-    if (ownEl) { return ownEl; }
+    if (ownEl) {
+      try {
+        if (!ownEl.parentNode && document.body) { document.body.appendChild(ownEl); }
+      } catch (e) { /* detached is still usable */ }
+      return ownEl;
+    }
     var v = document.createElement('video');
     try {
       v.id = 'nac-media';
@@ -219,6 +243,7 @@
       // diagnosis, not protocol: what the element thinks, and what we still owe it (2026-10-26:
       // a LOAD at 20 s kept playing from 0 and the state alone did not say why)
       el: v ? ((v.id || 'noid') + '/' + typeof v.readyState) : 'none',
+      inst: INSTANCE,
       audio: msePlayer ? (msePlayer.audioElement() ? msePlayer.audioElement().currentTime : null) : null,
       ready: v ? v.readyState : null,
       pending: pendingPos,
@@ -252,10 +277,34 @@
   function hideIdle() { idleEl.className = 'hidden'; }
 
   // ---- our own element events are not intents ----------------------------------------------
-  function markExpect(kind) { expect = { kind: kind, until: rxNow() + 2000 }; }
+  //: how many self-caused events one command may produce. Measured 2026-10-27: parking for a
+  //: `play_at` fires **two** `seeked` events (the park and the release), and the second one was
+  //: reported as a user intent — the controller then mirrored our own seek back at us.
+  function suppressIntents(kinds, ms) {
+    var now = rxNow();
+    (kinds || []).forEach(function (k) {
+      suppressUntil[k] = Math.max(suppressUntil[k] || 0, now + (ms || SUPPRESS_MS[k] || 1500));
+    });
+  }
+
+  function markExpect(kind, count) {
+    expect = { kind: kind, until: rxNow() + 3000, left: count || 2 };
+    if (kind === 'seek') { suppressIntents(['seeked']); }
+    if (kind === 'pause') { suppressIntents(['pause']); }
+    if (kind === 'play') { suppressIntents(['play']); }
+    if (kind === 'load') { suppressIntents(['play', 'seeked']); }
+  }
+
+  function suppressed(name) {
+    return name in suppressUntil && rxNow() < suppressUntil[name];
+  }
 
   function consumeExpect(kind) {
-    if (expect && expect.kind === kind && rxNow() <= expect.until) { expect = null; return true; }
+    if (expect && expect.kind === kind && rxNow() <= expect.until && expect.left > 0) {
+      expect.left -= 1;
+      if (expect.left === 0) { expect = null; }
+      return true;
+    }
     return false;
   }
 
@@ -381,7 +430,15 @@
     // mark before acting: a pause event is asynchronous in a browser but must never be mistaken
     // for somebody else's press, whichever order it arrives in.
     markExpect('pause');
+    // the park's own pause event lands at once; a real user pause must not be swallowed, so the
+    // window here is short (an explicit `pause` command gets the longer one)
+    suppressUntil.pause = rxNow() + 120;
     markExpect('seek');
+    try {
+      var sk = v.seekable;
+      log('seek ' + pos + ' -> ' + v.currentTime + ' seekable=' +
+          (sk && sk.length ? sk.start(0) + '..' + sk.end(sk.length - 1) : 'NONE'));
+    } catch (e) {}
     try { v.pause(); } catch (e) {}
     pendingPos = null;
     var park = function () {
@@ -404,8 +461,14 @@
 
   function waitForRelease(v, pos, target, metadataPending) {
     var released = false;
+    var mine = releaseToken;
     var fire = function () {
       if (released) { return; }
+      if (mine !== releaseToken) {
+        released = true;
+        log('release cancelled');
+        return;
+      }
       released = true;
       markExpect('play');
       try {
@@ -417,6 +480,11 @@
     };
     var attempt = function () {
       if (released) { return; }
+      if (mine !== releaseToken) {
+        released = true;
+        log('release cancelled');
+        return;
+      }
       var wait = target - rxNow();
       if (metadataPending && v.readyState < 1) {
         // The seek cannot land yet. Releasing anyway would play from wherever the element
@@ -445,6 +513,7 @@
   function doPause() {
     var v = mediaEl();
     if (!v) { return; }
+    releaseToken += 1;
     markExpect('pause');
     if (msePlayer) { msePlayer.pause(); } else { try { v.pause(); } catch (e) {} }
     sendState(true);
@@ -452,9 +521,15 @@
 
   function doSeek(m) {
     var v = mediaEl();
+    releaseToken += 1;
     var pos = Number(m.media);
     if (!v || !isFinite(pos)) { sendError('bad_seek', 'media is required'); return; }
     markExpect('seek');
+    try {
+      var sk = v.seekable;
+      log('seek ' + pos + ' -> ' + v.currentTime + ' seekable=' +
+          (sk && sk.length ? sk.start(0) + '..' + sk.end(sk.length - 1) : 'NONE'));
+    } catch (e) {}
     if (msePlayer) {
       msePlayer.seek(Math.max(0, pos)).then(function () { sendState(true); });
     } else {
@@ -465,12 +540,14 @@
 
   function doRate(m) {
     var v = mediaEl();
+    // a rate change does not cancel a scheduled release: it is part of landing
     var value = Number(m.value);
     if (!v || !isFinite(value)) { sendError('bad_rate', 'value is required'); return; }
     if (value < 0.5 || value > 2.0) {          // contracts §3.1: rate is 0.5 … 2.0
       sendError('rate_out_of_range', 'asked ' + value + ', the contract allows 0.5 … 2.0');
       return;
     }
+    suppressIntents(['ratechange']);
     setElementRate(v, value);
     if (msePlayer) { msePlayer.setRate(value); }
     sendState(true);
@@ -478,6 +555,8 @@
 
   function doStop(tellReady) {
     var v = mediaEl();
+    releaseToken += 1;
+    suppressIntents(['pause', 'seeked'], 1500);
     if (msePlayer) { try { msePlayer.stop(); } catch (e) {} msePlayer = null; }
     markExpect('pause');
     if (v) {
@@ -497,6 +576,10 @@
   function onElementEvent(name) {
     var v = mediaEl();
     if (!v || !mediaLoaded) { return; }
+    if (suppressed(name) && name !== 'ended' && name !== 'error') {
+      sendState(name === 'play' || name === 'pause');
+      return;
+    }
     if (name === 'play') {
       if (!consumeExpect('play') && !consumeExpect('load')) {
         broadcast('intent', { action: 'play' });

@@ -224,7 +224,15 @@ def measure_noise(page: Page, seconds: float = 60.0) -> dict:
 
 
 def measure_start(page: Page, tries: int = 10, target: float = 20.0) -> dict:
-    errors, missed = [], 0
+    """Where the playhead actually is, against the instant the page was told to be there.
+
+    The first version read the first `playing` state and compared its `media` with the target: it
+    returned 0.0 ms nine times out of nine, because that state still carries the *parked* position
+    (the playhead moves a few ms later at 4 Hz). The honest metric uses the receiver's own clock:
+    for the first state after the target instant, the expected position is
+    `target + (rx_ms - target_rx)/1000` (playing at rate 1) and the error is the difference.
+    """
+    errors, missed, details = [], 0, []
     for _ in range(tries):
         page.send("load", url=MEDIA, content_type="video/mp4", media=target, autoplay=False)
         if not page.wait_parked(target):
@@ -232,29 +240,50 @@ def measure_start(page: Page, tries: int = 10, target: float = 20.0) -> dict:
             page.send("stop")
             time.sleep(0.3)
             continue
-        page.send("pause")
         rx = page.d.est_rx()
         if rx is None:
             missed += 1
             continue
-        page.send("play_at", rx_ms=rx + 400.0, media=target)
-        seen = page.collect(2.5, hz=10.0)
-        playing = [m for m in seen if m.get("type") == "state" and m.get("player_state") == "playing"]
-        if not playing:
+        target_rx = rx + 400.0
+        page.send("play_at", rx_ms=target_rx, media=target)
+        seen = page.collect(3.0, hz=10.0)
+        # the playhead must have *moved* before we judge it: a state that still carries the
+        # parked position only measures how late the report came (that mistake read 0.0 nine
+        # times out of nine, then -lag once the metric was fixed to use the receiver clock)
+        after = [
+            m
+            for m in seen
+            if m.get("type") == "state"
+            and m.get("player_state") == "playing"
+            and (m.get("rx_ms") or 0) >= target_rx
+            and (m.get("media") or 0) > target + 0.05
+        ]
+        if not after:
             missed += 1
+            page.send("stop")
+            time.sleep(0.3)
             continue
-        first = playing[0]
-        # where the picture was when the device first said it was playing
-        errors.append((first["media"] - target) * 1000.0)
+        first = min(after, key=lambda m: m["rx_ms"])
+        expected = target + (first["rx_ms"] - target_rx) / 1000.0
+        err = (first["media"] - expected) * 1000.0
+        errors.append(err)
+        details.append(
+            {
+                "err_ms": round(err, 2),
+                "lag_ms": round(first["rx_ms"] - target_rx, 1),
+                "media": round(first["media"], 3),
+            }
+        )
         page.send("stop")
         time.sleep(0.3)
     if not errors:
-        return {"ok": False, "why": f"no playing state observed ({missed}/{tries})"}
+        return {"ok": False, "why": f"no usable landing ({missed}/{tries})"}
     absms = sorted(abs(e) for e in errors)
     return {
         "ok": True,
         "tries": tries,
         "landed": len(errors),
+        "missed": missed,
         "error_ms": {
             "median": round(statistics.median(errors), 2),
             "mean": round(statistics.mean(errors), 2),
@@ -262,11 +291,10 @@ def measure_start(page: Page, tries: int = 10, target: float = 20.0) -> dict:
             "p95_abs": round(absms[int(0.95 * (len(absms) - 1))], 2),
             "max_abs": round(absms[-1], 2),
         },
-        "note": (
-            "read from the first 'playing' state, so it includes the page's own reaction "
-            "time and the 4 Hz reporting: an upper bound on the true start error"
-        ),
+        "note": "measured on the receiver's own clock against the instant asked for; the read is "
+        "the first state at or after that instant, so it includes up to one 4 Hz report",
         "raw_ms": [round(e, 1) for e in errors],
+        "details": details,
     }
 
 
@@ -309,6 +337,7 @@ def measure_rate(page: Page, seconds: float = 60.0) -> dict:
 
 
 def main(argv=None) -> int:
+    global MEDIA
     p = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
@@ -319,7 +348,9 @@ def main(argv=None) -> int:
     )
     p.add_argument("--json", default=None)
     p.add_argument("--seconds", type=float, default=60.0)
+    p.add_argument("--media", default=MEDIA, help="the asset every measurement loads")
     a = p.parse_args(argv)
+    MEDIA = a.media
     wanted = a.what.split(",") if a.what != "all" else ["clock", "noise", "start", "rate"]
     results = {}
     with Page() as page:
