@@ -283,8 +283,10 @@ what was ambiguous.
 13. **§5 — the receiver page is a stable loader.** The device caches by **path** and ignores
     query strings and `Cache-Control` until it reboots (measured). `/receiver.html` (frozen) reads
     `/b/<now>/build.txt` (`no-store`) and loads `/r/<build>/receiver.js` and `/r/<build>/mse.js`;
-    `<build>` is the first 12 hex of the script's sha1. The first loader generation's paths
-    (`/build.txt`, `/receiver.js`) are answered with a 302 to the current build.
+    `<build>` is the first 12 hex of the sha1 of `receiver.js` + `mse.js`. The first loader
+    generation's paths (`/build.txt`, `/receiver.js`) are answered with a 302 to the current
+    build. A page already running keeps the scripts it loaded: an update reaches the device at
+    the next **launch** of the app (a share adopts a running instance), never by itself.
 14. **§7 — one lock file, one path.** cast-sender writes `<STATE_DIR>/group.owner`
     (`/opt/castsender/state/group.owner` on CT 121); the relay reads the path named by
     `OWNER_FILE` in `/etc/castrelay.conf`, for both `run-relay.sh` and its `ExecStopPost` wrapper.
