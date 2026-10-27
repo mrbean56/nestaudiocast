@@ -56,6 +56,9 @@ ENDED_LINGER_S = 2.0  # how long `ended` is visible before `idle`
 REFUSE_LOG_EVERY_S = 10.0
 #: how long the start sequence waits for the parallel app launch before giving up on it
 RECEIVER_LAUNCH_JOIN_S = 40.0
+#: how long a new start waits for the previous one to leave the devices (its launch is bounded
+#: by the link's own timeouts, so this is only reached if a device hangs)
+START_MUTEX_WAIT_S = 120.0
 #: how often the ownership of the device is checked while a session runs (§3.3: within one poll)
 OWNER_POLL_S = 1.0  # throttle for the guard's own log lines (a hostile controller)
 START_LEAD_S = 0.2  # only used by the stopgap plan, never by the real controller
@@ -130,6 +133,9 @@ class Session:
     last_error: str | None = None
     rate: float | None = None
     group_prepared: bool = False
+    #: set *before* group.prepare(): from then on the group may hold our media, even if the
+    #: prepare never returns, so every exit path must stop it
+    group_loading: bool = False
     receiver_launched: bool = False
 
     @property
@@ -197,7 +203,16 @@ class SessionManager:
         #: Measured on CT 121 (2026-10-26): a tick's GET_STATUS interleaved with the worker's on
         #: the same socket, the tick read the wrong reply, and a healthy session was declared
         #: "foreign app" 4 s in.
-        self._starting = False
+        self._starting: Session | None = None
+        #: One start at a time. A share while a start runs stops the old session at once, but its
+        #: worker keeps the devices until it reaches a checkpoint; the new worker waits here, so
+        #: two workers never drive the same socket (review 2026-10-27).
+        self._start_mutex = threading.Lock()
+        self._starter_thread: threading.Thread | None = None
+        #: the last group reading the ticker took: status() reports it instead of asking the
+        #: group itself, so an HTTP request never does device I/O behind the session's back
+        self._last_group_sample = None
+        self._last_video = None
         #: the last ownership verdict, and when it was taken (one GET_STATUS per second, §3.3)
         self._owner_verdict = True
         self._owner_checked_at = float("-inf")
@@ -251,6 +266,8 @@ class SessionManager:
                 created=self._clock(),
             )
             self._session = session
+            self._last_video = None
+            self._last_group_sample = None
             self._ended_at = None
             self._start_done = False
             self._transition_until = 0.0
@@ -300,136 +317,159 @@ class SessionManager:
     # the blocking start sequence (runs on a worker thread; never under the long lock)
     # =====================================================================================
     def _begin(self, session: Session) -> None:
-        with self._lock:
-            self._starting = True
+        if not self._start_mutex.acquire(timeout=START_MUTEX_WAIT_S):
+            return self._fail(session, "start_failed", "the previous start never left the devices")
+        device = {"done": False, "error": None, "thread": None}
         try:
-            # The device work and the media work are independent, and both are slow: yt-dlp takes
-            # 2-7 s, the app launch 3-10 s. Running them in parallel is what keeps the first frame
-            # inside the 15 s budget when the device is slow (measured 2026-10-27: sequential runs
-            # spent 13.1-13.7 s, and a stale app pushed past 25 s).
-            device = {"done": False, "error": None}
-
-            def launch_device() -> None:
-                try:
-                    self._link.launch()
-                    self._link.connect()
-                    device["done"] = True
-                except NotImplementedError:
-                    device["error"] = ("sender_link_unavailable", "the receiver link is a stub (task D)")
-                except Exception as exc:  # noqa: BLE001 - LostDevice included, on purpose
-                    device["error"] = ("receiver_failed", f"{type(exc).__name__}: {exc}")
-
-            starter = threading.Thread(target=launch_device, name="receiver-launch", daemon=True)
-            starter.start()
-            try:
-                resolved = self._resolve(session)
-            finally:
-                starter.join(timeout=RECEIVER_LAUNCH_JOIN_S)
-            if not device["done"] and device["error"] is None:
-                # the launch is still running after the media work: wait for it properly
-                starter.join(timeout=RECEIVER_LAUNCH_JOIN_S)
-            if device["error"] is not None:
-                code, why = device["error"]
-                return self._fail(session, code, why)
-            if not device["done"]:
-                return self._fail(session, "receiver_failed", "the app launch did not finish")
-            session.receiver_launched = True
-
-            if resolved is None or self._aborted(session):
-                return
-            session.video_id = getattr(resolved, "video_id", None)
-            session.title = getattr(resolved, "title", None)
-            session.duration_s = getattr(resolved, "duration_s", None)
-            session.sid = self._open_media(session, resolved)
-            if session.sid is None:
-                return
-            self._log(
-                "media_resolved",
-                session_id=session.id,
-                video_id=session.video_id,
-                sid=session.sid,
-                duration_s=session.duration_s,
-                mode=session.mode,
-            )
-            with self._lock:
-                if session.live:
-                    session.state = C.STATE_STARTING
-
-            self._log(
-                "receiver_ready",
-                session_id=session.id,
-                host=self._config.chromecast,
-                app_id=self._config.app_id,
-            )
-            if self._aborted(session):
-                return
-
-            # The clock estimate first: a landing instant expressed on the receiver's clock is
-            # meaningless without it (§3.1), and it is what _receiver_ms() uses.
-            self._refresh_clock(force=True)
-
-            # Then the video, parked: the plan (§1) assumes both sides sit loaded and paused at
-            # session.start_at when it is computed, and never loads anything itself.
-            if not self._load_video(session):
-                return
-            self._log(
-                "video_parked",
-                session_id=session.id,
-                at=round(session.start_at, 3),
-                ready=self._wait_receiver_ready(session),
-            )
-            if self._aborted(session):
-                return
-
-            group_ready = False
-            if session.audible:
-                try:
-                    self._group.connect()
-                    group_ready = bool(
-                        self._group.prepare(self._audio_url(session), "audio/mp4", session.start_at)
-                    )
-                    session.group_prepared = group_ready
-                except NotImplementedError:
-                    return self._fail(session, "group_unavailable", "the group seam is a stub (task E)")
-                except Exception as exc:  # noqa: BLE001 - UnsafeGroup and friends
-                    return self._fail(session, "group_failed", f"{type(exc).__name__}: {exc}")
-                self._log(
-                    "group_prepared",
-                    session_id=session.id,
-                    ok=group_ready,
-                    at=round(session.start_at, 3),
-                )
-
-            if self._aborted(session):
-                return
-            with self._lock:
-                self._write_record(session)
-            now = self._clock()
-            commands = self._start_plan(session, now, group_ready)
-            self._apply(session, commands, now, phase="start")
             with self._lock:
                 if self._aborted(session):
                     return
-                self._start_done = True
-                self._reload_budget = 0
-                self._transition_until = 0.0
-                session.started_at = now
-                self._note_transport(now)
-                session.state = C.STATE_PLAYING
-            self._log(
-                "session_started",
-                session_id=session.id,
-                video_id=session.video_id,
-                mode=session.mode,
-                group_ready=group_ready,
-                start=round(session.start_at, 3),
-                state=session.state,
-            )
+                self._starting = session
+                self._starter_thread = threading.current_thread()
+            self._begin_devices(session, device)
         except Exception as exc:  # noqa: BLE001 - a session must never take the server down
             self._fail(session, "start_failed", f"{type(exc).__name__}: {exc}")
         finally:
+            # A launch still running after the session gave up would land the app afterwards,
+            # with nobody to stop it: wait it out, and stop what it started.
+            starter = device["thread"]
+            if starter is not None and starter.is_alive():
+                starter.join(timeout=RECEIVER_LAUNCH_JOIN_S)
+            if device["done"] and not session.receiver_launched:
+                stop_receiver_idle(self._link, self._log)
             with self._lock:
-                self._starting = False
+                if self._starting is session:
+                    self._starting = None
+                    self._starter_thread = None
+            self._start_mutex.release()
+
+    def _begin_devices(self, session: Session, device: dict) -> None:
+        """The start sequence proper. The launch thread goes in ``device["thread"]``."""
+
+        # The device work and the media work are independent, and both are slow: yt-dlp takes
+        # 2-7 s, the app launch 3-10 s. Running them in parallel is what keeps the first frame
+        # inside the 15 s budget when the device is slow (measured 2026-10-27: sequential runs
+        # spent 13.1-13.7 s, and a stale app pushed past 25 s).
+        def launch_device() -> None:
+            try:
+                self._link.launch()
+                self._link.connect()
+                device["done"] = True
+            except NotImplementedError:
+                device["error"] = ("sender_link_unavailable", "the receiver link is a stub (task D)")
+            except Exception as exc:  # noqa: BLE001 - LostDevice included, on purpose
+                device["error"] = ("receiver_failed", f"{type(exc).__name__}: {exc}")
+
+        starter = threading.Thread(target=launch_device, name="receiver-launch", daemon=True)
+        device["thread"] = starter
+        starter.start()
+        try:
+            resolved = self._resolve(session)
+        finally:
+            starter.join(timeout=RECEIVER_LAUNCH_JOIN_S)
+        if not device["done"] and device["error"] is None:
+            # the launch is still running after the media work: wait for it properly
+            starter.join(timeout=RECEIVER_LAUNCH_JOIN_S)
+        if device["error"] is not None:
+            code, why = device["error"]
+            return self._fail(session, code, why)
+        if not device["done"]:
+            return self._fail(session, "receiver_failed", "the app launch did not finish")
+        session.receiver_launched = True
+
+        # _aborted() first: a failed resolution has already ended the session, and only the
+        # abort path stops the app that the parallel launch just started
+        if self._aborted(session) or resolved is None:
+            return
+        session.video_id = getattr(resolved, "video_id", None)
+        session.title = getattr(resolved, "title", None)
+        session.duration_s = getattr(resolved, "duration_s", None)
+        session.sid = self._open_media(session, resolved)
+        if session.sid is None:
+            return
+        self._log(
+            "media_resolved",
+            session_id=session.id,
+            video_id=session.video_id,
+            sid=session.sid,
+            duration_s=session.duration_s,
+            mode=session.mode,
+        )
+        with self._lock:
+            if session.live:
+                session.state = C.STATE_STARTING
+
+        self._log(
+            "receiver_ready",
+            session_id=session.id,
+            host=self._config.chromecast,
+            app_id=self._config.app_id,
+        )
+        if self._aborted(session):
+            return
+
+        # The clock estimate first: a landing instant expressed on the receiver's clock is
+        # meaningless without it (§3.1), and it is what _receiver_ms() uses.
+        self._refresh_clock(force=True)
+
+        # Then the video, parked: the plan (§1) assumes both sides sit loaded and paused at
+        # session.start_at when it is computed, and never loads anything itself.
+        if not self._load_video(session):
+            return
+        self._log(
+            "video_parked",
+            session_id=session.id,
+            at=round(session.start_at, 3),
+            ready=self._wait_receiver_ready(session),
+        )
+        if self._aborted(session):
+            return
+
+        group_ready = False
+        if session.audible:
+            session.group_loading = True
+            try:
+                self._group.connect()
+                group_ready = bool(
+                    self._group.prepare(self._audio_url(session), "audio/mp4", session.start_at)
+                )
+                session.group_prepared = group_ready
+            except NotImplementedError:
+                return self._fail(session, "group_unavailable", "the group seam is a stub (task E)")
+            except Exception as exc:  # noqa: BLE001 - UnsafeGroup and friends
+                return self._fail(session, "group_failed", f"{type(exc).__name__}: {exc}")
+            self._log(
+                "group_prepared",
+                session_id=session.id,
+                ok=group_ready,
+                at=round(session.start_at, 3),
+            )
+
+        if self._aborted(session):
+            return
+        with self._lock:
+            self._write_record(session)
+        now = self._clock()
+        commands = self._start_plan(session, now, group_ready)
+        self._apply(session, commands, now, phase="start")
+        with self._lock:
+            if self._aborted(session):
+                return
+            self._start_done = True
+            self._reload_budget = 0
+            self._transition_until = 0.0
+            session.started_at = now
+            self._note_transport(now)
+            session.state = C.STATE_PLAYING
+        self._log(
+            "session_started",
+            session_id=session.id,
+            video_id=session.video_id,
+            mode=session.mode,
+            group_ready=group_ready,
+            start=round(session.start_at, 3),
+            state=session.state,
+        )
 
     def _resolve(self, session: Session):
         resolver = self._resolver
@@ -579,6 +619,11 @@ class SessionManager:
                 return
             if not session.live:
                 return
+            # Nothing may touch the link before the start sequence has launched and connected
+            # it, nor while that sequence runs: drain() reads the socket too, and a reply it
+            # swallows is one the start worker is waiting for (review 2026-10-27).
+            if not session.receiver_launched or self._starting is not None:
+                return
 
             try:
                 messages = self._link.drain()
@@ -591,11 +636,8 @@ class SessionManager:
 
             if not session.live:
                 return
-            # Nothing may touch the link before the start sequence has launched and connected
-            # it: measured on CT 121 (2026-10-26) an idle tick pinged a link that did not exist,
-            # and the LinkDown was read as a foreign takeover, aborting the share in 100 ms.
-            if not session.receiver_launched or self._starting:
-                return
+            # (measured on CT 121, 2026-10-26: an idle tick pinged a link that did not exist, and
+            # the LinkDown was read as a foreign takeover, aborting the share in 100 ms)
             self._refresh_clock()  # throttled by CLOCK_REFRESH_S (§3.1)
             # §3.3 asks for a takeover seen "within one poll (≤ 1 s)". Asking at 4 Hz meant four
             # GET_STATUS a second on a device already decoding 1080p — measured 2026-10-27:
@@ -614,12 +656,14 @@ class SessionManager:
                 return self._on_lost(session, "foreign_app")
 
             video = self._safe_latest()
+            self._last_video = video
             group_sample = None
             if session.audible and session.group_prepared:
                 try:
                     group_sample = self._group.sample()
                 except Exception:  # noqa: BLE001 - a group read must never end the session
                     group_sample = None
+            self._last_group_sample = group_sample
             self._observe(session, video, group_sample, now)
             if not session.live:
                 return
@@ -1044,7 +1088,17 @@ class SessionManager:
 
     def _stop_locked(self, session: Session, reason: str, *, state: str) -> None:
         self._log("session_stopping", session_id=session.id, reason=reason)
-        if session.audible and session.group_prepared:
+        if self._starting is session and threading.current_thread() is not self._starter_thread:
+            # The start worker owns the devices until it finishes: touching them from here would
+            # put two threads on one socket. Its next checkpoint sees the session ended and its
+            # abort path stops the group, the app and the media (_release_after_abort).
+            self._log("stop_deferred_to_start", session_id=session.id)
+            self._close_bookkeeping(session, state)
+            session.ended_at = self._clock()
+            self._ended_at = session.ended_at
+            self._log("session_ended", session_id=session.id, reason=reason, state=state)
+            return
+        if session.audible and (session.group_prepared or session.group_loading):
             try:
                 self._group.stop()
             except NotImplementedError:
@@ -1112,13 +1166,14 @@ class SessionManager:
         with self._lock:
             session = self._session
             now = self._clock()
-            video = self._safe_latest() if session is not None and session.live else None
-            group_sample = None
-            if session is not None and session.live and session.audible and session.group_prepared:
-                try:
-                    group_sample = self._group.sample()
-                except Exception:  # noqa: BLE001
-                    group_sample = None
+            # The last readings the ticker took, never a fresh device read: an HTTP request must
+            # not do I/O on a socket the start worker or the ticker may be using (review
+            # 2026-10-27), and a slow speaker must not hold /api/status hostage.
+            live = session is not None and session.live
+            video = self._last_video if live else None
+            group_sample = (
+                self._last_group_sample if live and session.audible and session.group_prepared else None
+            )
             position_video = None if video is None else round(float(video.media), 3)
             position_group = None if group_sample is None else round(float(group_sample.media), 3)
             error_ms = None
@@ -1205,14 +1260,31 @@ class SessionManager:
         The lock is not touched here: whoever stopped this session already released it (and a
         replacement share may hold it by now).
         """
+        if session.audible and (session.group_prepared or session.group_loading):
+            # a stop that arrived during group.prepare() could not stop the group (the prepare
+            # was still loading it): this is the only place left that can
+            try:
+                self._group.stop()
+                self._log("group_stopped_after_abort", session_id=session.id)
+            except Exception as exc:  # noqa: BLE001
+                self._log(
+                    "group_error",
+                    session_id=session.id,
+                    step="abort",
+                    error=f"{type(exc).__name__}: {exc}",
+                )
+            session.group_prepared = session.group_loading = False
         if session.receiver_launched:
             stop_receiver_idle(self._link, self._log)
+            session.receiver_launched = False
         if session.sid:
             try:
                 self._proxy.close_session(session.sid)
             except Exception:  # noqa: BLE001
                 pass
-        clear_session_record(self._record_path)
+            session.sid = None
+        if self._session is None or self._session is session:
+            clear_session_record(self._record_path)
 
     def _safe_latest(self):
         try:
