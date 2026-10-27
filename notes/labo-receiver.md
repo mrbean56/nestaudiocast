@@ -433,3 +433,36 @@ Tout a été mesuré **en silence** (banc `video_only`, appareil muet au niveau 
 (3 fois sur 6 essais) — l'app reste lancée mais inactive et la session finit en `receiver_failed`
 ou ne démarre pas. Le recyclage ajouté ce soir couvre la forme « pas de hello » ; celle-ci est
 différente et reste à instruire.
+
+## C11 — Le « premier partage » qui échoue : cause racine et mesure (2026-10-27 05:10)
+
+**Hypothèse** : le défaut ouvert de C10 (3 échecs sur 6 cycles) est un problème de la page.
+
+**Mesures**, cycles partage → lecture → arrêt contre le service déployé, en silence :
+
+| étape | cycles | réussis | mode d'échec |
+|---|---|---|---|
+| avant | 6 | **2** | `GET_STATUS` timeout qualifié de prise de contrôle ; puis `stale_app` (sonde de 6 s) |
+| après 1 Hz + lookahead 12 s + garde du pump | 8 | 4 | toujours `GET_STATUS` timeout |
+| **après réouverture de la liaison** | **10** | **10** | — (premier frame 9,4–9,7 s) |
+
+**Cause racine** : les nouvelles tentatives de `GET_STATUS` se faisaient **sur la même socket**. Or
+c'est la socket qui meurt quand l'app redémarre (le Chromecast ferme la session TLS) : chaque
+tentative brûlait son propre délai (2 s) sur une liaison morte, soit 6,5 s perdues, et le partage
+échouait. La tentative suivante **rouvre la liaison** avant de réessayer.
+
+**Contributions secondaires, toutes mesurées** :
+- la propriété de l'appareil était vérifiée **4 fois par seconde** (§3.3 demande « en un poll ») :
+  1 Hz suffit et divise la charge par quatre sur un appareil qui décode ;
+- la résolution du média et le lancement de l'app étaient **séquentiels** alors qu'ils sont
+  indépendants : ils tournent maintenant en parallèle (c'est ce qui ramène le premier frame de
+  13,7 s à 9,6 s) ;
+- la sonde « hello » de recyclage est passée de 6 s à **3 s** ;
+- côté page, un arrêt qui croise un `appendBuffer` levait « This SourceBuffer has been removed »
+  et faisait échouer le partage : l'ajout est abandonné proprement, et l'avance de tampon est
+  passée de 20 s à 12 s.
+
+**Preuve** : `evidence/51-first-share-flakiness.json`, test de régression
+`tests/v020/test_chromecast_net.py::TestStatusOnADeadLink` (le faux récepteur coupe la session et la
+liaison doit répondre quand même). **Réserve** : tout cela est le côté vidéo ; le côté groupe de
+chaque ligne de transport exige une fenêtre audible.

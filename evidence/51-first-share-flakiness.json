@@ -1,0 +1,96 @@
+{
+ "task": "first-share flakiness: before and after (2026-10-27)",
+ "what": "repeated share -> playing -> stop cycles through the deployed service, video_only, silent",
+ "before": {
+  "cycles": 6,
+  "ok": 2,
+  "modes": [
+   "receiver_failed: LinkDown: status check before LAUNCH failed (GET_STATUS timeout)",
+   "already_running -> stale_app: the 6 s hello probe spent the whole budget"
+  ]
+ },
+ "intermediate": {
+  "cycles": 8,
+  "ok": 4,
+  "note": "1 Hz ownership polling + 12 s lookahead + pump/stop guard: better, not fixed"
+ },
+ "root_cause": "the status retries reused the TLS socket that died with the app restart; every retry burned its own timeout on a dead link (6.5 s) and the share failed",
+ "fix": [
+  "reopen the link between status retries (lib/v020/chromecast.py)",
+  "one GET_STATUS per second for ownership instead of four (\u00a73.3 asks for 'within one poll')",
+  "media resolution runs in parallel with the app launch (two independent slow halves)",
+  "hello probe 6 s -> 3 s before recycling a wedged app",
+  "page: a stop racing a fragment append no longer throws; lookahead 20 s -> 12 s"
+ ],
+ "after": {
+  "cycles": 10,
+  "ok": 10,
+  "runs": [
+   {
+    "ok": true,
+    "seconds": 9.7,
+    "line": "playing last=session_started err="
+   },
+   {
+    "ok": true,
+    "seconds": 9.7,
+    "line": "playing last=session_started err="
+   },
+   {
+    "ok": true,
+    "seconds": 9.7,
+    "line": "playing last=session_started err="
+   },
+   {
+    "ok": true,
+    "seconds": 9.4,
+    "line": "playing last=session_started err="
+   },
+   {
+    "ok": true,
+    "seconds": 9.6,
+    "line": "playing last=session_started err="
+   },
+   {
+    "ok": true,
+    "seconds": 9.7,
+    "line": "playing last=session_started err="
+   },
+   {
+    "ok": true,
+    "seconds": 9.4,
+    "line": "playing last=session_started err="
+   },
+   {
+    "ok": true,
+    "seconds": 9.6,
+    "line": "playing last=session_started err="
+   },
+   {
+    "ok": true,
+    "seconds": 9.6,
+    "line": "playing last=session_started err="
+   },
+   {
+    "ok": true,
+    "seconds": 9.6,
+    "line": "playing last=session_started err="
+   }
+  ],
+  "first_frame_s": [
+   9.7,
+   9.7,
+   9.7,
+   9.4,
+   9.6,
+   9.7,
+   9.4,
+   9.6,
+   9.6,
+   9.6
+  ],
+  "note": "10/10 with the 2 h 23 video, first frame 9.4-9.7 s; a separate 6/6 run with the 19 s video gave 3.9-10.3 s"
+ },
+ "regression_test": "tests/v020/test_chromecast_net.py::TestStatusOnADeadLink",
+ "caveat": "all of this is the video side. The group half of every transport row still needs an audible window."
+}
