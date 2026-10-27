@@ -189,6 +189,11 @@ class SessionManager:
         self._last_error: str | None = None
         self._level: float | None = None  # last level we commanded (no getter in the seam)
         self._controller_missing = False
+        #: True while the start sequence runs: it owns the CASTv2 link, the ticker stays out.
+        #: Measured on CT 121 (2026-10-26): a tick's GET_STATUS interleaved with the worker's on
+        #: the same socket, the tick read the wrong reply, and a healthy session was declared
+        #: "foreign app" 4 s in.
+        self._starting = False
         self._clock_offset_ms = 0.0  # receiver-clock minus controller-clock (§3)
         self._clock_residual_ms: float | None = None
         self._clock_at = -1e9
@@ -288,6 +293,8 @@ class SessionManager:
     # the blocking start sequence (runs on a worker thread; never under the long lock)
     # =====================================================================================
     def _begin(self, session: Session) -> None:
+        with self._lock:
+            self._starting = True
         try:
             resolved = self._resolve(session)
             if resolved is None or self._aborted(session):
@@ -394,6 +401,9 @@ class SessionManager:
             )
         except Exception as exc:  # noqa: BLE001 - a session must never take the server down
             self._fail(session, "start_failed", f"{type(exc).__name__}: {exc}")
+        finally:
+            with self._lock:
+                self._starting = False
 
     def _resolve(self, session: Session):
         resolver = self._resolver
@@ -558,7 +568,7 @@ class SessionManager:
             # Nothing may touch the link before the start sequence has launched and connected
             # it: measured on CT 121 (2026-10-26) an idle tick pinged a link that did not exist,
             # and the LinkDown was read as a foreign takeover, aborting the share in 100 ms.
-            if not session.receiver_launched:
+            if not session.receiver_launched or self._starting:
                 return
             self._refresh_clock()  # throttled by CLOCK_REFRESH_S (§3.1)
             try:
