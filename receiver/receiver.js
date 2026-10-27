@@ -49,6 +49,7 @@
   // element: created once, reused, and preferred over nothing. If CAF later inserts its own
   // (on a DASH load), that one wins, so the state we report is always the element we drive.
   var ownEl = null;
+  var ownAudioEl = null;
 
   function ownElement() {
     if (ownEl) { return ownEl; }
@@ -68,6 +69,17 @@
   // (2026-10-26): the page bound its own element at boot but mediaEl() then returned CAF's
   // empty one, so `v.currentTime = start` landed nowhere and a LOAD at 20 s played from 0.
   var dashMode = false;
+
+  function audioElement() {
+    if (ownAudioEl) { return ownAudioEl; }
+    var a = document.createElement('audio');
+    try {
+      a.id = 'nac-audio';
+      document.body.appendChild(a);
+    } catch (e) {}
+    ownAudioEl = a;
+    return a;
+  }
 
   function mediaEl() {
     // The page drives exactly one element: its own. CAF keeps a <video> of its own in the DOM
@@ -207,6 +219,7 @@
       // diagnosis, not protocol: what the element thinks, and what we still owe it (2026-10-26:
       // a LOAD at 20 s kept playing from 0 and the state alone did not say why)
       el: v ? ((v.id || 'noid') + '/' + typeof v.readyState) : 'none',
+      audio: msePlayer ? (msePlayer.audioElement() ? msePlayer.audioElement().currentTime : null) : null,
       ready: v ? v.readyState : null,
       pending: pendingPos,
       logTail: logs.slice(-4).map(function (l) { return l.line; })
@@ -346,7 +359,7 @@
         onUpdate: function () { sendState(true); },
         onError: function (code, why) { sendError('mse_' + code, why); }
       });
-      return msePlayer.start(tracks, atTime);
+      return msePlayer.start(tracks, atTime, [audioElement()]);
     }).then(function () {
       if (autoplay) { msePlayer.play(); }
       mseLoading = false;

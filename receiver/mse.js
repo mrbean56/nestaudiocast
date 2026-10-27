@@ -15,6 +15,11 @@
  * Seeking is exact: the fragment that contains the requested time is found in the sidx table and
  * the buffer restarts from there.
  *
+ * One constraint found on the device (measured 2026-10-26): this Chromecast's MediaSource accepts
+ * **one** SourceBuffer — the video buffer is created and the audio one is refused with "This
+ * MediaSource has reached the limit of SourceBuffer objects it can handle". So each track gets
+ * its own element and its own MediaSource, and the audio element is slaved to the video one.
+ *
  * No dependency, no manifest parser beyond the two ranges the MPD already gave us.
  */
 (function (root, factory) {
@@ -122,6 +127,8 @@
   function MsePlayer(el, opts) {
     this.el = el;
     this.opts = opts || {};
+    //: extra elements, one per additional track (this device allows one SourceBuffer each)
+    this.flock = [];
     this.log = this.opts.log || function () {};
     this.mediaSource = null;
     this.tracks = [];
@@ -138,18 +145,24 @@
            typeof window.fetch === 'function';
   };
 
-  MsePlayer.prototype.start = function (tracks, atTime) {
+  MsePlayer.prototype.start = function (tracks, atTime, extraEls) {
     var self = this;
     if (!this.supported()) { return Promise.reject(new Error('no MSE in this browser')); }
     this.stopped = false;
-    this.mediaSource = new MediaSource();
-    this.url = URL.createObjectURL(this.mediaSource);
-    var opened = new Promise(function (resolve) {
-      self.mediaSource.addEventListener('sourceopen', resolve, { once: true });
+    var elements = [this.el].concat(extraEls || []);
+    var groups = tracks.map(function (spec, i) {
+      return { spec: spec, el: elements[i] || elements[0] };
     });
-    this.el.src = this.url;
-    return opened.then(function () {
-      return self._loadTracks(tracks);
+    return Promise.all(groups.map(function (g) {
+      g.ms = new MediaSource();
+      g.url = URL.createObjectURL(g.ms);
+      g.el.src = g.url;
+      return new Promise(function (resolve) {
+        g.ms.addEventListener('sourceopen', resolve, { once: true });
+      });
+    })).then(function () {
+      self.groups = groups;
+      return self._loadTracks(groups);
     }).then(function () {
       self.pendingSeek = atTime || 0;
       return self.pump();
@@ -159,9 +172,10 @@
     });
   };
 
-  MsePlayer.prototype._loadTracks = function (tracks) {
+  MsePlayer.prototype._loadTracks = function (groups) {
     var self = this;
-    return Promise.all(tracks.map(function (spec) {
+    return Promise.all(groups.map(function (g) {
+      var spec = g.spec;
       return fetchRange(spec.initUrl, spec.initStart, spec.initEnd).then(function (init) {
         spec.init = init;
         return fetchRange(spec.sidxUrl, spec.sidxStart, spec.sidxEnd);
@@ -172,17 +186,17 @@
         spec.table = fragmentTable(sidx);
         if (!spec.table.length) { throw new Error('empty fragment table for ' + spec.mime); }
         var buffer;
-        self.log('add ' + spec.mime + ' #' + bufferCount(self.mediaSource) +
-                 ' state=' + self.mediaSource.readyState);
+        self.log('add ' + spec.mime + ' state=' + g.ms.readyState);
         try {
-          buffer = self.mediaSource.addSourceBuffer(spec.mime);
+          buffer = g.ms.addSourceBuffer(spec.mime);
         } catch (e) {
-          throw new Error('addSourceBuffer refused "' + spec.mime + '": ' +
-                          ((e && e.message) || String(e)));
+          throw new Error('addSourceBuffer refused "' + spec.mime + '" on ' + g.el.tagName +
+                          ': ' + ((e && e.message) || String(e)));
         }
         buffer.mode = 'segments';
         spec.buffer = buffer;
         spec.next = 0;
+        spec.el = g.el;
         self.tracks.push(spec);
         return appendBuffer(buffer, spec.init);
       });
@@ -225,13 +239,17 @@
 
   MsePlayer.prototype._afterPump = function () {
     if (this.pendingSeek !== null) {
+      var self = this;
       var want = this.pendingSeek;
       if (this.bufferedStart() <= want + 0.25) {
-        try { this.el.currentTime = want; } catch (e) { /* the buffer will catch up */ }
+        this._elements().forEach(function (el) {
+          try { el.currentTime = want; } catch (e) { /* the buffer will catch up */ }
+        });
         this.pendingSeek = null;
-        if (this.playing) { this._play(); }
+        if (this.playing) { self._play(); }
       }
     }
+    this.sync();
     this.onUpdate();
   };
 
@@ -250,8 +268,18 @@
   };
 
   MsePlayer.prototype._play = function () {
-    var p = this.el.play();
-    if (p && p.catch) { p.catch(function () {}); }
+    this._elements().forEach(function (el) {
+      try {
+        var p = el.play();
+        if (p && p.catch) { p.catch(function () {}); }
+      } catch (e) { /* one element refusing must not stop the other */ }
+    });
+  };
+
+  MsePlayer.prototype._elements = function () {
+    var els = [];
+    this.groups.forEach(function (g) { if (els.indexOf(g.el) < 0) { els.push(g.el); } });
+    return els.length ? els : [this.el];
   };
 
   MsePlayer.prototype.play = function () {
@@ -261,12 +289,12 @@
 
   MsePlayer.prototype.pause = function () {
     this.playing = false;
-    try { this.el.pause(); } catch (e) {}
+    this._elements().forEach(function (el) { try { el.pause(); } catch (e) {} });
   };
 
   MsePlayer.prototype.setRate = function (value) {
     this.rate = value;
-    try { this.el.playbackRate = value; } catch (e) {}
+    this._elements().forEach(function (el) { try { el.playbackRate = value; } catch (e) {} });
   };
 
   MsePlayer.prototype.seek = function (t) {
@@ -288,15 +316,42 @@
   MsePlayer.prototype.stop = function () {
     this.stopped = true;
     this.playing = false;
-    try { this.el.pause(); } catch (e) {}
-    try { this.el.removeAttribute('src'); this.el.load(); } catch (e) {}
-    try { if (this.url) { URL.revokeObjectURL(this.url); } } catch (e) {}
-    this.tracks = [];
-    this.mediaSource = null;
+    var self = this;
+    this._elements().forEach(function (el) {
+      try { el.pause(); } catch (e) {}
+      try { el.removeAttribute('src'); el.load(); } catch (e) {}
+    });
+    (this.groups || []).forEach(function (g) {
+      try { if (g.url) { URL.revokeObjectURL(g.url); } } catch (e) {}
+    });
+    self.tracks = [];
+    self.groups = [];
+  };
+
+  //: Keep the extra elements on the master clock (this device needs one SourceBuffer per
+  //: MediaSource, so the audio lives on its own element).
+  MsePlayer.prototype.sync = function () {
+    var self = this;
+    var master = this.el;
+    var other = this._elements().filter(function (el) { return el !== master; });
+    other.forEach(function (el) {
+      try {
+        if (!el.paused && Math.abs(el.currentTime - master.currentTime) > 0.06) {
+          el.currentTime = master.currentTime;
+        }
+        if (master.paused && !el.paused) { el.pause(); }
+        if (!master.paused && el.paused) { self._play(); }
+      } catch (e) { /* the sync must never throw into the caller */ }
+    });
   };
 
   MsePlayer.prototype.ready = function () {
     return this.tracks.length > 0 && this.bufferedEnd() !== null;
+  };
+
+  MsePlayer.prototype.audioElement = function () {
+    var extra = this._elements().filter(function (el) { return el !== this.el; }, this);
+    return extra.length ? extra[0] : null;
   };
 
   // ---- helpers ------------------------------------------------------------------------------
