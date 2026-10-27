@@ -46,5 +46,18 @@ else
   echo "   FAIL: no ExecStopPost wrapper — stopping v0.1 would mute the kitchen under v0.2"
   fail=1
 fi
+if grep -q "^ExecStopPost=.*relay-stop-post.sh" systemd/cast-relay.service 2>/dev/null && \
+   ! grep -q "^ExecStopPost=.*emergency.py" systemd/cast-relay.service; then
+  echo "   ok: the relay unit stops through the wrapper, never emergency.py directly"
+else
+  echo "   FAIL: systemd/cast-relay.service calls emergency.py directly (or is missing)"
+  fail=1
+fi
+if grep -q "^OWNER_FILE=/opt/castsender/state/group.owner" castrelay.conf.example; then
+  echo "   ok: the relay reads the lock where cast-sender writes it"
+else
+  echo "   FAIL: castrelay.conf.example does not point OWNER_FILE at cast-sender's lock"
+  fail=1
+fi
 [ "$fail" = "0" ] && echo "   -> all safety regressions clear" || echo "   -> REGRESSION(S) PRESENT"
 [ "$fail" = "0" ]

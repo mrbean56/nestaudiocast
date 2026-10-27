@@ -1,0 +1,27 @@
+# cast-relay — the v0.1 relay (follows the TV, plays its audio on the Cuisine group).
+#
+# Copy to /etc/systemd/system/cast-relay.service on CT 121, with /etc/castrelay.conf
+# (castrelay.conf.example) and the checkout in /opt/castrelay.
+#
+# ExecStopPost goes through tools/relay-stop-post.sh, not lib/emergency.py directly: while
+# cast-sender (v0.2) owns the group, the v0.1 emergency mute would silence v0.2's kitchen.
+# Without a live v0.2 owner the wrapper runs lib/emergency.py, unchanged.
+[Unit]
+Description=Cast relay PoC: kitchen Nest Audio group synced to the living-room TV
+Documentation=file:/opt/castrelay/notes/consensus.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/castrelay
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/castrelay/tools/run-relay.sh
+# If the relay dies, silence the kitchen rather than leave a runaway session — unless v0.2 owns it.
+ExecStopPost=-/opt/castrelay/tools/relay-stop-post.sh
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+
+[Install]
+WantedBy=multi-user.target

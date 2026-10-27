@@ -21,7 +21,14 @@ set -u
 
 HERE=$(cd "$(dirname "$0")/.." && pwd)
 ROOT=${CASTRELAY_ROOT:-$HERE}
-OWNER_FILE=${GROUP_OWNER_FILE:-$ROOT/state/group.owner}
+# The lock lives where cast-sender writes it; /etc/castrelay.conf names it once (OWNER_FILE),
+# for run-relay.sh and for this hook alike. Two different defaults is how the relay and the
+# sender ended up looking at two different files on CT 121 (review 2026-10-27).
+CONF=${CONF:-/etc/castrelay.conf}
+# shellcheck disable=SC1090
+[ -r "$CONF" ] && . "$CONF"
+OWNER_FILE=${GROUP_OWNER_FILE:-${OWNER_FILE:-$ROOT/state/group.owner}}
+case "$OWNER_FILE" in /*) ;; *) OWNER_FILE=$ROOT/$OWNER_FILE ;; esac
 PY=$ROOT/.venv/bin/python
 [ -x "$PY" ] || PY=python3
 

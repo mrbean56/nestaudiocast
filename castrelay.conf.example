@@ -12,3 +12,7 @@ POLL=0.25
 MIRROR_VOLUME=1
 VOLUME_GAIN=1.0
 VOLUME_MAX=1.0
+# Group ownership lock written by cast-sender (v0.2, docs/v020-contracts.md §7). The relay only
+# reads it, and yields the group while a live v0.2 session owns it. It MUST be the file
+# cast-sender writes (its state dir), or the two never see each other.
+OWNER_FILE=/opt/castsender/state/group.owner
