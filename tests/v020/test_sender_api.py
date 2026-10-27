@@ -242,6 +242,31 @@ class TestControl(ApiCase):
         self.assert_error("POST", C.PATH_CONTROL, 409, {"action": "volume", "level": 0.2})
 
 
+class TestReceiverLoader(ApiCase):
+    """The frozen URL is a loader; the service must serve what it asks for (measured 2026-10-26)."""
+
+    def test_build_stamp_and_script_are_served(self):
+        page_dir = os.path.join(self.root, "receiver")
+        os.makedirs(page_dir, exist_ok=True)
+        with open(os.path.join(page_dir, "receiver.js"), "w") as handle:
+            handle.write("// page\n")
+        self.api.receiver_dir = page_dir
+
+        status, _parsed, body, _ctype = self.call("GET", "/b/123/build.txt")
+        self.assertEqual(status, 200)
+        stamp = body.decode().strip()
+        self.assertEqual(len(stamp), 12)
+
+        status, _parsed, script, ctype = self.call("GET", f"/r/{stamp}/receiver.js")
+        self.assertEqual(status, 200)
+        self.assertIn(b"page", script)
+        self.assertIn("javascript", ctype)
+
+    def test_an_unknown_loader_shape_is_404(self):
+        status, _parsed, _body, _ctype = self.call("GET", "/b/123/other.txt")
+        self.assertEqual(status, 404)
+
+
 class TestMediaAndMeasure(ApiCase):
     def test_the_manifest_is_served_for_an_open_session(self):
         self.call("POST", C.PATH_SHARE, {"url": YOUTUBE})

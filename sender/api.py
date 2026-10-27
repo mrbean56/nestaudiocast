@@ -39,6 +39,21 @@ from .session import ControlError, ShareError
 
 LAN_NETWORK = ipaddress.ip_network("192.168.2.0/24")
 MEASURE_PREFIX = "/assets/measure/"
+
+
+def _is_loader_path(path: str) -> bool:
+    """``/b/<anything>/build.txt`` or ``/r/<anything>/receiver.js`` (see the frozen loader)."""
+    parts = [p for p in path.split("/") if p]
+    return (
+        len(parts) == 3
+        and parts[0] in ("b", "r")
+        and (
+            (parts[0] == "b" and parts[2] == "build.txt")
+            or (parts[0] == "r" and parts[2] == "receiver.js")
+        )
+    )
+
+
 MEASURE_SUFFIXES = (".m4a", ".wav")
 DEFAULT_MAX_BODY = 64 * 1024
 
@@ -91,6 +106,7 @@ class SenderAPI:
         self.log = log or (lambda *a, **k: None)
         self.proxy = proxy if proxy is not None else getattr(sender, "_proxy", None)
         self.receiver_dir = receiver_dir or getattr(config, "receiver_dir", None) or "receiver"
+        self._stamp_cache: tuple[float, str] | None = None
         self.assets_dir = assets_dir or getattr(config, "assets_dir", None) or "assets"
         self.extra_allowed = frozenset(str(ip) for ip in extra_allowed)
         self.max_body = int(max_body)
@@ -138,6 +154,22 @@ class SenderAPI:
         if missing:
             raise ApiError(500, "internal_error", f"status is missing {missing}")
         return doc
+
+    def build_stamp(self) -> str:
+        """A stamp that changes whenever the page script does (sha1, memoised on mtime)."""
+        source = os.path.join(self.receiver_dir, "receiver.js")
+        try:
+            mtime = os.path.getmtime(source)
+        except OSError:
+            return "0"
+        if self._stamp_cache and self._stamp_cache[0] == mtime:
+            return self._stamp_cache[1]
+        import hashlib
+
+        with open(source, "rb") as handle:
+            digest = hashlib.sha1(handle.read()).hexdigest()[:12]
+        self._stamp_cache = (mtime, digest)
+        return digest
 
 
 class SenderServer(ThreadingHTTPServer):
@@ -203,6 +235,11 @@ class _Handler(BaseHTTPRequestHandler):
             path = urlsplit(self.path).path or "/"
             if path.startswith(C.PATH_MEDIA_PREFIX):
                 return self._media(method, path)
+            # The frozen receiver URL is a stable loader; it asks for /b/<now>/build.txt and
+            # /r/<build>/receiver.js. Measured 2026-10-26: the device caches by PATH and ignores
+            # query strings, so these must be served here too, or the page never boots.
+            if _is_loader_path(path):
+                return self._loader_asset(path)
             if path.startswith(MEASURE_PREFIX):
                 return self._measure_asset(method, path)
             route = _ROUTES.get(path) or _ROUTES.get(path.rstrip("/") or "/")
@@ -239,6 +276,22 @@ class _Handler(BaseHTTPRequestHandler):
         with open(path, "rb") as handle:
             body = handle.read()
         self._send(200, "text/html; charset=utf-8", body, cache="no-cache")
+
+    # -- the receiver loader's two paths ---------------------------------------------------
+    def _loader_asset(self, path: str) -> None:
+        if path.endswith("/build.txt"):
+            body = self.api.build_stamp().encode()
+            self._send(200, "text/plain; charset=utf-8", body, cache="no-store")
+            return
+        source = os.path.join(self.api.receiver_dir, "receiver.js")
+        if not os.path.isfile(source):
+            raise ApiError(
+                404, "receiver_missing", f"{source} is missing: the page script is not in this checkout"
+            )
+        with open(source, "rb") as handle:
+            body = handle.read()
+        # the path carries the build, so the response may be cached for ever
+        self._send(200, "text/javascript; charset=utf-8", body, cache="max-age=31536000")
 
     def _h_ui(self) -> None:
         self._send(

@@ -53,6 +53,20 @@ if _LIB not in sys.path:  # lib/ holds castv2.py; CI imports this module on a ba
 _CASTV2 = None
 
 
+IDLE_APP_ID = "E8C28D3C"  # Backdrop: the screen a device shows when nobody owns it
+
+
+def _is_idle_screen(status: dict) -> bool:
+    """True when the device is on its own idle screen (Backdrop) or reports nothing at all."""
+    payload = status.get("payload") if isinstance(status, dict) else None
+    body = payload if isinstance(payload, dict) else (status if isinstance(status, dict) else {})
+    apps = body.get("applications") or []
+    if not apps:
+        return True
+    app = apps[0] or {}
+    return app.get("appId") == IDLE_APP_ID or bool(app.get("isIdleScreen"))
+
+
 def _castv2():
     """Import ``lib/castv2.py`` on first use.
 
@@ -252,12 +266,20 @@ class SenderLink:
         app_id, _name, _transport = cv.receiver_app(status)
         if app_id == self.app_id:
             self._emit("already_running", app_id=app_id, host=self.host)
-        elif app_id is not None:
+        elif app_id is None or _is_idle_screen(status):
+            # The device sitting on its own idle screen is *free*, not somebody else's cast.
+            # Measured on CT 121 (2026-10-26): Backdrop is what an idle Chromecast reports, and
+            # treating it as a takeover refused every first launch of a session.
+            self._emit("idle_screen", app_id=app_id, host=self.host)
+        else:
             self._mark_lost(f"foreign_app:{app_id}")
             raise LostDevice(
                 f"{self.host} is running {app_id!r}, not ours ({self.app_id}); refusing to launch"
             )
-        else:
+
+        if app_id != self.app_id:
+            # free device (idle screen or nothing): launch ours
+
             try:
                 payload = self.link.launch(self.app_id, timeout=timeout)
             except cv.CastError as exc:
